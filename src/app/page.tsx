@@ -1,4 +1,3 @@
-import {PrayerTimes} from "@/app/PrayerTimes";
 import {Test} from "@/app/test";
 
 export default function Home() {
