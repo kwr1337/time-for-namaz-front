@@ -69,25 +69,27 @@ interface City {
 const PrayerTime: React.FC<PrayerTimeProps> = ({time, label, highlight, pic, pic2, remainingTime, progress}) => {
     return (
         <div
-            className={` w-[302px] h-[302px] mx-auto rounded-[50px] p-[20px] flex flex-col  justify-start ${
+            className={` w-[302px] h-[302px] mx-auto rounded-[50px] p-[20px] flex flex-col justify-start ${
                 highlight ? 'bg-[#5ec262]' : 'bg-white'
             }`}
         >
             {/* Верхняя часть: Иконка и блок времени */}
-            <div className="flex items-center">
+            <div className="flex items-center ">
                 {/* Иконка */}
-                <div className={'h-[88px] flex items-end'}>
-                    <Image className=" w-2/3  " src={highlight ? pic2 : pic}
-                           alt={label}/>
+                <div className="w-[88px] h-[88px] flex   bg-transparent">
+                    <Image
+                        className="max-w-full max-h-full object-contain"
+                        src={highlight ? pic2 : pic}
+                        alt={label}
+                    />
                 </div>
-
 
                 {/* Оставшееся время  */}
                 {highlight && (
-                    <div className="w-full flex flex-col items-end justify-between  ">
-                        <div className="w-[91%] bg-white rounded-tr-[50px] rounded-[10px] py-2 px-4 flex flex-col   ">
+                    <div className="w-full flex flex-col items-end justify-between">
+                        <div className="w-[91%] bg-white rounded-tr-[50px] rounded-[10px] py-2 px-4 flex flex-col">
                             <div className="text-[#a0a2b1] text-sm font-normal">осталось</div>
-                            <div className="text-[#17181d] text-base font-bold ">
+                            <div className="text-[#17181d] text-base font-bold">
                                 {formatTime(remainingTime)}
                             </div>
                         </div>
@@ -102,7 +104,7 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({time, label, highlight, pic, pic
                 )}
             </div>
 
-            <div className="flex flex-col items-start mt-[15%]">
+            <div className="flex flex-col items-start  mt-[15%]">
                 {/* Время */}
                 <div
                     className={`text-center text-[64px] leading-none font-light ${
@@ -121,11 +123,10 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({time, label, highlight, pic, pic
                     {label}
                 </div>
             </div>
-
-
         </div>
     );
 };
+
 
 
 // Функция для расчета разницы времени в миллисекундах
