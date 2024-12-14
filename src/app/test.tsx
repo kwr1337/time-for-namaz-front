@@ -76,8 +76,10 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({time, label, highlight, pic, pic
             {/* Верхняя часть: Иконка и блок времени */}
             <div className="flex items-center">
                 {/* Иконка */}
-                <Image className=" w-1/3  " src={highlight ? pic2 : pic}
-                       alt={label}/>
+                <div className={'h-[88px] flex items-end'}>
+                    <Image className=" w-2/3  " src={highlight ? pic2 : pic}
+                           alt={label}/>
+                </div>
 
 
                 {/* Оставшееся время  */}
