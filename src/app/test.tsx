@@ -69,14 +69,14 @@ interface City {
 const PrayerTime: React.FC<PrayerTimeProps> = ({time, label, highlight, pic, pic2, remainingTime, progress}) => {
     return (
         <div
-            className={` w-[302px] h-[302px] mx-auto rounded-[50px] p-[20px] flex flex-col justify-start ${
+            className={`w-[200px] h-[200px] pc1:w-[230px] pc1:h-[230px] pc:w-[302px] pc:h-[302px] mx-auto rounded-[50px] p-[20px] flex flex-col justify-start ${
                 highlight ? 'bg-[#5ec262]' : 'bg-white'
             }`}
         >
             {/* Верхняя часть: Иконка и блок времени */}
-            <div className="flex items-center ">
+            <div className="flex items-center"> 
                 {/* Иконка */}
-                <div className="w-[88px] h-[88px] flex   bg-transparent">
+                <div className="w-[50px] h-[50px] pc:w-[88px] pc:h-[88px] flex bg-transparent">
                     <Image
                         className="max-w-full max-h-full object-contain"
                         src={highlight ? pic2 : pic}
@@ -84,17 +84,17 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({time, label, highlight, pic, pic
                     />
                 </div>
 
-                {/* Оставшееся время  */}
+                {/* Оставшееся время */}
                 {highlight && (
                     <div className="w-full flex flex-col items-end justify-between">
-                        <div className="w-[91%] bg-white rounded-tr-[50px] rounded-[10px] py-2 px-4 flex flex-col">
-                            <div className="text-[#a0a2b1] text-sm font-normal">осталось</div>
-                            <div className="text-[#17181d] text-base font-bold">
+                        <div className="w-[87%] pc:w-[91%] bg-white rounded-tr-[50px] rounded-[10px] py-1 px-2 pc:px-4 pc:py-2 flex flex-col">
+                            <div className="text-[#a0a2b1] text-[10px] pc:text-sm font-normal">осталось</div>
+                            <div className="text-[#17181d] text-[12px] pc:text-base font-bold">
                                 {formatTime(remainingTime)}
                             </div>
                         </div>
                         {/* Прогресс-бар */}
-                        <div className="w-[91%] h-2 bg-gray-200 rounded-full mt-2">
+                        <div className="w-[87%] pc:w-[91%] h-2 bg-gray-200 rounded-full mt-1 pc:mt-2">
                             <div
                                 className="h-full bg-white rounded-full"
                                 style={{width: `${progress}%`}}
@@ -104,10 +104,10 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({time, label, highlight, pic, pic
                 )}
             </div>
 
-            <div className="flex flex-col items-start  mt-[15%]">
+            <div className="flex flex-col items-start mt-[15%]">
                 {/* Время */}
                 <div
-                    className={`text-center text-[64px] leading-none font-light ${
+                    className={`text-center text-[45px] pc:text-[64px] leading-none font-light ${
                         highlight ? 'text-white' : 'text-[#17181d]'
                     }`}
                 >
@@ -116,7 +116,7 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({time, label, highlight, pic, pic
 
                 {/* Название молитвы */}
                 <div
-                    className={`text-center text-[30px] font-bold ${
+                    className={`text-center text-[22px] pc:text-[30px] font-bold ${
                         highlight ? 'text-white' : 'text-[#17181d]'
                     }`}
                 >
@@ -132,21 +132,28 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({time, label, highlight, pic, pic
 // Функция для расчета разницы времени в миллисекундах
 const calculateTimeDifference = (targetTime: string): number => {
     const currentTime = new Date();
+    // Обнуляем секунды и миллисекунды у текущего времени для точного расчета
+    currentTime.setSeconds(0, 0);
+    
     const [hours, minutes] = targetTime.split(':').map(Number);
     const targetDateTime = new Date(currentTime);
-    targetDateTime.setHours(hours, minutes, 0);
+    targetDateTime.setHours(hours, minutes, 0, 0);
 
     const difference = targetDateTime.getTime() - currentTime.getTime();
     return Math.max(difference, 0);
 };
 
-// Форматирование времени в часы, минуты, секунды
+// Форматирование времени в часы и минуты
 const formatTime = (milliseconds: number): string => {
-    const totalSeconds = Math.floor(milliseconds / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    return `${hours} ч ${minutes} мин`;
+    // Округляем до целых минут
+    const totalMinutes = Math.round(milliseconds / (1000 * 60));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    if (hours > 0) {
+        return `${hours} ч ${minutes} мин`;
+    }
+    return `${minutes} мин`;
 };
 
 const calculateProgress = (remainingTime: number, totalDuration: number): number => {
@@ -396,14 +403,14 @@ export function Test() {
                 className="w-full bg-[#eeeeee] rounded-[40px] flex flex-wrap  2xl:justify-between items-center p-[10px] xl-max:justify-center  lg-max:flex-col  ">
 
                 <div className="flex flex-wrap items-center space-x-6">
-                    <div className="text-[#17181d] text-[62px] font-extralight">
+                    <div className="text-[#17181d] text-[62px] lg:text-[52px] xl:text-[62px] font-extralight">
                         {new Date().toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'})}
                     </div>
                     <div>
-                        <div className="text-[#17181d] text-[24px] font-extrabold">
+                        <div className="text-[#17181d] text-[24px] lg:text-[20px] xl:text-[24px] font-extrabold">
                             {new Date().toLocaleDateString('ru-RU', {day: 'numeric', month: 'long'})}
                         </div>
-                        <div className="text-[#17181d] text-[24px] font-normal">
+                        <div className="text-[#17181d] text-[24px] lg:text-[20px] xl:text-[24px] font-normal">
                             {new Date().toLocaleDateString('ru-RU', {weekday: 'long'})}
                         </div>
                     </div>
@@ -462,9 +469,9 @@ export function Test() {
                     </div>
                 </div>
             </div>
-            <div className="flex flex-wrap justify-center gap-4 w-full mt-[2%]">
+            <div className="flex flex-wrap justify-center  pc1:gap-4 w-full mt-[2%]">
                 {prayers.map((prayer, index) => (
-                    <div key={index} className="w-full sm:w-[297px] flex-shrink-0">
+                    <div key={index} className=" mb-[2%] w-[210px] pc1:w-[230px] pc:w-[297px] flex-shrink-1">
                         <PrayerTime
                             time={prayer.time}
                             label={prayer.label}
@@ -478,28 +485,32 @@ export function Test() {
                 ))}
             </div>
             <div className="w-full  bg-white rounded-[50px] flex sm-max:flex-col justify-between items-center px-6 md:px-12 py-4 relative mt-6">
-                <div className="flex items-center justify-center min-h-screen-xl xl-max:flex-col ">
-                    <div
-                        className="w-full lg:w-[500px] bg-[#F6F6F6] rounded-[50px] flex justify-center items-center relative p-[4%] xl-max:p-[2%]">
-                        <div
-                            className="text-[#17181D] text-[120px] xl-max:text-[100px] font-extrabold text-center">{currentName.arabic}</div>
+                <div className="flex items-center justify-center min-h-screen-xl xl-max:flex-col">
+                    <div className="w-full lg:w-[400px] xl:w-[500px] bg-[#F6F6F6] rounded-[50px] flex justify-center items-center relative p-[4%] xl-max:p-[2%]">
+                        <div className="text-[#17181D] text-[120px] lg:text-[90px] xl:text-[120px] xl-max:text-[100px] font-extrabold text-center">
+                            {currentName.arabic}
+                        </div>
                     </div>
-                    <div className="ml-[7%] xl-max:ml-[0%] w-[100%] ">
-                        <div
-                            className="text-[#17181D] text-[70px] xl-max:text-[40px] font-extrabold text-center">{currentName.pronunciation}</div>
-                        <div
-                            className="text-[#17181D] text-[60px] xl-max:text-[30px] font-bold text-center">{currentName.explanation}</div>
+                    <div className="ml-[7%] xl-max:ml-[0%] w-[100%]">
+                        <div className="text-[#17181D] text-[70px] lg:text-[50px] xl:text-[70px] xl-max:text-[40px] font-extrabold text-center">
+                            {currentName.pronunciation}
+                        </div>
+                        <div className="text-[#17181D] text-[60px] lg:text-[40px] xl:text-[60px] xl-max:text-[30px] font-bold text-center">
+                            {currentName.explanation}
+                        </div>
                     </div>
                 </div>
-                <div className="w-[287px] h-[400px] flex flex-col space-y-4  bg-[#5EC262] rounded-[50px] p-[35px]">
-                    <div className={"text-white text-[21px] font-extrabold"}>
+                <div className="w-[287px] lg:w-[250px] xl:w-[287px] h-[400px] lg:h-[350px] xl:h-[400px] flex flex-col space-y-4 bg-[#5EC262] rounded-[50px] p-[35px]">
+                    <div className="text-white text-[21px] lg:text-[18px] xl:text-[21px] font-extrabold">
                         Подробную информацию можно узнать по переходу с QR-кода
                     </div>
-
-                    <div className={"text-white text-[20px] flex justify-center font-extrabold"}>
+                    <div className="text-white text-[20px] flex justify-center font-extrabold">
                         {qrCode && (
-                            <img className="w-[190px] h-[190px] rounded-[20px]" src={`${API_BASE_URL}${qrCode}`}
-                                 alt="QR Code"/>
+                            <img 
+                                className="w-[190px] lg:w-[160px] xl:w-[190px] h-[190px] lg:h-[160px] xl:h-[190px] rounded-[20px]" 
+                                src={`${API_BASE_URL}${qrCode}`}
+                                alt="QR Code"
+                            />
                         )}
                     </div>
                 </div>
