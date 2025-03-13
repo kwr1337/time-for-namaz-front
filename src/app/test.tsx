@@ -69,7 +69,7 @@ interface City {
 const PrayerTime: React.FC<PrayerTimeProps> = ({time, label, highlight, pic, pic2, remainingTime, progress}) => {
     return (
         <div
-            className={`w-[200px] h-[200px] pc1:w-[230px] pc1:h-[230px] pc:w-[302px] pc:h-[302px] mx-auto rounded-[50px] p-[20px] flex flex-col justify-start ${
+            className={`w-[190px] h-[190px] tv:w-[200px] tv:h-[200px] pc1:w-[230px] pc1:h-[230px] pc:w-[302px] pc:h-[302px] mx-auto rounded-[50px] p-[20px] flex flex-col justify-start ${
                 highlight ? 'bg-[#5ec262]' : 'bg-white'
             }`}
         >
@@ -393,14 +393,14 @@ export function Test() {
         } else if (city?.logoUrl) {
             return `${API_BASE_URL}${city.logoUrl}`;
         } else {
-            return 'https://via.placeholder.com/61x61'; // URL заглушки, если логотипа нет
+            return 'https://placeholder.apptor.studio/61/61/product1.png'; // URL заглушки, если логотипа нет
         }
     };
 
     return (
         <div className="w-[100%] h-screen  bg-[#f6f6f6] p-[20px] overflow-auto">
             <div
-                className="w-full bg-[#eeeeee] rounded-[40px] flex flex-wrap  2xl:justify-between items-center p-[10px] xl-max:justify-center  lg-max:flex-col  ">
+                className="w-full bg-[#eeeeee] rounded-[40px] flex flex-wrap  xl:justify-between items-center p-[10px] xl-max:justify-center  lg-max:flex-col  ">
 
                 <div className="flex flex-wrap items-center space-x-6">
                     <div className="text-[#17181d] text-[62px] lg:text-[52px] xl:text-[62px] font-extralight">
@@ -471,7 +471,7 @@ export function Test() {
             </div>
             <div className="flex flex-wrap justify-center  pc1:gap-4 w-full mt-[2%]">
                 {prayers.map((prayer, index) => (
-                    <div key={index} className=" mb-[2%] w-[210px] pc1:w-[230px] pc:w-[297px] flex-shrink-1">
+                    <div key={index} className=" mb-[1%] w-[200px] tv:w-[210px] pc1:w-[230px] pc:w-[297px] flex-shrink-1">
                         <PrayerTime
                             time={prayer.time}
                             label={prayer.label}
@@ -484,7 +484,7 @@ export function Test() {
                     </div>
                 ))}
             </div>
-            <div className="w-full  bg-white rounded-[50px] flex sm-max:flex-col justify-between items-center px-6 md:px-12 py-4 relative mt-6">
+            <div className="w-full h-[330px] pc:h-[360px] bg-white rounded-[50px] flex sm-max:flex-col justify-between items-center px-6 md:px-12 py-4 relative mt-6">
                 <div className="flex items-center justify-center min-h-screen-xl xl-max:flex-col">
                     <div className="w-full lg:w-[400px] xl:w-[500px] bg-[#F6F6F6] rounded-[50px] flex justify-center items-center relative p-[4%] xl-max:p-[2%]">
                         <div className="text-[#17181D] text-[120px] lg:text-[90px] xl:text-[120px] xl-max:text-[100px] font-extrabold text-center">
@@ -492,16 +492,16 @@ export function Test() {
                         </div>
                     </div>
                     <div className="ml-[7%] xl-max:ml-[0%] w-[100%]">
-                        <div className="text-[#17181D] text-[70px] lg:text-[50px] xl:text-[70px] xl-max:text-[40px] font-extrabold text-center">
+                        <div className="text-[#17181D] text-[50px] pc1:text-[70px] font-extrabold text-center">
                             {currentName.pronunciation}
                         </div>
-                        <div className="text-[#17181D] text-[60px] lg:text-[40px] xl:text-[60px] xl-max:text-[30px] font-bold text-center">
+                        <div className="text-[#17181D] text-[40px] pc1:text-[60px] font-bold text-center">
                             {currentName.explanation}
                         </div>
                     </div>
                 </div>
-                <div className="w-[287px] lg:w-[250px] xl:w-[287px] h-[400px] lg:h-[350px] xl:h-[400px] flex flex-col space-y-4 bg-[#5EC262] rounded-[50px] p-[35px]">
-                    <div className="text-white text-[21px] lg:text-[18px] xl:text-[21px] font-extrabold">
+                <div className="w-[287px] lg:w-[250px] xl:w-[287px] h-[310px] pc:h-[340px] flex flex-col space-y-4 bg-[#5EC262] rounded-[50px] p-[35px]">
+                    <div className="text-white text-[13px] pc:text-[15px] text-center font-extrabold">
                         Подробную информацию можно узнать по переходу с QR-кода
                     </div>
                     <div className="text-white text-[20px] flex justify-center font-extrabold">
@@ -509,6 +509,7 @@ export function Test() {
                             <img 
                                 className="w-[190px] lg:w-[160px] xl:w-[190px] h-[190px] lg:h-[160px] xl:h-[190px] rounded-[20px]" 
                                 src={`${API_BASE_URL}${qrCode}`}
+                                // src="https://placeholder.apptor.studio/190/190/product1.png"
                                 alt="QR Code"
                             />
                         )}
