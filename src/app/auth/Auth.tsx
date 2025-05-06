@@ -22,7 +22,7 @@ const LoginPage = () => {
 	};
 
 	return (
-		<div className="flex items-center justify-center min-h-screen bg-gray-100">
+		<div className="flex items-center justify-center min-h-screen bg-gray-100 overflow-y-auto max-h-screen">
 			<div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
 				<h2 className="text-2xl font-bold text-center text-gray-700">Вход в админку</h2>
 				<input
@@ -30,14 +30,14 @@ const LoginPage = () => {
 					placeholder="Email"
 					value={email}
 					onChange={(e) => setEmail(e.target.value)}
-					className="w-full px-4 py-2 mb-4 border border-gray-300 rounded-lg text-bg focus:outline-none focus:ring-2 focus:ring-blue-500"
+					className="w-full px-4 py-2 mb-4 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
 				/>
 				<input
 					type="password"
 					placeholder="Пароль"
 					value={password}
 					onChange={(e) => setPassword(e.target.value)}
-					className="w-full px-4 py-2 mb-4 border border-gray-300 rounded-lg text-bg focus:outline-none focus:ring-2 focus:ring-blue-500"
+					className="w-full px-4 py-2 mb-4 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
 				/>
 				<button
 					onClick={handleLogin}

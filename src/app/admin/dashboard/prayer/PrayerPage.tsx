@@ -9,7 +9,9 @@ interface PrayerResponse {
 	id: number;
 	cityId: number;
 	date: string;
+	city?: string;
 	fajr: string;
+	mechet?: string;
 	shuruk: string;
 	zuhr: string;
 	asr: string;
@@ -30,6 +32,8 @@ const PrayerPage = () => {
 	const [userCityId, setUserCityId] = useState<number | null>(null);
 	const [selectedPrayer, setSelectedPrayer] = useState('');
 	const [shiftMinutes, setShiftMinutes] = useState(0);
+	const [customShiftMinutes, setCustomShiftMinutes] = useState('');
+	const [isCustomShift, setIsCustomShift] = useState(false);
 	const [file, setFile] = useState<File | null>(null);
 	const [loading, setLoading] = useState(false);
 
@@ -85,10 +89,12 @@ const PrayerPage = () => {
 	const handlePrayerShift = async () => {
 		if (!selectedCityId || !selectedPrayer) return;
 
+		const finalShiftMinutes = isCustomShift ? parseInt(customShiftMinutes, 10) : shiftMinutes;
+
 		await axios.post(`${API_BASE_URL}/api/prayers/shift`, {
 			cityId: parseInt(selectedCityId, 10),
-			prayerName: selectedPrayer,
-			shiftMinutes: shiftMinutes,
+			prayerName: selectedPrayer === 'mosque' ? 'mechet' : selectedPrayer,
+			shiftMinutes: finalShiftMinutes,
 		}, {
 			headers: {
 				Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -114,7 +120,7 @@ const PrayerPage = () => {
 	}, [role, userCityId]);
 
 	return (
-		<div className={`min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4 ${loading ? 'pointer-events-none opacity-50' : ''}`}>
+		<div className={`min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4 overflow-y-auto max-h-screen ${loading ? 'pointer-events-none opacity-50' : ''}`}>
 			{loading && (
 				<div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
 					<div className="loader">Загрузка...</div>
@@ -127,7 +133,7 @@ const PrayerPage = () => {
 				</div>
 				{role !== 'CITY_ADMIN' && (
 					<select value={selectedCityId} onChange={(e) => handleCityChange(e.target.value)}
-									className="mb-4 border p-2 w-full text-bg">
+									className="mb-4 border p-2 w-full text-black">
 						<option value="">Выберите город</option>
 						{cities.map(city => (
 							<option key={city.id} value={city.id}>{city.name}</option>
@@ -146,29 +152,33 @@ const PrayerPage = () => {
 				)}
 
 				<div className="w-full max-w-full bg-white rounded-lg shadow-md overflow-y-auto mb-4"
-						 style={{ maxHeight: '400px' }}>
+						 style={{ maxHeight: '500px' }}>
 					<table className="w-full">
 						<thead>
 						<tr className="bg-gray-200">
-							<th className="p-2 text-bg text-center">Дата</th>
-							<th className="p-2 text-bg text-center">Фаджр</th>
-							<th className="p-2 text-bg text-center">Шурук</th>
-							<th className="p-2 text-bg text-center">Зухр</th>
-							<th className="p-2 text-bg text-center">Аср</th>
-							<th className="p-2 text-bg text-center">Магриб</th>
-							<th className="p-2 text-bg text-center">Иша</th>
+							{/* <th className="p-2 text-bg text-center">Город</th> */}
+							<th className="p-2 text-black text-center">Дата</th>
+							<th className="p-2 text-black text-center">Фаджр</th>
+							<th className="p-2 text-black text-center">Мечеть</th>
+							<th className="p-2 text-black text-center">Шурук</th>
+							<th className="p-2 text-black text-center">Зухр</th>
+							<th className="p-2 text-black text-center">Аср</th>
+							<th className="p-2 text-black text-center">Магриб</th>
+							<th className="p-2 text-black text-center">Иша</th>
 						</tr>
 						</thead>
 						<tbody>
 						{prayers.map((prayer: PrayerResponse) => (
 							<tr key={prayer.id} className="border-b">
-								<td className="p-2 text-bg text-center">{prayer.date}</td>
-								<td className="p-2 text-bg text-center">{prayer.fajr}</td>
-								<td className="p-2 text-bg text-center">{prayer.shuruk}</td>
-								<td className="p-2 text-bg text-center">{prayer.zuhr}</td>
-								<td className="p-2 text-bg text-center">{prayer.asr}</td>
-								<td className="p-2 text-bg text-center">{prayer.maghrib}</td>
-								<td className="p-2 text-bg text-center">{prayer.isha}</td>
+								{/* <td className="p-2 text-bg text-center">{prayer.city || '-'}</td> */}
+								<td className="p-2 text-black text-center">{prayer.date}</td>
+								<td className="p-2 text-black text-center">{prayer.fajr}</td>
+								<td className="p-2 text-black text-center">{prayer.mechet || '-'}</td>
+								<td className="p-2 text-black text-center">{prayer.shuruk}</td>
+								<td className="p-2 text-black text-center">{prayer.zuhr}</td>
+								<td className="p-2 text-black text-center">{prayer.asr}</td>
+								<td className="p-2 text-black text-center">{prayer.maghrib}</td>
+								<td className="p-2 text-black text-center">{prayer.isha}</td>
 							</tr>
 						))}
 						</tbody>
@@ -177,7 +187,7 @@ const PrayerPage = () => {
 
 				<div className="mb-4">
 					<select value={selectedPrayer} onChange={(e) => setSelectedPrayer(e.target.value)}
-									className="mb-2 border p-2 w-full text-bg">
+									className="mb-2 border p-2 w-full text-black">
 						<option value="">Выберите намаз</option>
 						<option value="fajr">Фаджр</option>
 						<option value="shuruk">Шурук</option>
@@ -185,15 +195,39 @@ const PrayerPage = () => {
 						<option value="asr">Аср</option>
 						<option value="maghrib">Магриб</option>
 						<option value="isha">Иша</option>
+						<option value="mosque">Мечеть</option>
 					</select>
-					<select value={shiftMinutes} onChange={(e) => setShiftMinutes(Number(e.target.value))}
-									className="mb-2 border p-2 w-full text-bg">
-						<option value="0">0 минут</option>
-						<option value="-5">-5 минут</option>
-						<option value="-10">-10 минут</option>
-						<option value="5">5 минут</option>
-						<option value="10">10 минут</option>
-					</select>
+					
+					<div className="flex items-center mb-2">
+						<input 
+							type="checkbox" 
+							id="customShift" 
+							checked={isCustomShift} 
+							onChange={() => setIsCustomShift(!isCustomShift)} 
+							className="mr-2"
+						/>
+						<label htmlFor="customShift" className="text-black">Произвольное значение</label>
+					</div>
+					
+					{isCustomShift ? (
+						<input 
+							type="number" 
+							value={customShiftMinutes} 
+							onChange={(e) => setCustomShiftMinutes(e.target.value)}
+							placeholder="Введите количество минут (положительное или отрицательное)" 
+							className="mb-2 border p-2 w-full text-black"
+						/>
+					) : (
+						<select value={shiftMinutes} onChange={(e) => setShiftMinutes(Number(e.target.value))}
+										className="mb-2 border p-2 w-full text-black">
+							<option value="0">0 минут</option>
+							<option value="-5">-5 минут</option>
+							<option value="-10">-10 минут</option>
+							<option value="5">5 минут</option>
+							<option value="10">10 минут</option>
+						</select>
+					)}
+					
 					<button onClick={handlePrayerShift} className="bg-blue-500 text-white px-4 py-2 rounded">Изменить время
 					</button>
 				</div>

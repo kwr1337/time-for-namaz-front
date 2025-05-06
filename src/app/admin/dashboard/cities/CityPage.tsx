@@ -115,17 +115,17 @@ const CityPage = () => {
 	}, [userRole, userCityId]);
 
 	return (
-		<div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+		<div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 overflow-y-auto max-h-screen">
 			<div className="w-full max-w-[1000px] p-8 bg-white rounded-lg shadow-md">
 				<div className="flex justify-between items-center mb-4">
 					<h2 className="text-2xl font-bold text-gray-700">Список городов</h2>
 					<button onClick={handleBack} className="text-blue-600">Назад</button>
 				</div>
-				<ul className="my-4 max-h-64 overflow-y-auto">
+				<ul className="my-4 max-h-96 overflow-y-auto">
 					{cities.map((city) => (
 						<li key={city.id} className="flex items-center border-b py-2">
 							<div className="flex-1">
-								<span className="font-semibold text-bg">{city.name}</span>
+								<span className="font-semibold text-black">{city.name}</span>
 							</div>
 							<div className="flex-1">
 								<img
@@ -149,7 +149,7 @@ const CityPage = () => {
 				</ul>
 				{(userRole === 'SUPER_ADMIN' || (userRole === 'CITY_ADMIN' && isEditing)) && (
 					<>
-						<h2 className="mt-4 text-lg font-bold text-bg">{isEditing ? 'Редактировать город' : 'Добавить город'}</h2>
+						<h2 className="mt-4 text-lg font-bold text-black">{isEditing ? 'Редактировать город' : 'Добавить город'}</h2>
 						<input
 							type="text"
 							value={name}
@@ -161,7 +161,7 @@ const CityPage = () => {
 							type="file"
 							accept="image/*"
 							onChange={(e) => setLogo(e.target.files ? e.target.files[0] : null)}
-							className="border p-2 mb-2 text-bg w-full"
+							className="border p-2 mb-2 text-black w-full"
 						/>
 						<button onClick={isEditing ? handleUpdateCity : handleCreateCity} className="w-full px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out mt-2">
 							{isEditing ? 'Сохранить изменения' : 'Добавить'}

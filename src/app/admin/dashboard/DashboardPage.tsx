@@ -60,7 +60,7 @@ const DashboardPage = () => {
 	};
 
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+		<div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 overflow-y-auto max-h-screen">
 			<h2 className="text-3xl font-bold text-gray-800 mb-6">
 				{role === 'SUPER_ADMIN' ? 'Панель главного администратора' : `Панель администратора города: ${city}`}
 			</h2>

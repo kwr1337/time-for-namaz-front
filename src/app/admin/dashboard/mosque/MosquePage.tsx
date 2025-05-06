@@ -83,13 +83,63 @@ const MosquePage = () => {
 	};
 
 	const handleDeleteMosque = async (id: number) => {
-		const token = localStorage.getItem('token');
-		await axios.delete(`${API_BASE_URL}/api/mosques/${id}`, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		});
-		fetchMosques();
+		// Подтверждение удаления
+		if (!confirm('Вы уверены, что хотите удалить эту мечеть? Это действие нельзя будет отменить.')) {
+			return;
+		}
+		
+		try {
+			const token = localStorage.getItem('token');
+			
+			// Проверяем, есть ли связанные QR-коды с этой мечетью
+			const qrResponse = await axios.get(`${API_BASE_URL}/api/qrcodes/by-mosque/${id}`, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+			
+			// Если есть QR-коды, предупреждаем пользователя
+			if (qrResponse.data && qrResponse.data.length > 0) {
+				const confirmDelete = confirm(`У этой мечети есть ${qrResponse.data.length} QR-код(ов). При удалении мечети связанные QR-коды также будут удалены. Продолжить?`);
+				if (!confirmDelete) {
+					return;
+				}
+			}
+			
+			// Выполняем удаление
+			await axios.delete(`${API_BASE_URL}/api/mosques/${id}`, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+			
+			alert('Мечеть успешно удалена');
+			fetchMosques();
+		} catch (err: any) {
+			console.error('Ошибка при удалении мечети:', err);
+			
+			let errorMessage = 'Не удалось удалить мечеть. ';
+			
+			if (err.response) {
+				const status = err.response.status;
+				console.log('Статус ошибки:', status);
+				console.log('Данные ошибки:', err.response.data);
+				
+				if (status === 500) {
+					errorMessage += 'Возможно, мечеть не может быть удалена, потому что на неё есть ссылки в других данных (например, в расписании молитв).';
+				} else if (status === 403) {
+					errorMessage += 'У вас нет прав на удаление этой мечети.';
+				} else if (status === 404) {
+					errorMessage += 'Мечеть не найдена.';
+				} else {
+					errorMessage += err.response.data.message || 'Произошла ошибка на сервере.';
+				}
+			} else {
+				errorMessage += 'Проверьте соединение с сервером.';
+			}
+			
+			alert(errorMessage);
+		}
 	};
 
 	const handleEditMosque = (mosque: Mosque) => {
@@ -146,7 +196,7 @@ const MosquePage = () => {
 	}, [userRole, userCityId]);
 
 	return (
-		<div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+		<div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 overflow-y-auto max-h-screen">
 			<div className="w-full max-w-[1000px] p-8 bg-white rounded-lg shadow-md">
 				<div className="flex justify-between items-center mb-4">
 					<h2 className="text-2xl font-bold text-gray-700">Список Мечетей</h2>
@@ -154,35 +204,35 @@ const MosquePage = () => {
 						Назад
 					</button>
 				</div>
-				<ul className="my-4 max-h-64 overflow-y-auto">
+				<ul className="my-4 max-h-96 overflow-y-auto">
 					{mosques.map((mosque) => (
 						<li key={mosque.id} className="flex items-center border-b py-2">
-							<h3 className="font-semibold flex-1 text-bg w-1/2">{mosque.name}</h3>
+							<h3 className="font-semibold flex-1 text-black w-1/2">{mosque.name}</h3>
 							<img src={`${API_BASE_URL}/${mosque.logoUrl}`} alt={`${mosque.name} logo`} className="h-16 w-16 mr-2" />
 							<button onClick={() => handleEditMosque(mosque)} className="bg-yellow-500 text-white p-2 mr-2">Редактировать</button>
 							<button onClick={() => handleDeleteMosque(mosque.id)} className="text-red-500">Удалить</button>
 						</li>
 					))}
 				</ul>
-				<h2 className="mt-4 text-lg font-bold text-bg">{isEditing ? 'Редактировать Мечеть' : 'Добавить Мечеть'}</h2>
+				<h2 className="mt-4 text-lg font-bold text-black">{isEditing ? 'Редактировать Мечеть' : 'Добавить Мечеть'}</h2>
 				<input
 					type="text"
 					placeholder="Имя мечети"
 					value={name}
 					onChange={(e) => setName(e.target.value)}
-					className="border p-2 w-full mb-2 text-bg"
+					className="border p-2 w-full mb-2 text-black"
 				/>
 				<input
 					type="file"
 					accept="image/*"
 					onChange={(e) => setLogo(e.target.files ? e.target.files[0] : null)}
-					className="border p-2 mb-2 text-bg  w-full"
+					className="border p-2 mb-2 text-black w-full"
 				/>
 				{userRole !== 'CITY_ADMIN' && (
 					<select
 						value={cityId}
 						onChange={(e) => setCityId(e.target.value)}
-						className="border p-2 mb-2 text-bg w-full"
+						className="border p-2 mb-2 text-black w-full"
 					>
 						<option value="">Выберите город</option>
 						{cities.map((city) => (

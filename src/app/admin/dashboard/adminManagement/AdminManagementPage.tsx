@@ -102,7 +102,7 @@ const AdminManagementPage = () => {
 	}, []);
 
 	return (
-		<div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+		<div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 overflow-y-auto max-h-screen">
 			<div className="w-full max-w-[1000px] p-8 bg-white rounded-lg shadow-md">
 				<div className="flex justify-between items-center mb-4">
 					<h2 className="text-2xl font-bold text-gray-700">Управление CITY_ADMIN'ами</h2>
@@ -110,13 +110,14 @@ const AdminManagementPage = () => {
 				</div>
 
 				{/* Таблица для отображения администраторов */}
+				<div className="max-h-[500px] overflow-y-auto mb-4">
 				<table className="min-w-full bg-white">
 					<thead>
 					<tr>
-						<th className="py-2 px-4 border-b text-bg">Email</th>
-						<th className="py-2 px-4 border-b text-bg">Роль</th>
-						<th className="py-2 px-4 border-b text-bg">Город</th>
-						<th className="py-2 px-4 border-b text-bg">Действия</th>
+						<th className="py-2 px-4 border-b text-black">Email</th>
+						<th className="py-2 px-4 border-b text-black">Роль</th>
+						<th className="py-2 px-4 border-b text-black">Город</th>
+						<th className="py-2 px-4 border-b text-black">Действия</th>
 					</tr>
 					</thead>
 					<tbody>
@@ -124,10 +125,10 @@ const AdminManagementPage = () => {
 						.filter(admin => admin.role !== 'SUPER_ADMIN') // Исключаем SUPER_ADMIN
 						.map((admin) => (
 							<tr key={admin.id}>
-								<td className="py-2 px-4 border-b text-bg">{admin.email}</td>
-								<td className="py-2 px-4 border-b text-bg">{admin.role}</td>
-								<td className="py-2 px-4 border-b text-bg">{admin.cityId ? cities.find(city => city.id === admin.cityId)?.name : 'Нет города'}</td>
-								<td className="py-2 px-4 border-b text-bg">
+								<td className="py-2 px-4 border-b text-black">{admin.email}</td>
+								<td className="py-2 px-4 border-b text-black">{admin.role}</td>
+								<td className="py-2 px-4 border-b text-black">{admin.cityId ? cities.find(city => city.id === admin.cityId)?.name : 'Нет города'}</td>
+								<td className="py-2 px-4 border-b text-black">
 									<button onClick={() => handleEditAdmin(admin)} className="text-yellow-500 p-2 mr-2">Редактировать</button>
 									<button onClick={() => handleDeleteAdmin(admin.id)} className="text-red-500">Удалить</button>
 								</td>
@@ -135,26 +136,27 @@ const AdminManagementPage = () => {
 						))}
 					</tbody>
 				</table>
+				</div>
 
-				<h2 className="mt-4 text-lg font-bold text-bg">{isEditing ? 'Редактировать CITY_ADMIN' : 'Добавить CITY_ADMIN'}</h2>
+				<h2 className="mt-4 text-lg font-bold text-black">{isEditing ? 'Редактировать CITY_ADMIN' : 'Добавить CITY_ADMIN'}</h2>
 				<input
 					type="email"
 					value={email}
 					onChange={(e) => setEmail(e.target.value)}
 					placeholder="Email"
-					className="border p-2 mb-2 w-full text-bg"
+					className="border p-2 mb-2 w-full text-black"
 				/>
 				<input
 					type="password"
 					value={password}
 					onChange={(e) => setPassword(e.target.value)}
 					placeholder="Пароль"
-					className="border p-2 mb-2 w-full text-bg"
+					className="border p-2 mb-2 w-full text-black"
 				/>
 				<select
 					value={cityId || ''}
 					onChange={(e) => setCityId(parseInt(e.target.value))}
-					className="border p-2 mb-2 w-full text-bg"
+					className="border p-2 mb-2 w-full text-black"
 				>
 					<option value="">Выберите город</option>
 					{cities.map((city) => (
