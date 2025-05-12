@@ -712,7 +712,7 @@ export function Test() {
         <div className="w-[100%] h-screen bg-[#f6f6f6] p-[20px] overflow-auto pc1:p-[10px] pc2:p-[5px]  ">
             <div className="w-full border-[5px] border-white bg-[#eeeeee] rounded-[40px] flex flex-wrap xl:justify-between items-center p-[10px] xl-max:justify-center lg-max:flex-col sm-max:flex-col sm-max:gap-[20px] sm-max:items-center">
                 <div className="flex flex-wrap items-center space-x-6 sm-max:flex-col sm-max:space-x-0 sm-max:gap-[10px] sm-max:items-center ">
-                    <div className="text-[#17181d] text-center text-[52px] font-[700] pt-[8px] pb-[8px] pr-[48px] pl-[48px]  tv:pt-[6px] tv:pb-[6px] tv:pr-[30px] tv:pl-[30px]  tv1:pt-[4px] tv1:pb-[4px] tv1:pr-[25px] tv1:pl-[25px] bg-white rounded-[24px]">
+                    <div className="text-[#17181d] text-center text-[52px] font-[700] pt-[8px] pb-[8px] pr-[48px] pl-[48px]  pc2:pt-[6px] pc2:pb-[6px] pc2:pr-[30px] pc2:pl-[30px]  tv1:pt-[4px] tv1:pb-[4px] tv1:pr-[25px] tv1:pl-[25px] bg-white rounded-[24px]">
                         {(() => {
                             const now = new Date();
                                const hours = now.getHours().toString().padStart(2, '0');
@@ -720,30 +720,30 @@ export function Test() {
                             const seconds = now.getSeconds().toString().padStart(2, '0');
                             return (
                                 <div className="flex items-center justify-center">
-                                    <span className="text-[52px] pc1:text-[52px] tv:text-[42px] tv1:text-[32px]">{hours}:{minutes}</span>
-                                    <span className="text-[32px] font-normal pc1:text-[32px] tv:text-[22px] tv1:text-[16px] mt-[14px]">:{seconds}</span>
+                                    <span className="text-[52px] pc1:text-[52px] pc2:text-[42px] tv1:text-[32px]">{hours}:{minutes}</span>
+                                    <span className="text-[32px] font-normal pc1:text-[32px] pc2:text-[22px] tv1:text-[16px] mt-[14px]">:{seconds}</span>
                                 </div>
                             );
                         })()}
                     </div>
                     <div className='flex gap-[5px] sm-max:flex-col sm-max:items-center sm-max:gap-[0px]'>
-                        <div className="text-[#17181d] text-[40px] pc1:text-[40px] tv:text-[30px] tv1:text-[20px] ">
+                        <div className="text-[#17181d] text-[40px] pc1:text-[40px] pc2:text-[30px] tv1:text-[20px] ">
                             {new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })},
                         </div>
-                        <div className="text-[#17181d] text-[40px] pc1:text-[40px] tv:text-[30px] tv1:text-[20px] ">
+                        <div className="text-[#17181d] text-[40px] pc1:text-[40px] pc2:text-[30px] tv1:text-[20px] ">
                             {new Date().toLocaleDateString('ru-RU', { weekday: 'long' })}
                         </div>
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center text-center space-x-6 tv:space-x-4 tv1:space-x-2 lg-max:justify-center lg:flex-row sm-max:flex-col sm-max:gap-[15px]">
+                <div className="flex flex-wrap items-center text-center space-x-6 pc2:space-x-4 tv1:space-x-2 lg-max:justify-center lg:flex-row sm-max:flex-col sm-max:gap-[15px]">
                     <div 
-                        className="flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 py-[10px] tv:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center"
+                        className="flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 py-[10px] pc2:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center"
                     >
-                        <div className="text-[#a0a2b1] text-[12px] font-normal tv:leading-[27.60px] tv1:leading-[17.60px] tv1:text-[10px]">
+                        <div className="text-[#a0a2b1] text-[12px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px] tv1:text-[10px]">
                             Погода
                         </div>
-                        <div className="text-[#17181d] tv:text-[18px] tv1:text-[14px] font-normal tv:leading-[27.60px] tv1:leading-[17.60px] flex items-center justify-center">
+                        <div className="text-[#17181d] pc2:text-[18px] tv1:text-[14px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px] flex items-center justify-center">
                             {isLoadingWeather ? (
                                 <div className="flex items-center ">
                                     <span className="animate-spin">⟳</span>
@@ -751,7 +751,7 @@ export function Test() {
                                 </div>
                             ) : weatherData ? (
                                 <div className="flex items-center">
-                                    <span className="mr-2 flex items-center tv:scale-125 tv1:scale-100">
+                                    <span className="mr-2 flex items-center pc2:scale-125 tv1:scale-100">
                                         {mapWeatherCodeToIcon(weatherData.icon)}
                                     </span>
                                     <span className="font-normal">{weatherData.temperature}°C</span>
@@ -766,20 +766,20 @@ export function Test() {
                             )}
                         </div>
                     </div>
-                    <div className="flex flex-col bg-white rounded-[25px] tv:px-1 tv1:px-0  px-3 py-[10px] tv:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center">
-                        <div className="text-[#a0a2b1] tv:text-[12px] font-normal tv:leading-[27.60px] tv1:leading-[17.60px] tv1:text-[10px] ">Дата по хиджре</div>
-                        <div className="text-[#17181d] pc1:text-[24px] tv:text-[18px] tv1:text-[14px] font-normal  tv:leading-[27.60px] tv1:leading-[17.60px]">{getHijriDate()}</div>
+                    <div className="flex flex-col bg-white rounded-[25px] pc2:px-1 tv1:px-0  px-3 py-[10px] pc2:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center">
+                        <div className="text-[#a0a2b1] pc2:text-[12px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px] tv1:text-[10px] ">Дата по хиджре</div>
+                        <div className="text-[#17181d] pc1:text-[24px] pc2:text-[18px] tv1:text-[14px] font-normal  pc2:leading-[27.60px] tv1:leading-[17.60px]">{getHijriDate()}</div>
                     </div>
                     <div className="flex items-left gap-[10px] items-center lg-max:w-full justify-center ">
-                        <div className='flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 pt-[10px] tv:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center'>
-                            <div className="cursor-pointer relative z-10 text-[#17181d] pc1:text-[24px] tv:text-[18px] tv1:text-[14px] font-normal tv:leading-[27.60px] tv1:leading-[17.60px]"
+                        <div className='flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 pt-[10px] pc2:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center'>
+                            <div className="cursor-pointer relative z-10 text-[#17181d] pc1:text-[24px] pc2:text-[18px] tv1:text-[14px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px]"
                                 onClick={() => setCityDropdownOpen(prev => !prev)}>
-                                <div className="text-[#a0a2b1] tv:text-[12px] tv1:text-[10px]  font-normal">Город</div>
+                                <div className="text-[#a0a2b1] pc2:text-[12px] tv1:text-[10px]  font-normal">Город</div>
                                 {selectedCity}
                                 {cityDropdownOpen && (
                                     <div className="absolute bg-white border rounded-lg shadow-lg w-[250px] max-h-[320px] overflow-x-hidden overflow-y-auto z-1000">
                                         {cities.map((city) => (
-                                            <div key={city.id} className="p-2 hover:bg-gray-200 cursor-pointer pc1:text-[24px] tv:text-[18px] tv1:text-[14px]"
+                                            <div key={city.id} className="p-2 hover:bg-gray-200 cursor-pointer pc1:text-[24px] pc2:text-[18px] tv1:text-[14px]"
                                                 onClick={(e) => {
                                                     e.stopPropagation(); // Предотвращаем всплытие события
                                                     setCityDropdownOpen(false);
@@ -798,11 +798,11 @@ export function Test() {
                             </div>
                         </div>
 
-                        <div className="flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 pt-[10px] tv:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center">
+                        <div className="flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 pt-[10px] pc2:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center">
                             <div className="cursor-pointer relative z-10"
                                 onClick={() => setMosqueDropdownOpen(prev => !prev)}>
-                                <div className='text-[#a0a2b1] tv:text-[12px] tv1:text-[10px] tv:leading-[27.60px] tv1:leading-[17.60px] font-normal'>Мечеть</div>
-                                <div className="text-[#17181d] pc1:text-[24px] tv:text-[18px] tv1:text-[14px] font-normal tv:leading-[27.60px] tv1:leading-[17.60px]">{selectedMosque}</div>
+                                <div className='text-[#a0a2b1] pc2:text-[12px] tv1:text-[10px] pc2:leading-[27.60px] tv1:leading-[17.60px] font-normal'>Мечеть</div>
+                                <div className="text-[#17181d] pc1:text-[24px] pc2:text-[18px] tv1:text-[14px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px]">{selectedMosque}</div>
                                 {mosqueDropdownOpen && (
                                     <div className="absolute bg-white border rounded-lg shadow-lg w-[250px] max-h-96 overflow-y-auto z-1000">
                                         {mosques.filter(mosque => mosque.cityId === currentCityId).map((mosque) => (
@@ -845,17 +845,17 @@ export function Test() {
                 })}
             </div>
 
-            <div className="w-full gap-[24px] tv:h-[357px]  rounded-[50px] flex sm-max:flex-col justify-between items-center px-3 mt-[40px] sm-max:h-auto">
+            <div className="w-full gap-[24px] pc2:h-[357px]  rounded-[50px] flex sm-max:flex-col justify-between items-center px-3 tv1:mt-[30px] pc2:mt-[40px] sm-max:h-auto">
                 {secondaryQrCode && (
                 <div className="text-white text-[20px] flex justify-center font-extrabold sm-max:w-full">
-                        <div className="tv:w-[287px] tv:h-[357px] tv1:w-[247px] tv1:h-[260px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto sm-max:items-center">
+                        <div className="pc2:w-[287px] pc2:h-[357px] tv1:w-[247px] tv1:h-[260px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto sm-max:items-center">
                         <div className='flex gap-[11px] items-center justify-between sm-max:flex-col sm-max:items-start'>
-                                <div className="text-white text-left tv:text-[32px] tv1:text-[20px] font-bold">Помощь "Проект"</div>
+                                <div className="text-white text-left pc2:text-[32px] tv1:text-[20px] font-bold">Помощь "Проект"</div>
                                 <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[30px] sm:w-[35px] sm:h-[35px] md:w-[40px] md:h-[40px]" />
                             </div>
                             <div className="flex flex-col items-center">
                                 <img 
-                                    className="tv:w-[190px] tv:h-[190px] tv1:w-[150px] tv1:h-[150px] rounded-[20px] sm-max:mx-auto" 
+                                    className="pc2:w-[190px] pc2:h-[190px] tv1:w-[150px] tv1:h-[150px] rounded-[20px] sm-max:mx-auto" 
                                     src={`${API_BASE_URL}${secondaryQrCode}`} 
                                     alt="Дополнительный QR код для проекта" 
                                 />
@@ -864,16 +864,16 @@ export function Test() {
                     </div>
                 )}
 
-                <div className={`${!secondaryQrCode ? 'flex-grow' : 'max-w-[1200px]'} w-full max-h-[387px] h-full bg-[rgba(217,217,217,1)] rounded-[32px] flex items-center justify-center`}>
+                <div className={`${!secondaryQrCode ? 'flex-grow' : 'max-w-[1200px]'} w-full max-h-[387px] pc2:h-full tv1:h-[260px] bg-[rgba(217,217,217,1)] rounded-[32px] flex items-center justify-center`}>
                     <div className="w-full h-full flex flex-col items-center justify-center">
                         <div className="bg-white rounded-[24px] p-6 shadow-md border-[2px] border-[#5ec262] mx-auto w-[95%] h-[90%] flex flex-col items-center justify-center">
-                            <div className="text-[50px] pc:text-[60px] pc1:text-[50px] tv:text-[40px] font-bold text-[#5ec262] mb-4 text-center">
+                            <div className="text-[50px] pc:text-[60px] pc1:text-[50px] pc2:text-[40px] font-bold text-[#5ec262] mb-4 text-center">
                                 {currentName.arabic}
                             </div>
-                            <div className="text-[34px] pc:text-[40px] pc1:text-[34px] tv:text-[28px] font-medium text-center text-[#17181d]">
+                            <div className="text-[34px] pc:text-[40px] pc1:text-[34px] pc2:text-[28px] font-medium text-center text-[#17181d]">
                                 {currentName.pronunciation}
                             </div>
-                            <div className="text-[28px] pc:text-[32px] pc1:text-[28px] tv:text-[24px] text-gray-600 text-center mt-2">
+                            <div className="text-[28px] pc:text-[32px] pc1:text-[28px] pc2:text-[24px] text-gray-600 text-center mt-2">
                                 {currentName.explanation}
                             </div>
                         </div>
@@ -882,14 +882,14 @@ export function Test() {
 
                 {qrCode && (
                 <div className="text-white text-[20px] flex justify-center font-extrabold sm-max:w-full sm-max:mb-[200px]">
-                        <div className="tv:w-[287px] tv:h-[357px]  tv1:w-[247px] tv1:h-[260px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto">
+                        <div className="pc2:w-[287px] pc2:h-[357px]  tv1:w-[247px] tv1:h-[260px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto">
                         <div className='flex gap-[11px] items-center justify-between sm-max:flex-col sm-max:items-start'>
-                                <div className="text-white text-left tv:text-[32px] tv1:text-[20px] font-bold">Помощь мечети</div>
+                                <div className="text-white text-left pc2:text-[32px] tv1:text-[20px] font-bold">Помощь мечети</div>
                                 <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[30px] sm:w-[35px] sm:h-[35px] md:w-[40px] md:h-[40px]" />
                             </div>
                             <div className="flex flex-col items-center">
                                 <img 
-                                    className="tv:w-[190px] tv:h-[190px] tv1:w-[150px] tv1:h-[150px] rounded-[20px] sm-max:mx-auto" 
+                                    className="pc2:w-[190px] pc2:h-[190px] tv1:w-[150px] tv1:h-[150px] rounded-[20px] sm-max:mx-auto" 
                                     src={`${API_BASE_URL}${qrCode}`} 
                                     alt="Основной QR код для мечети" 
                                 />
