@@ -89,12 +89,13 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
     return (
         <div
             className={`relative 
+                tv1:w-[140px] tv1:h-[230px] 
                 tv:w-[150px] tv:h-[280px]
                 pc1:w-[190px] pc1:h-[272x]
                 pc:w-[229px] pc:h-[349px]
                 rounded-[20px] p-[20px] flex flex-col justify-start items-start transition-all duration-300 ease-in-out sm-max:mx-auto
-                ${highlight 
-                    ? 'bg-[#5ec262] transform text-white !h-[429px] !w-[353px]  pc:!w-[353px] pc:!h-[429px] pc1:!w-[283px]  pc1:!h-[352px] tv:!h-[342px] tv:!w-[243px]  pc: pt-[20px] pr-[20px] pl-[20px] pb-[20px] sm-max:!h-[270px]  flex justify-between'
+                    ${highlight
+                    ? 'bg-[#5ec262] transform text-white !h-[429px] !w-[353px]  pc:!w-[353px] pc:!h-[429px] pc1:!w-[283px]  pc1:!h-[352px] tv:!h-[342px] tv:!w-[243px]  tv1:!h-[302px] tv1:!w-[203px]  pc: pt-[20px] pr-[20px] pl-[20px] pb-[20px] sm-max:!h-[270px]  flex justify-between'
                     : `bg-white justify-between ${className}`}
             `}
         >
@@ -103,7 +104,8 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
                     max-w-[70px] max-h-[70px]
                     pc1:max-w-[60px] pc1:max-h-[60px]
                     tv:max-w-[50px] tv:max-h-[50px]
-                    ${highlight ? '!max-w-[120px] !max-h-[120px] pc1:!max-w-[100px] pc1:!max-h-[100px] tv:!max-w-[80px] tv:!max-h-[80px]' : 'text-[#17181d]'} flex bg-transparent`}>
+                    tv1:max-w-[40px] tv1:max-h-[40px]
+                    ${highlight ? '!max-w-[120px] !max-h-[120px] pc1:!max-w-[100px] pc1:!max-h-[100px] tv:!max-w-[80px] tv:!max-h-[80px] tv1:!max-w-[60px] tv1:!max-h-[60px]' : 'text-[#17181d]'} flex bg-transparent`}>
                     <Image
                         className={highlight ? 'mt-0' : 'max-w-full max-h-full object-contain'} 
                         src={highlight ? pic2 : pic}
@@ -112,10 +114,10 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
                 </div>
 
                 {highlight && (
-                    <div className="absolute pc:max-w-[175px] pc1:max-w-[155px] tv:max-w-[125px] h-[112px] right-[4px] top-[4px] flex flex-col items-end">
+                    <div className="absolute pc:max-w-[175px] pc1:max-w-[155px] tv:max-w-[125px] tv1:max-w-[105px] h-[112px] right-[4px] top-[4px] flex flex-col items-end">
                         <div className="w-[100%] text-right bg-white rounded-bl-[40px] rounded-[8px] rounded-tr-[19px] py-[4px] px-[8px] flex flex-col">
-                            <div className="text-[#17181d] pc:text-[22px] tv:text-[16px]  font-normal">Через</div>
-                            <div className="text-[#17181d] text-[30px] pc:text-[30px] pc1:text-[25px] tv:text-[20px] font-bold">
+                            <div className="text-[#17181d] pc:text-[22px] tv:text-[16px] tv1:text-[12px]  font-normal">Через</div>
+                            <div className="text-[#17181d] text-[30px] pc:text-[30px] pc1:text-[25px] tv:text-[20px] tv1:text-[18px] font-bold">
                                 {formatTime(remainingTime)}
                             </div>
                         </div>
@@ -124,11 +126,11 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
             </div>
 
             <div className="flex flex-col items-start mt-[15%] w-full">
-                <div className={`text-center text-[60px] pc:text-[60px] pc1:text-[50px] tv:text-[40px] leading-none font-[700] ${highlight ? 'text-white !text-[60px] pc:!text-[60px] pc1:!text-[55px] tv:!text-[50px]' : 'text-[#17181d]'}`}>
+                <div className={`text-center text-[60px] pc:text-[60px] pc1:text-[50px] tv:text-[40px] tv1:text-[35px] leading-none font-[700] ${highlight ? 'text-white !text-[60px] pc:!text-[60px] pc1:!text-[55px] tv:!text-[50px] tv1:!text-[45px]' : 'text-[#17181d]'}`}>
                     {time}
                 </div>
 
-                <div className={`text-center text-[40px] tv:text-[25px] font-[400] ${highlight ? 'text-white !text-[48px] pc:!text-[48px] tv:!text-[35px]' : 'text-[#17181d]'}`}>
+                <div className={`text-center text-[40px] tv:text-[25px] tv1:text-[20px] font-[400] ${highlight ? 'text-white !text-[48px] pc:!text-[48px] tv:!text-[35px] tv1:!text-[30px]' : 'text-[#17181d]'}`}>
                     {label}
                 </div>
 
@@ -141,7 +143,7 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
                                     width: `${progress}%`,
                                     animation: 'pulseAndGrow 1s ease-in-out infinite alternate',
                                 }}
-                            ></div>
+                                ></div>
                         </div>
                         <style jsx>{`
                             @keyframes pulseAndGrow {
@@ -461,7 +463,7 @@ export function Test() {
                 // Устанавливаем currentCityId только если он не был установлен ранее
                 // или если изменился выбранный город
                 if (!currentCityId || selectedCity) {
-                    const selectedCityData = response.data.find(city => city.name === selectedCity);
+                const selectedCityData = response.data.find(city => city.name === selectedCity);
                     if (selectedCityData) {
                         console.log(`Установка ID города из useEffect: ${selectedCityData.id} для города ${selectedCity}`);
                         setCurrentCityId(selectedCityData.id);
@@ -568,7 +570,7 @@ export function Test() {
             : ((currentPrayerTime + 24 * 60) - prevPrayerTime) * 60 * 1000;
 
         console.log(`Интервал между намазами ${previousPrayerName} и ${closestPrayer}: ${formatTime(timeBetweenPrayers)}`);
-        
+
         setNearestPrayer(closestPrayer);
         setRemainingTime(minDifference);
         setTotalDuration(timeBetweenPrayers);
@@ -710,38 +712,38 @@ export function Test() {
         <div className="w-[100%] h-screen bg-[#f6f6f6] p-[20px] overflow-auto pc1:p-[10px] pc2:p-[5px]  ">
             <div className="w-full border-[5px] border-white bg-[#eeeeee] rounded-[40px] flex flex-wrap xl:justify-between items-center p-[10px] xl-max:justify-center lg-max:flex-col sm-max:flex-col sm-max:gap-[20px] sm-max:items-center">
                 <div className="flex flex-wrap items-center space-x-6 sm-max:flex-col sm-max:space-x-0 sm-max:gap-[10px] sm-max:items-center ">
-                    <div className="text-[#17181d] text-[52px] font-[700] pt-[8px] pb-[8px] pr-[48px] pl-[48px]  tv:pt-[6px] tv:pb-[6px] tv:pr-[30px] tv:pl-[30px] bg-white rounded-[24px]">
+                    <div className="text-[#17181d] text-center text-[52px] font-[700] pt-[8px] pb-[8px] pr-[48px] pl-[48px]  tv:pt-[6px] tv:pb-[6px] tv:pr-[30px] tv:pl-[30px]  tv1:pt-[4px] tv1:pb-[4px] tv1:pr-[25px] tv1:pl-[25px] bg-white rounded-[24px]">
                         {(() => {
                             const now = new Date();
                                const hours = now.getHours().toString().padStart(2, '0');
                             const minutes = now.getMinutes().toString().padStart(2, '0');
                             const seconds = now.getSeconds().toString().padStart(2, '0');
                             return (
-                                <span>
-                                    <span className="text-[52px] pc1:text-[52px] tv:text-[42px] ">{hours}:{minutes}</span>
-                                    <span className="text-[32px] font-normal pc1:text-[32px] tv :text-[22px] ">:{seconds}</span>
-                                </span>
+                                <div className="flex items-center justify-center">
+                                    <span className="text-[52px] pc1:text-[52px] tv:text-[42px] tv1:text-[32px]">{hours}:{minutes}</span>
+                                    <span className="text-[32px] font-normal pc1:text-[32px] tv:text-[22px] tv1:text-[16px] mt-[14px]">:{seconds}</span>
+                                </div>
                             );
                         })()}
                     </div>
                     <div className='flex gap-[5px] sm-max:flex-col sm-max:items-center sm-max:gap-[0px]'>
-                        <div className="text-[#17181d] text-[40px] pc1:text-[40px] tv:text-[30px] font-normal ">
+                        <div className="text-[#17181d] text-[40px] pc1:text-[40px] tv:text-[30px] tv1:text-[20px] ">
                             {new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })},
                         </div>
-                        <div className="text-[#17181d] text-[40px] pc1:text-[40px] tv:text-[30px] ">
+                        <div className="text-[#17181d] text-[40px] pc1:text-[40px] tv:text-[30px] tv1:text-[20px] ">
                             {new Date().toLocaleDateString('ru-RU', { weekday: 'long' })}
                         </div>
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center text-center space-x-6 tv:space-x-4 lg-max:justify-center lg:flex-row sm-max:flex-col sm-max:gap-[15px]">
+                <div className="flex flex-wrap items-center text-center space-x-6 tv:space-x-4 tv1:space-x-2 lg-max:justify-center lg:flex-row sm-max:flex-col sm-max:gap-[15px]">
                     <div 
-                        className="flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 py-[10px] h-[70px] sm:h-[75px] md:h-[80px] lg:h-[86px] sm-max:px-3 sm-max:w-full sm-max:items-center"
+                        className="flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 py-[10px] tv:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center"
                     >
-                        <div className="text-[#a0a2b1] text-[12px] font-normal leading-[27.60px]">
+                        <div className="text-[#a0a2b1] text-[12px] font-normal tv:leading-[27.60px] tv1:leading-[17.60px] tv1:text-[10px]">
                             Погода
                         </div>
-                        <div className="text-[#17181d] text-[18px] font-normal leading-[27.60px] flex items-center justify-center">
+                        <div className="text-[#17181d] tv:text-[18px] tv1:text-[14px] font-normal tv:leading-[27.60px] tv1:leading-[17.60px] flex items-center justify-center">
                             {isLoadingWeather ? (
                                 <div className="flex items-center ">
                                     <span className="animate-spin">⟳</span>
@@ -749,7 +751,7 @@ export function Test() {
                                 </div>
                             ) : weatherData ? (
                                 <div className="flex items-center">
-                                    <span className="mr-2 flex items-center scale-125">
+                                    <span className="mr-2 flex items-center tv:scale-125 tv1:scale-100">
                                         {mapWeatherCodeToIcon(weatherData.icon)}
                                     </span>
                                     <span className="font-normal">{weatherData.temperature}°C</span>
@@ -764,20 +766,20 @@ export function Test() {
                             )}
                         </div>
                     </div>
-                    <div className="flex flex-col bg-white rounded-[25px] tv:px-1  px-3 py-[10px] h-[70px] h-[86px] sm-max:px-3 sm-max:w-full sm-max:items-center">
-                        <div className="text-[#a0a2b1] text-[12px] font-normal leading-[27.60px]">Дата по хиджре</div>
-                        <div className="text-[#17181d] pc1:text-[24px] tv:text-[18px] font-normal leading-[27.60px]">{getHijriDate()}</div>
+                    <div className="flex flex-col bg-white rounded-[25px] tv:px-1 tv1:px-0  px-3 py-[10px] tv:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center">
+                        <div className="text-[#a0a2b1] tv:text-[12px] font-normal tv:leading-[27.60px] tv1:leading-[17.60px] tv1:text-[10px] ">Дата по хиджре</div>
+                        <div className="text-[#17181d] pc1:text-[24px] tv:text-[18px] tv1:text-[14px] font-normal  tv:leading-[27.60px] tv1:leading-[17.60px]">{getHijriDate()}</div>
                     </div>
-                    <div className="flex items-left gap-[24px] lg-max:w-full justify-center sm-max:flex-col sm-max:items-center sm-max:gap-[15px] sm-max:!ml-0">
-                        <div className='flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 pt-[10px] h-[70px] sm:h-[75px] md:h-[80px] lg:h-[86px] sm-max:px-3 sm-max:w-full sm-max:items-center'>
-                            <div className="cursor-pointer relative z-10 text-[#17181d] text-[20px] sm:text-[24px] md:text-[28px] lg:text-[33px] sm-max:text-[25px] font-normal leading-[27.60px]"
+                    <div className="flex items-left gap-[10px] items-center lg-max:w-full justify-center ">
+                        <div className='flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 pt-[10px] tv:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center'>
+                            <div className="cursor-pointer relative z-10 text-[#17181d] pc1:text-[24px] tv:text-[18px] tv1:text-[14px] font-normal tv:leading-[27.60px] tv1:leading-[17.60px]"
                                 onClick={() => setCityDropdownOpen(prev => !prev)}>
-                                <div className="text-[#a0a2b1] text-[12px] sm:text-[14px] md:text-[16px] font-normal">Город</div>
+                                <div className="text-[#a0a2b1] tv:text-[12px] tv1:text-[10px]  font-normal">Город</div>
                                 {selectedCity}
                                 {cityDropdownOpen && (
                                     <div className="absolute bg-white border rounded-lg shadow-lg w-[250px] max-h-[320px] overflow-x-hidden overflow-y-auto z-1000">
                                         {cities.map((city) => (
-                                            <div key={city.id} className="p-2 hover:bg-gray-200 cursor-pointer pc1:text-[24px] tv:text-[18px]"
+                                            <div key={city.id} className="p-2 hover:bg-gray-200 cursor-pointer pc1:text-[24px] tv:text-[18px] tv1:text-[14px]"
                                                 onClick={(e) => {
                                                     e.stopPropagation(); // Предотвращаем всплытие события
                                                     setCityDropdownOpen(false);
@@ -796,11 +798,11 @@ export function Test() {
                             </div>
                         </div>
 
-                        <div className="flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 pt-[10px] h-[70px] sm:h-[75px] md:h-[80px] lg:h-[86px] sm-max:px-3 sm-max:w-full sm-max:items-center">
+                        <div className="flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 pt-[10px] tv:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center">
                             <div className="cursor-pointer relative z-10"
                                 onClick={() => setMosqueDropdownOpen(prev => !prev)}>
-                                <div className='text-[#a0a2b1] text-[12px] sm:text-[14px] md:text-[16px] font-normal'>Мечеть</div>
-                                <div className="text-[#17181d] text-[18px] sm:text-[20px] md:text-[22px] lg:text-[24px] leading-[35.60px] sm-max:text-[25px]">{selectedMosque}</div>
+                                <div className='text-[#a0a2b1] tv:text-[12px] tv1:text-[10px] tv:leading-[27.60px] tv1:leading-[17.60px] font-normal'>Мечеть</div>
+                                <div className="text-[#17181d] pc1:text-[24px] tv:text-[18px] tv1:text-[14px] font-normal tv:leading-[27.60px] tv1:leading-[17.60px]">{selectedMosque}</div>
                                 {mosqueDropdownOpen && (
                                     <div className="absolute bg-white border rounded-lg shadow-lg w-[250px] max-h-96 overflow-y-auto z-1000">
                                         {mosques.filter(mosque => mosque.cityId === currentCityId).map((mosque) => (
@@ -821,39 +823,39 @@ export function Test() {
                 </div>
             </div>
 
-            <div className="flex items-center h-[397px] pc:h-[397px] pc1:h-[320px] tv:h-[300px] gap justify-between w-full border-[5px] border-white rounded-[48px] pt-[20px] pb-[20px] pl-[15px] pr-[15px] sm:pl-[20px] sm:pr-[20px] md:pl-[25px] md:pr-[25px] mt-[40px] sm-max:flex-wrap sm-max:justify-center sm-max:gap-[15px]">
+            <div className="flex items-center h-[397px] pc:h-[397px] pc1:h-[320px] tv:h-[300px] tv1:h-[250px] gap justify-between w-full border-[5px] border-white rounded-[48px] pt-[20px] pb-[20px] pl-[15px] pr-[15px] sm:pl-[20px] sm:pr-[20px] md:pl-[25px] md:pr-[25px] mt-[40px] sm-max:flex-wrap sm-max:justify-center sm-max:gap-[15px]">
                 {prayers.map((prayer, index) => {
                     const highlightedIndex = getHighlightedPrayerIndex();
                     const isNextToHighlighted = (highlightedIndex !== -1) && (index === highlightedIndex - 1 || index === highlightedIndex + 1);
                     
                     return (
                         <div key={index} className="mx-[3px] sm:mx-1 md:mx-2">
-                            <PrayerTime
-                                time={prayer.time}
-                                label={prayer.label}
-                                highlight={prayer.highlight}
-                                pic={prayer.pic}
-                                pic2={prayer.pic2}
-                                remainingTime={remainingTime}
-                                progress={calculateProgress(remainingTime, totalDuration)}
+                        <PrayerTime
+                            time={prayer.time}
+                            label={prayer.label}
+                            highlight={prayer.highlight}
+                            pic={prayer.pic}
+                            pic2={prayer.pic2}
+                            remainingTime={remainingTime}
+                            progress={calculateProgress(remainingTime, totalDuration)}
                                 className={isNextToHighlighted ? 'w-[211px] pc1:w-[180px] pc2:w-[150px]' : ''}
-                            />
-                        </div>
+                        />
+                    </div>
                     );
                 })}
             </div>
 
-            <div className="w-full gap-[24px] h-[387px] sm:h-[300px] md:h-[330px] lg:h-[350px] xl:h-[387px] rounded-[50px] flex sm-max:flex-col justify-between items-center px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 py-4 relative mt-6 sm-max:gap-[20px] sm-max:h-auto">
+            <div className="w-full gap-[24px] tv:h-[357px]  rounded-[50px] flex sm-max:flex-col justify-between items-center px-3 mt-[40px] sm-max:h-auto">
                 {secondaryQrCode && (
-                    <div className="text-white text-[20px] flex justify-center font-extrabold sm-max:w-full">
-                        <div className="w-[200px] sm:w-[220px] md:w-[240px] lg:w-[264px] xl:w-[287px] h-[280px] sm:h-[300px] md:h-[320px] lg:h-[340px] xl:h-[357px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto sm-max:items-center">
-                            <div className='flex gap-[11px] items-center justify-between sm-max:flex-col sm-max:items-start'>
-                                <div className="text-white text-left text-[22px] sm:text-[24px] md:text-[28px] lg:text-[32px] font-bold">Помощь "Проект"</div>
+                <div className="text-white text-[20px] flex justify-center font-extrabold sm-max:w-full">
+                        <div className="tv:w-[287px] tv:h-[357px] tv1:w-[247px] tv1:h-[260px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto sm-max:items-center">
+                        <div className='flex gap-[11px] items-center justify-between sm-max:flex-col sm-max:items-start'>
+                                <div className="text-white text-left tv:text-[32px] tv1:text-[20px] font-bold">Помощь "Проект"</div>
                                 <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[30px] sm:w-[35px] sm:h-[35px] md:w-[40px] md:h-[40px]" />
                             </div>
                             <div className="flex flex-col items-center">
                                 <img 
-                                    className="w-[140px] sm:w-[150px] md:w-[170px] lg:w-[180px] xl:w-[190px] h-[140px] sm:h-[150px] md:h-[170px] lg:h-[180px] xl:h-[190px] rounded-[20px] sm-max:mx-auto" 
+                                    className="tv:w-[190px] tv:h-[190px] tv1:w-[150px] tv1:h-[150px] rounded-[20px] sm-max:mx-auto" 
                                     src={`${API_BASE_URL}${secondaryQrCode}`} 
                                     alt="Дополнительный QR код для проекта" 
                                 />
@@ -862,7 +864,7 @@ export function Test() {
                     </div>
                 )}
 
-                <div className={`${!secondaryQrCode ? 'flex-grow' : 'max-w-[1200px]'} w-full max-h-[387px] h-full bg-[rgba(217,217,217,1)] rounded-[32px] sm-max:h-[200px] flex items-center justify-center`}>
+                <div className={`${!secondaryQrCode ? 'flex-grow' : 'max-w-[1200px]'} w-full max-h-[387px] h-full bg-[rgba(217,217,217,1)] rounded-[32px] flex items-center justify-center`}>
                     <div className="w-full h-full flex flex-col items-center justify-center">
                         <div className="bg-white rounded-[24px] p-6 shadow-md border-[2px] border-[#5ec262] mx-auto w-[95%] h-[90%] flex flex-col items-center justify-center">
                             <div className="text-[50px] pc:text-[60px] pc1:text-[50px] tv:text-[40px] font-bold text-[#5ec262] mb-4 text-center">
@@ -879,15 +881,15 @@ export function Test() {
                 </div>
 
                 {qrCode && (
-                    <div className="text-white text-[20px] flex justify-center font-extrabold sm-max:w-full sm-max:mb-[200px]">
-                        <div className="w-[200px] sm:w-[220px] md:w-[240px] lg:w-[264px] xl:w-[287px] h-[280px] sm:h-[300px] md:h-[320px] lg:h-[340px] xl:h-[357px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto">
-                            <div className='flex gap-[11px] items-center justify-between sm-max:flex-col sm-max:items-start'>
-                                <div className="text-white text-left text-[22px] sm:text-[24px] md:text-[28px] lg:text-[32px] font-bold">Помощь мечети</div>
+                <div className="text-white text-[20px] flex justify-center font-extrabold sm-max:w-full sm-max:mb-[200px]">
+                        <div className="tv:w-[287px] tv:h-[357px]  tv1:w-[247px] tv1:h-[260px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto">
+                        <div className='flex gap-[11px] items-center justify-between sm-max:flex-col sm-max:items-start'>
+                                <div className="text-white text-left tv:text-[32px] tv1:text-[20px] font-bold">Помощь мечети</div>
                                 <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[30px] sm:w-[35px] sm:h-[35px] md:w-[40px] md:h-[40px]" />
                             </div>
                             <div className="flex flex-col items-center">
                                 <img 
-                                    className="w-[140px] sm:w-[150px] md:w-[170px] lg:w-[180px] xl:w-[190px] h-[140px] sm:h-[150px] md:h-[170px] lg:h-[180px] xl:h-[190px] rounded-[20px] sm-max:mx-auto" 
+                                    className="tv:w-[190px] tv:h-[190px] tv1:w-[150px] tv1:h-[150px] rounded-[20px] sm-max:mx-auto" 
                                     src={`${API_BASE_URL}${qrCode}`} 
                                     alt="Основной QR код для мечети" 
                                 />

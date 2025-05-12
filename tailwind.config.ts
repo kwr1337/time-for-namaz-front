@@ -462,6 +462,7 @@ const config: Config = {
 				'4xl-max': { max: '1850px' },
 				'5xl': '2250px',
 				'5xl-max': { max: '2250px' },
+				'tv1': '1000px',
 				'tv': '1366px',
 				'pc2': '1440px',
 				'pc1': '1599px',
