@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { DASHBOARD_PAGES } from '@/config/pages-url.config'
 import { API_BASE_URL } from '@/config/config'
+import { toast } from 'react-hot-toast';
 
 const LoginPage = () => {
 	const [email, setEmail] = useState('');
@@ -12,12 +13,42 @@ const LoginPage = () => {
 
 	const handleLogin = async () => {
 		try {
-			const response = await axios.post(`${API_BASE_URL}/api/admin/login`, { email, password });
-			localStorage.setItem('token', response.data.access_token);
-			axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`;
-			window.location.href = DASHBOARD_PAGES.DASHBOARD;
-		} catch (err) {
-			setError('Неверный логин или пароль');
+			if (!email || !password) {
+				toast.error('Пожалуйста, заполните все поля');
+				return;
+			}
+
+			const response = await axios.post(`${API_BASE_URL}/api/admin/login`, { 
+				email, 
+				password 
+			});
+
+			if (response.data && response.data.access_token) {
+				localStorage.setItem('token', response.data.access_token);
+				axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`;
+				toast.success('Успешный вход в систему');
+				window.location.href = DASHBOARD_PAGES.DASHBOARD;
+			} else {
+				toast.error('Ошибка авторизации: неверный ответ сервера');
+			}
+		} catch (err: any) {
+			if (err.response) {
+				// Обработка ответа с ошибкой от сервера
+				if (err.response.status === 400) {
+					toast.error('Неверный email или пароль');
+				} else if (err.response.status === 401) {
+					toast.error('Нет доступа. Проверьте свои учетные данные');
+				} else {
+					toast.error(`Ошибка сервера: ${err.response.data.message || 'Неизвестная ошибка'}`);
+				}
+			} else if (err.request) {
+				// Ошибка сети - запрос был сделан, но ответ не получен
+				toast.error('Ошибка сети. Проверьте подключение к интернету');
+			} else {
+				// Что-то случилось при настройке запроса
+				toast.error('Ошибка при попытке входа');
+			}
+			setError('Ошибка при входе в систему');
 		}
 	};
 

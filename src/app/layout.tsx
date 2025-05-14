@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { Noto_Sans } from 'next/font/google'
-import { Toaster } from 'sonner'
+import { Toaster } from 'react-hot-toast'
 
 import { SITE_NAME } from '@/constants/seo.constants'
 
@@ -34,11 +34,7 @@ export default function RootLayout({
 				<Providers>
 					{children}
 
-					<Toaster
-						theme='dark'
-						position='bottom-right'
-						duration={1500}
-					/>
+					<Toaster position="top-right" />
 				</Providers>
 			</body>
 		</html>

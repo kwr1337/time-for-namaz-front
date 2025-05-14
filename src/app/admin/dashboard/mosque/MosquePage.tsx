@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { DASHBOARD_PAGES } from '@/config/pages-url.config';
 import { API_BASE_URL } from '@/config/config'
+import { API } from '@/constants/api.constants';
 
 // Интерфейс для мечети
 interface Mosque {
@@ -92,7 +93,7 @@ const MosquePage = () => {
 			const token = localStorage.getItem('token');
 			
 			// Проверяем, есть ли связанные QR-коды с этой мечетью
-			const qrResponse = await axios.get(`${API_BASE_URL}/api/qrcodes/by-mosque/${id}`, {
+			const qrResponse = await axios.get(`${API_BASE_URL}${API.GET_MOSQUE_QRCODES(id)}`, {
 				headers: {
 					Authorization: `Bearer ${token}`,
 				},

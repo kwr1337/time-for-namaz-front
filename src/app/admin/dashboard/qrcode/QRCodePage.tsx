@@ -10,6 +10,7 @@ interface QRCode {
 	imageUrl: string;
 	mosqueId: number;
 	isPrimary?: boolean; // Добавляем флаг, является ли QR-код основным
+	projectName?: string | null; // Добавляем название проекта для дополнительного QR-кода
 }
 
 // Интерфейс для мечети (если еще не создан)
@@ -25,6 +26,7 @@ const QRCodePage = () => {
 	const [image, setImage] = useState<File | null>(null);
 	const [mosqueId, setMosqueId] = useState<string>('');
 	const [isPrimary, setIsPrimary] = useState<boolean>(true); // По умолчанию основной QR-код
+	const [projectName, setProjectName] = useState<string>(''); // Название проекта для дополнительного QR-кода
 	const [mosques, setMosques] = useState<Mosque[]>([]);
 	const [isEditing, setIsEditing] = useState(false);
 	const [editingQRCodeId, setEditingQRCodeId] = useState<number | null>(null);
@@ -99,7 +101,7 @@ const QRCodePage = () => {
 			setError(null);
 			const token = localStorage.getItem('token');
 			
-			const response = await axios.get<QRCode[]>(`${API_BASE_URL}/api/qrcodes`, {
+			const response = await axios.get<QRCode[]>(`${API_BASE_URL}/api/qrcode`, {
 				headers: {
 					Authorization: `Bearer ${token}`,
 				},
@@ -136,9 +138,14 @@ const QRCodePage = () => {
 			}
 			formData.append('mosqueId', mosqueId);
 			formData.append('isPrimary', isPrimary.toString());
+			
+			// Добавляем название проекта для дополнительного QR-кода
+			if (!isPrimary && projectName) {
+				formData.append('projectName', projectName);
+			}
 
 			// Отправляем запрос на создание QR-кода
-			const response = await axios.post(`${API_BASE_URL}/api/qrcodes/create`, formData, {
+			const response = await axios.post(`${API_BASE_URL}/api/qrcode`, formData, {
 				headers: {
 					'Content-Type': 'multipart/form-data',
 					Authorization: `Bearer ${token}`,
@@ -187,7 +194,7 @@ const QRCodePage = () => {
 			setError(null);
 			const token = localStorage.getItem('token');
 			
-			await axios.delete(`${API_BASE_URL}/api/qrcodes/${id}`, {
+			await axios.delete(`${API_BASE_URL}/api/qrcode/${id}`, {
 				headers: {
 					Authorization: `Bearer ${token}`,
 				},
@@ -208,6 +215,7 @@ const QRCodePage = () => {
 		setEditingQRCodeId(qrcode.id);
 		setMosqueId(qrcode.mosqueId.toString());
 		setIsPrimary(qrcode.isPrimary ?? true);
+		setProjectName(qrcode.projectName || '');
 		setImage(null);
 		
 		// Прокрутка к форме редактирования
@@ -232,9 +240,14 @@ const QRCodePage = () => {
 			}
 			formData.append('mosqueId', mosqueId);
 			formData.append('isPrimary', isPrimary.toString());
+			
+			// Добавляем название проекта для дополнительного QR-кода
+			if (!isPrimary && projectName) {
+				formData.append('projectName', projectName);
+			}
 
 			// Отправляем запрос на обновление QR-кода
-			const response = await axios.put(`${API_BASE_URL}/api/qrcodes/${editingQRCodeId}`, formData, {
+			const response = await axios.put(`${API_BASE_URL}/api/qrcode/${editingQRCodeId}`, formData, {
 				headers: {
 					'Content-Type': 'multipart/form-data',
 					Authorization: `Bearer ${token}`,
@@ -277,6 +290,7 @@ const QRCodePage = () => {
 		setImage(null);
 		setMosqueId('');
 		setIsPrimary(true);
+		setProjectName('');
 		setIsEditing(false);
 		setEditingQRCodeId(null);
 	};
@@ -315,7 +329,7 @@ const QRCodePage = () => {
 			formData.append('isPrimary', newIsPrimary.toString());
 			
 			// Отправляем запрос на обновление типа QR-кода
-			const response = await axios.put(`${API_BASE_URL}/api/qrcodes/${qrcode.id}`, formData, {
+			const response = await axios.put(`${API_BASE_URL}/api/qrcode/${qrcode.id}`, formData, {
 				headers: {
 					'Content-Type': 'multipart/form-data',
 					Authorization: `Bearer ${token}`,
@@ -437,6 +451,11 @@ const QRCodePage = () => {
 															<div className={`text-sm font-medium mb-2 px-3 py-1 rounded-full ${qrcode.isPrimary ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'}`}>
 																{qrcode.isPrimary ? 'Основной QR (для пожертвований мечети)' : 'Дополнительный QR (для проекта)'}
 															</div>
+															{!qrcode.isPrimary && qrcode.projectName && (
+																<div className="text-center text-md font-semibold text-blue-600 mb-2">
+																	{qrcode.projectName}
+																</div>
+															)}
 															<img
 																src={qrcode.imageUrl ? `${API_BASE_URL}${qrcode.imageUrl}` : 'https://via.placeholder.com/61x61'}
 																alt="QR code"
@@ -559,6 +578,21 @@ const QRCodePage = () => {
 							</label>
 						</div>
 					</div>
+					
+					{/* Поле для названия проекта - отображается только для дополнительного QR-кода */}
+					{!isPrimary && (
+						<div className="mb-4">
+							<label className="block text-gray-700 font-medium mb-2">Название проекта:</label>
+							<input
+								type="text"
+								value={projectName}
+								onChange={(e) => setProjectName(e.target.value)}
+								placeholder="Введите название проекта"
+								className="border p-2 mb-2 w-full text-black rounded-md"
+							/>
+							<p className="text-sm text-gray-500 mt-1">Название будет отображаться вместе с QR-кодом</p>
+						</div>
+					)}
 					
 					<div className="flex flex-col space-y-2">
 						<button 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import asr from '../pic/asr-1.png';
 import asr2 from '../pic/asr-2.png';
 import fadjr from '../pic/fadjr-1.png';
@@ -21,6 +21,8 @@ import axios from "axios";
 import moment from 'moment-hijri';
 import namesOfAllah from "@/namesOfAllah/namesOfAllah";
 import { API_BASE_URL } from '@/config/config'
+import { API } from '@/constants/api.constants';
+import { toast } from 'react-hot-toast';
 
 // Импорт иконок погоды
 import sunnyIcon from '../pic/weather/sunny.png'; // Солнечно
@@ -39,6 +41,8 @@ type PrayerTimeProps = {
     remainingTime: number;
     progress: number;
     className?: string;
+    fixedTime?: string | null;
+    isFixedTimeActive?: boolean;
 };
 
 interface PrayerTimes {
@@ -85,7 +89,30 @@ interface WeatherData {
     updatedAt?: string; // Время последнего обновления
 }
 
-const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pic2, remainingTime, progress, className = '' }) => {
+// Добавляем интерфейс для фиксированного времени намаза
+interface FixedPrayerTime {
+    id: number;
+    cityId: number;
+    fajr: string;
+    shuruk: string;
+    zuhr: string;
+    asr: string;
+    maghrib: string;
+    isha: string;
+    mechet: string | null;
+    fajrActive: boolean;
+    shurukActive: boolean;
+    zuhrActive: boolean;
+    asrActive: boolean;
+    maghribActive: boolean;
+    ishaActive: boolean;
+    mechetActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+    cityName: string;
+}
+
+const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pic2, remainingTime, progress, className = '', fixedTime, isFixedTimeActive = false }) => {
     return (
         <div
             className={`relative 
@@ -113,6 +140,16 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
                     />
                 </div>
 
+                {isFixedTimeActive && (
+                    <div className="absolute top-2 right-2 flex items-center">
+                        {/* <span className="flex h-3 w-3 relative">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                        </span> */}
+                        {/* <span className="ml-1 text-[10px] text-green-600 font-bold">ФИКС.</span> */}
+                    </div>
+                )}
+
                 {highlight && (
                     <div className="absolute pc:max-w-[175px] pc1:max-w-[155px] tv:max-w-[125px] tv1:max-w-[105px] h-[112px] right-[4px] top-[4px] flex flex-col items-end">
                         <div className="w-[100%] text-right bg-white rounded-bl-[40px] rounded-[8px] rounded-tr-[19px] py-[4px] px-[8px] flex flex-col">
@@ -126,7 +163,13 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
             </div>
 
             <div className="flex flex-col items-start mt-[15%] w-full">
-                <div className={`text-center text-[60px] pc:text-[60px] pc1:text-[50px] tv:text-[40px] tv1:text-[35px] leading-none font-[700] ${highlight ? 'text-white !text-[60px] pc:!text-[60px] pc1:!text-[55px] tv:!text-[50px] tv1:!text-[45px]' : 'text-[#17181d]'}`}>
+                {highlight && isFixedTimeActive && fixedTime && (
+                    <div className={`text-center text-[60px] pc:text-[60px] pc1:text-[50px] tv:text-[40px] tv1:text-[35px] leading-none font-[700] ${highlight ? 'text-white !text-[60px] pc:!text-[60px] pc1:!text-[55px] tv:!text-[50px] tv1:!text-[45px]' : 'text-[#17181d]'}`}>
+                        {fixedTime}*
+                    </div>
+                )}
+                
+                <div className={`text-center ${highlight && isFixedTimeActive && fixedTime ? 'text-[40px] pc:text-[40px] pc1:text-[35px] tv:text-[30px] tv1:text-[25px]' : 'text-[60px] pc:text-[60px] pc1:text-[50px] tv:text-[40px] tv1:text-[35px]'} leading-none font-[700] ${highlight ? `text-white ${isFixedTimeActive && fixedTime ? '!text-[40px] pc:!text-[40px] pc1:!text-[35px] tv:!text-[30px] tv1:!text-[25px]' : '!text-[60px] pc:!text-[60px] pc1:!text-[55px] tv:!text-[50px] tv1:!text-[45px]'}` : 'text-[#17181d]'}`}>
                     {time}
                 </div>
 
@@ -144,7 +187,7 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
                                     animation: 'pulseAndGrow 1s ease-in-out infinite alternate',
                                 }}
                                 ></div>
-                        </div>
+                            </div>
                         <style jsx>{`
                             @keyframes pulseAndGrow {
                                 0% {
@@ -286,23 +329,49 @@ const mapOpenWeatherCodeToInternalCode = (openWeatherCode: string) => {
 
 export function Test() {
     const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
+    const [fixedPrayerTimes, setFixedPrayerTimes] = useState<FixedPrayerTime | null>(null);
     const [nearestPrayer, setNearestPrayer] = useState<string>('');
     const [remainingTime, setRemainingTime] = useState<number>(0);
     const [totalDuration, setTotalDuration] = useState<number>(0);
     const [cities, setCities] = useState<City[]>([]);
-    const [currentCityId, setCurrentCityId] = useState<number | null>(1);
-    const [currentMosqueId, setCurrentMosqueId] = useState<number | null>(null);
+    const [currentCityId, setCurrentCityId] = useState<number | null>(() => {
+        if (typeof window !== 'undefined') {
+            const savedCityId = localStorage.getItem('currentCityId');
+            return savedCityId ? parseInt(savedCityId) : 1;
+        }
+        return 1;
+    });
+    const [currentMosqueId, setCurrentMosqueId] = useState<number | null>(() => {
+        if (typeof window !== 'undefined') {
+            const savedMosqueId = localStorage.getItem('currentMosqueId');
+            return savedMosqueId ? parseInt(savedMosqueId) : null;
+        }
+        return null;
+    });
     const [mosques, setMosques] = useState<Mosque[]>([]);
-    const [selectedCity, setSelectedCity] = useState<string>('Казань');
-    const [selectedMosque, setSelectedMosque] = useState<string>('');
+    const [selectedCity, setSelectedCity] = useState<string>(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('selectedCity') || 'Казань';
+        }
+        return 'Казань';
+    });
+    const [selectedMosque, setSelectedMosque] = useState<string>(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('selectedMosque') || '';
+        }
+        return '';
+    });
     const [qrCode, setQrCode] = useState<string | null>(null);
     const [secondaryQrCode, setSecondaryQrCode] = useState<string | null>(null);
+    const [secondaryQrProjectName, setSecondaryQrProjectName] = useState<string | null>(null);
     const [cityDropdownOpen, setCityDropdownOpen] = useState<boolean>(false);
     const [mosqueDropdownOpen, setMosqueDropdownOpen] = useState<boolean>(false);
     const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
     const [isLoadingWeather, setIsLoadingWeather] = useState<boolean>(false);
     const [currentNameIndex, setCurrentNameIndex] = useState<number>(0);
     const [currentName, setCurrentName] = useState(namesOfAllah[0]);
+    const cityDropdownRef = useRef<HTMLDivElement>(null);
+    const mosqueDropdownRef = useRef<HTMLDivElement>(null);
 
     // Интервал для обновления имени Аллаха каждые 30 секунд
     useEffect(() => {
@@ -321,38 +390,64 @@ export function Test() {
             label: 'Фаджр',
             highlight: nearestPrayer === 'fajr',
             pic: fadjr,
-            pic2: fadjr2
+            pic2: fadjr2,
+            fixedTime: fixedPrayerTimes?.fajrActive ? fixedPrayerTimes?.fajr : null,
+            isFixedTimeActive: fixedPrayerTimes?.fajrActive || false
         },
         {
             time: prayerTimes?.mechet || '00:00',
             label: 'Мечеть',
             highlight: nearestPrayer === 'mechet',
             pic: mosque,
-            pic2: mosque
+            pic2: mosque,
+            fixedTime: fixedPrayerTimes?.mechetActive ? fixedPrayerTimes?.mechet : null,
+            isFixedTimeActive: fixedPrayerTimes?.mechetActive || false
         },
         {
             time: prayerTimes?.shuruk || '00:00',
             label: 'Шурук',
             highlight: nearestPrayer === 'shuruk',
             pic: shuruk,
-            pic2: shuruk2
+            pic2: shuruk2,
+            fixedTime: fixedPrayerTimes?.shurukActive ? fixedPrayerTimes?.shuruk : null,
+            isFixedTimeActive: fixedPrayerTimes?.shurukActive || false
         },
         {
             time: prayerTimes?.zuhr || '00:00',
             label: 'Зухр',
             highlight: nearestPrayer === 'zuhr',
             pic: zuhr,
-            pic2: zuhr2
+            pic2: zuhr2,
+            fixedTime: fixedPrayerTimes?.zuhrActive ? fixedPrayerTimes?.zuhr : null,
+            isFixedTimeActive: fixedPrayerTimes?.zuhrActive || false
         },
-        { time: prayerTimes?.asr || '00:00', label: 'Аср', highlight: nearestPrayer === 'asr', pic: asr, pic2: asr2 },
+        { 
+            time: prayerTimes?.asr || '00:00', 
+            label: 'Аср', 
+            highlight: nearestPrayer === 'asr', 
+            pic: asr, 
+            pic2: asr2,
+            fixedTime: fixedPrayerTimes?.asrActive ? fixedPrayerTimes?.asr : null,
+            isFixedTimeActive: fixedPrayerTimes?.asrActive || false
+        },
         {
             time: prayerTimes?.maghrib || '00:00',
             label: 'Магриб',
             highlight: nearestPrayer === 'maghrib',
             pic: magrib,
-            pic2: magrib2
+            pic2: magrib2,
+            fixedTime: fixedPrayerTimes?.maghribActive ? fixedPrayerTimes?.maghrib : null,
+            isFixedTimeActive: fixedPrayerTimes?.maghribActive || false
         },
-        { time: prayerTimes?.isha || '00:00', label: 'Иша', highlight: nearestPrayer === 'isha', pic: isha, pic2: isha2 },
+        { 
+            time: prayerTimes?.isha || '00:00', 
+            label: 'Иша', 
+            highlight: nearestPrayer === 'isha', 
+            pic: isha, 
+            pic2: isha2,
+            fixedTime: fixedPrayerTimes?.ishaActive ? fixedPrayerTimes?.isha : null,
+            isFixedTimeActive: fixedPrayerTimes?.ishaActive || false
+        },
     ];
 
     const hijriMonths = [
@@ -373,7 +468,7 @@ export function Test() {
         if (currentMosqueId) {
             const fetchQRCode = async () => {
                 try {
-                    const response = await fetch(`${API_BASE_URL}/api/qrcodes/by-mosque/${currentMosqueId}`);
+                    const response = await fetch(`${API_BASE_URL}${API.GET_MOSQUE_QRCODES(currentMosqueId)}`);
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
                     }
@@ -397,18 +492,25 @@ export function Test() {
                         // Устанавливаем второстепенный QR-код, если есть
                         if (secondaryQR) {
                             setSecondaryQrCode(secondaryQR.imageUrl);
+                            setSecondaryQrProjectName(secondaryQR.projectName);
+                           
                         } else {
+                            setQrCode(null);
                             setSecondaryQrCode(null);
+                            setSecondaryQrProjectName(null);
+                            
                         }
                     } else {
                         setQrCode(null);
                         setSecondaryQrCode(null);
-                        console.log('Для текущей мечети нет QR-кодов');
+                        setSecondaryQrProjectName(null);
+                        
                     }
                 } catch (error) {
                     setQrCode(null);
                     setSecondaryQrCode(null);
-                    console.error('Ошибка при получении QR-кодов:', error);
+                    setSecondaryQrProjectName(null);
+                    
                 }
             };
 
@@ -417,6 +519,7 @@ export function Test() {
             // Если мечеть не выбрана, очищаем QR-коды
             setQrCode(null);
             setSecondaryQrCode(null);
+            setSecondaryQrProjectName(null);
             console.log('Мечеть не выбрана, QR-коды сброшены');
         }
     }, [currentMosqueId]);
@@ -433,7 +536,6 @@ export function Test() {
             // Запрашиваем погоду только если прошло больше 10 секунд с последнего запроса
             // Это предотвратит дублирование запросов при быстрых изменениях состояния
             if (selectedCity && now - lastFetchTime > 10000 && isMounted) {
-                console.log(`Запрос погоды из интервала для города: ${selectedCity}`);
                 lastFetchTime = now;
                 fetchWeatherData(selectedCity);
             }
@@ -460,13 +562,14 @@ export function Test() {
                 const response = await axios.get<City[]>(`${API_BASE_URL}/api/cities`);
                 setCities(response.data);
                 
-                // Устанавливаем currentCityId только если он не был установлен ранее
-                // или если изменился выбранный город
                 if (!currentCityId || selectedCity) {
                 const selectedCityData = response.data.find(city => city.name === selectedCity);
                     if (selectedCityData) {
-                        console.log(`Установка ID города из useEffect: ${selectedCityData.id} для города ${selectedCity}`);
                         setCurrentCityId(selectedCityData.id);
+                        localStorage.setItem('currentCityId', selectedCityData.id.toString());
+                        
+                        // Получаем фиксированное время намаза при изменении города
+                        fetchFixedPrayerTime(selectedCityData.id);
                     }
                 }
             } catch (error) {
@@ -476,7 +579,7 @@ export function Test() {
         
         getHijriDate();
         fetchCities();
-    }, [selectedCity]); // Зависим только от selectedCity, currentCityId не добавляем
+    }, [selectedCity]);
 
     useEffect(() => {
         const fetchMosques = async () => {
@@ -486,14 +589,31 @@ export function Test() {
 
                 const mosquesInCity = response.data.filter(mosque => mosque.cityId === currentCityId);
                 if (mosquesInCity.length > 0) {
-                    setSelectedMosque(mosquesInCity[0].name);
-                    setCurrentMosqueId(mosquesInCity[0].id);
+                    // Проверяем, есть ли сохраненная мечеть в списке мечетей текущего города
+                    const savedMosque = mosquesInCity.find(mosque => 
+                        mosque.id === currentMosqueId && mosque.cityId === currentCityId
+                    );
+
+                    if (savedMosque) {
+                        // Если сохраненная мечеть найдена, используем её
+                        setSelectedMosque(savedMosque.name);
+                        setCurrentMosqueId(savedMosque.id);
+                } else {
+                        // Если сохраненной мечети нет в списке, берем первую мечеть из города
+                        setSelectedMosque(mosquesInCity[0].name);
+                        setCurrentMosqueId(mosquesInCity[0].id);
+                        localStorage.setItem('selectedMosque', mosquesInCity[0].name);
+                        localStorage.setItem('currentMosqueId', mosquesInCity[0].id.toString());
+                    }
                 } else {
                     // Если у города нет мечетей, сбрасываем выбранную мечеть и QR-коды
                     setSelectedMosque('');
                     setCurrentMosqueId(null);
                     setQrCode(null);
                     setSecondaryQrCode(null);
+                    setSecondaryQrProjectName(null);
+                    localStorage.removeItem('selectedMosque');
+                    localStorage.removeItem('currentMosqueId');
                     console.log('У выбранного города нет мечетей, QR-коды сброшены');
                 }
             } catch (error) {
@@ -501,6 +621,7 @@ export function Test() {
                 // При ошибке также сбрасываем данные
                 setQrCode(null);
                 setSecondaryQrCode(null);
+                setSecondaryQrProjectName(null);
             }
         };
 
@@ -524,8 +645,10 @@ export function Test() {
                     isha,
                     mechet,
                 });
+                // toast.success('Время намазов успешно обновлено');
             } catch (error) {
                 console.error('Ошибка при загрузке данных:', error);
+                // toast.error('Ошибка при загрузке времени намазов');
             }
         };
 
@@ -535,80 +658,47 @@ export function Test() {
     useEffect(() => {
         if (!prayerTimes) return;
 
-        const prayerTimesArray = Object.entries(prayerTimes);
-        let closestPrayer = '';
-        let minDifference = Infinity;
-        let previousPrayerName = '';
-        let timeBetweenPrayers = 0;
-
-        // Находим ближайший следующий намаз
-        prayerTimesArray.forEach(([prayerName, time]) => {
-            const difference = calculateTimeDifference(time);
-            if (difference < minDifference && difference > 0) {
-                minDifference = difference;
-                closestPrayer = prayerName;
-            }
-        });
-
-        // Находим предыдущий намаз для расчета общего интервала
-        const sortedPrayers = [...prayerTimesArray].sort((a, b) => {
-            return getTimeInMinutes(a[1]) - getTimeInMinutes(b[1]);
-        });
-
-        const closestPrayerIndex = sortedPrayers.findIndex(([name]) => name === closestPrayer);
-        const previousPrayerIndex = closestPrayerIndex > 0 ? closestPrayerIndex - 1 : sortedPrayers.length - 1;
+        // Используем функцию для расчета времени до следующего намаза с учетом фиксированного времени
+        const { nextPrayer, remainingTime: nextRemainingTime, totalDuration: nextTotalDuration } = 
+            calculateTimeToNextPrayer(prayerTimes, fixedPrayerTimes);
         
-        previousPrayerName = sortedPrayers[previousPrayerIndex][0];
-        
-        // Расчет общего времени между намазами
-        const currentPrayerTime = getTimeInMinutes(sortedPrayers[closestPrayerIndex][1]);
-        const prevPrayerTime = getTimeInMinutes(sortedPrayers[previousPrayerIndex][1]);
-        
-        // Если предыдущий намаз позже текущего, это означает, что он был вчера
-        timeBetweenPrayers = currentPrayerTime > prevPrayerTime 
-            ? (currentPrayerTime - prevPrayerTime) * 60 * 1000 
-            : ((currentPrayerTime + 24 * 60) - prevPrayerTime) * 60 * 1000;
+        setNearestPrayer(nextPrayer);
+        setRemainingTime(nextRemainingTime);
+        setTotalDuration(nextTotalDuration);
 
-        console.log(`Интервал между намазами ${previousPrayerName} и ${closestPrayer}: ${formatTime(timeBetweenPrayers)}`);
+        let animationFrameId: number;
+        let lastUpdateTime = Date.now();
 
-        setNearestPrayer(closestPrayer);
-        setRemainingTime(minDifference);
-        setTotalDuration(timeBetweenPrayers);
+        const updateTimer = () => {
+            const currentTime = Date.now();
+            const deltaTime = currentTime - lastUpdateTime;
+            lastUpdateTime = currentTime;
 
-        const timer = setInterval(() => {
             setRemainingTime((prevTime) => {
                 if (prevTime <= 1000) {
-                    // Нашли следующий намаз
-                    let nextPrayerIndex = sortedPrayers.findIndex(([name]) => name === closestPrayer) + 1;
-                    if (nextPrayerIndex >= sortedPrayers.length) {
-                        nextPrayerIndex = 0;
-                    }
+                    // Когда время до намаза закончилось, пересчитываем следующий намаз
+                    const { nextPrayer: newNextPrayer, remainingTime: newRemainingTime, totalDuration: newTotalDuration } = 
+                        calculateTimeToNextPrayer(prayerTimes, fixedPrayerTimes);
                     
-                    const nextPrayerName = sortedPrayers[nextPrayerIndex][0];
-                    const nextPrayerTime = sortedPrayers[nextPrayerIndex][1];
+                    setNearestPrayer(newNextPrayer);
+                    setTotalDuration(newTotalDuration);
                     
-                    // Обновим предыдущий намаз - это текущий, который только что прошел
-                    previousPrayerName = closestPrayer;
-                    
-                    // Расчет нового общего времени между намазами
-                    const newCurrentPrayerTime = getTimeInMinutes(sortedPrayers[nextPrayerIndex][1]);
-                    const newPrevPrayerTime = getTimeInMinutes(sortedPrayers[nextPrayerIndex > 0 ? nextPrayerIndex - 1 : sortedPrayers.length - 1][1]);
-                    
-                    const newTimeBetweenPrayers = newCurrentPrayerTime > newPrevPrayerTime 
-                        ? (newCurrentPrayerTime - newPrevPrayerTime) * 60 * 1000 
-                        : ((newCurrentPrayerTime + 24 * 60) - newPrevPrayerTime) * 60 * 1000;
-                    
-                    setTotalDuration(newTimeBetweenPrayers);
-                    setNearestPrayer(nextPrayerName);
-                    
-                    return calculateTimeDifference(nextPrayerTime);
+                    return newRemainingTime;
                 }
-                return prevTime - 1000;
+                return Math.max(0, prevTime - deltaTime);
             });
-        }, 1000);
 
-        return () => clearInterval(timer);
-    }, [prayerTimes]);
+            animationFrameId = requestAnimationFrame(updateTimer);
+        };
+
+        animationFrameId = requestAnimationFrame(updateTimer);
+
+        return () => {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+        };
+    }, [prayerTimes, fixedPrayerTimes]);
 
     // Функция для конвертации времени в минуты от начала дня
     const getTimeInMinutes = (timeString: string): number => {
@@ -616,10 +706,34 @@ export function Test() {
         return hours * 60 + minutes;
     };
 
+    const handleCitySelect = (city: City) => {
+        try {
+            setCityDropdownOpen(false);
+            setSelectedCity(city.name);
+            setCurrentCityId(city.id);
+            localStorage.setItem('selectedCity', city.name);
+            localStorage.setItem('currentCityId', city.id.toString());
+            fetchWeatherData(city.name);
+            fetchFixedPrayerTime(city.id);
+            // toast.success('Город успешно изменен');
+        } catch (error) {
+            console.error('Ошибка при смене города:', error);
+            // toast.error('Ошибка при смене города');
+        }
+    };
+
     const handleMosqueSelect = (mosque: Mosque) => {
-        setSelectedMosque(mosque.name);
-        setCurrentMosqueId(mosque.id);
-        setMosqueDropdownOpen(false);
+        try {
+            setSelectedMosque(mosque.name);
+            setCurrentMosqueId(mosque.id);
+            setMosqueDropdownOpen(false);
+            localStorage.setItem('selectedMosque', mosque.name);
+            localStorage.setItem('currentMosqueId', mosque.id.toString());
+            // toast.success('Мечеть успешно выбрана');
+        } catch (error) {
+            console.error('Ошибка при выборе мечети:', error);
+            // toast.error('Ошибка при выборе мечети');
+        }
     };
 
     const getLogoUrl = () => {
@@ -639,73 +753,227 @@ export function Test() {
     const fetchWeatherData = async (cityName: string) => {
         try {
             setIsLoadingWeather(true);
-            console.log(`Запрос погоды для города: ${cityName}`);
-            // Правильно кодируем название города для URL
-            const encodedCityName = encodeURIComponent(cityName);
-            console.log(`Закодированное название: ${encodedCityName}`);
             
-            // Добавляем метку времени для предотвращения кэширования
-            const timestamp = new Date().getTime();
-            const response = await axios.get(`https://api.weatherapi.com/v1/current.json?key=07574987d72a4422b5665010250505&q=${encodedCityName}&lang=ru&_t=${timestamp}`);
-            console.log('Ответ API:', response.data);
             
-            // Проверяем, что ответ относится к запрошенному городу
-            if (response.data.location && response.data.location.name) {
-                console.log(`API вернул данные для города: ${response.data.location.name}`);
+            // Получаем координаты через геокодинг
+            const geocodeResponse = await axios.get(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityName)},Россия&limit=1`
+            );
+    
+            if (!geocodeResponse.data || geocodeResponse.data.length === 0) {
+                throw new Error('Город не найден');
             }
-            
-            const weatherInfo: WeatherData = {
-                temperature: Math.round(response.data.current.temp_c),
-                description: response.data.current.condition.text,
-                icon: response.data.current.condition.code.toString(),
-                city: cityName, // Используем выбранное название города, а не то, что вернул API
-                updatedAt: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
-            };
-            
-            console.log('Обработанные погодные данные:', weatherInfo);
-            setWeatherData(weatherInfo);
-        } catch (error) {
-            console.error('Ошибка при загрузке погоды через WeatherAPI:', error);
-            
-            // Попробуем альтернативный API - OpenWeatherMap
-            try {
-                console.log('Пробуем получить погоду через альтернативный API...');
-                const encodedCityName = encodeURIComponent(cityName);
-                const openWeatherResponse = await axios.get(
-                    `https://api.openweathermap.org/data/2.5/weather?q=${encodedCityName},ru&appid=7da8513adbad99c86a8edc1c5f04bc04&units=metric&lang=ru`
-                );
-                console.log('Ответ OpenWeatherMap API:', openWeatherResponse.data);
-                
-                const weatherInfo: WeatherData = {
-                    temperature: Math.round(openWeatherResponse.data.main.temp),
-                    description: openWeatherResponse.data.weather[0].description,
-                    // Мапирование кодов OpenWeatherMap на наши коды иконок (приблизительное)
-                    icon: mapOpenWeatherCodeToInternalCode(openWeatherResponse.data.weather[0].id.toString()),
+    
+            const { lat, lon } = geocodeResponse.data[0];
+            const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ3MDY1MDYwLCJpYXQiOjE3NDcwNjQ3NjAsImp0aSI6ImFiOTgzM2YyNjAzZTQ4Mjk4ODc5ZDBmMzk2Y2I3NzZjIiwidXNlcl9pZCI6ODkzfQ.hPqzVC8BOUff9JoOXLQHEfZFPJ3GR2aJHnfroReTYus';
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hour = String(now.getHours()).padStart(2, '0');
+            const dateHour = `${year}-${month}-${day}T${hour}:00`;
+
+            const response = await axios.get(
+                `https://projecteol.ru/api/weather/?lat=${lat}&lon=${lon}&date=${dateHour}&token=${token}`
+            );
+    
+            if (response.data && response.data.length > 0) {
+                const weatherInfo = response.data[0];
+                const weatherData: WeatherData = {
+                    temperature: Math.round(weatherInfo.temp_2 - 273.15),
+                    description: getWeatherDescription(weatherInfo.oblachnost_atmo, weatherInfo.vlaga_2f),
+                    icon: getWeatherIcon(weatherInfo.oblachnost_atmo, weatherInfo.vlaga_2f),
                     city: cityName,
                     updatedAt: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
                 };
                 
-                console.log('Данные погоды с резервного API:', weatherInfo);
-                setWeatherData(weatherInfo);
-            } catch (backupError) {
-                console.error('Ошибка при загрузке погоды через резервный API:', backupError);
-                // Фиксированное значение как крайнее резервное
-                setWeatherData({
-                    temperature: 5,
-                    description: 'Облачно',
-                    icon: '1003',
-                    city: cityName,
-                    updatedAt: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
-                });
+                setWeatherData(weatherData);
             }
+        } catch (error) {
+            console.error('Ошибка при загрузке погоды:', error);
+            setWeatherData({
+                temperature: 5,
+                description: 'Облачно',
+                icon: '1003',
+                city: cityName,
+                updatedAt: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+            });
         } finally {
             setIsLoadingWeather(false);
         }
     };
+    
+    // Функция для определения описания погоды
+    const getWeatherDescription = (cloudiness: number, humidity: number): string => {
+        if (cloudiness < 20) return 'Ясно';
+        if (cloudiness < 50) return 'Малооблачно';
+        if (cloudiness < 80) return 'Облачно';
+        if (humidity > 80) return 'Дождливо';
+        return 'Облачно';
+    };
+    
+    // Функция для определения иконки погоды
+    const getWeatherIcon = (cloudiness: number, humidity: number): string => {
+        if (cloudiness < 20) return 'sunny';
+        if (cloudiness < 50) return 'partly_cloudy';
+        if (cloudiness < 80) return 'cloudy';
+        if (humidity > 80) return 'rainy';
+        return 'cloudy';
+    };
+    
+    // Обновляем интервал обновления погоды
+    useEffect(() => {
+        let isMounted = true;
+        let lastFetchTime = 0;
+        
+        const updateWeather = () => {
+            const now = new Date().getTime();
+            if (selectedCity && now - lastFetchTime > 3600000 && isMounted) { // 1 час
+                
+                lastFetchTime = now;
+                fetchWeatherData(selectedCity);
+            }
+        };
+        
+        // Обновляем погоду сразу при смене города
+        if (selectedCity) {
+            updateWeather();
+        }
+        
+        // Устанавливаем интервал обновления каждый час
+        const weatherUpdateInterval = setInterval(updateWeather, 3600000);
+        
+        return () => {
+            isMounted = false;
+            clearInterval(weatherUpdateInterval);
+        };
+    }, [selectedCity]);
 
     // Определяем индекс текущей выделенной молитвы
     const getHighlightedPrayerIndex = () => {
         return prayers.findIndex(prayer => prayer.highlight === true);
+    };
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (
+                cityDropdownOpen &&
+                cityDropdownRef.current &&
+                !cityDropdownRef.current.contains(event.target as Node)
+            ) {
+                setCityDropdownOpen(false);
+            }
+            if (
+                mosqueDropdownOpen &&
+                mosqueDropdownRef.current &&
+                !mosqueDropdownRef.current.contains(event.target as Node)
+            ) {
+                setMosqueDropdownOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [cityDropdownOpen, mosqueDropdownOpen]);
+
+    // Функция для получения фиксированного времени намаза
+    const fetchFixedPrayerTime = async (cityId: number) => {
+        try {
+            const response = await axios.get<FixedPrayerTime>(`${API_BASE_URL}/api/prayers/fixed-time/city/${cityId}`);
+            if (response.data) {
+                setFixedPrayerTimes(response.data);
+                // toast.success('Фиксированное время намазов загружено');
+            } else {
+                setFixedPrayerTimes(null);
+            }
+        } catch (error) {
+            console.error('Ошибка при получении фиксированного времени намаза:', error);
+            // toast.error('Ошибка при загрузке фиксированного времени');
+            setFixedPrayerTimes(null);
+        }
+    };
+
+    // Функция расчета времени до ближайшего намаза с учетом фиксированного времени
+    const calculateTimeToNextPrayer = (prayerTimes: PrayerTimes, fixedPrayerTimes: FixedPrayerTime | null): { nextPrayer: string, remainingTime: number, totalDuration: number } => {
+        if (!prayerTimes) return { nextPrayer: '', remainingTime: 0, totalDuration: 0 };
+
+        const currentTime = new Date();
+        currentTime.setSeconds(0, 0);
+
+        // Создаем словарь времен намазов с учетом фиксированного времени, если оно активно
+        const prayerTimesDict: Record<string, { time: string, isFixed: boolean }> = {
+            fajr: { 
+                time: fixedPrayerTimes?.fajrActive ? fixedPrayerTimes.fajr : prayerTimes.fajr, 
+                isFixed: fixedPrayerTimes?.fajrActive || false 
+            },
+            shuruk: { 
+                time: fixedPrayerTimes?.shurukActive ? fixedPrayerTimes.shuruk : prayerTimes.shuruk, 
+                isFixed: fixedPrayerTimes?.shurukActive || false 
+            },
+            zuhr: { 
+                time: fixedPrayerTimes?.zuhrActive ? fixedPrayerTimes.zuhr : prayerTimes.zuhr, 
+                isFixed: fixedPrayerTimes?.zuhrActive || false 
+            },
+            asr: { 
+                time: fixedPrayerTimes?.asrActive ? fixedPrayerTimes.asr : prayerTimes.asr, 
+                isFixed: fixedPrayerTimes?.asrActive || false 
+            },
+            maghrib: { 
+                time: fixedPrayerTimes?.maghribActive ? fixedPrayerTimes.maghrib : prayerTimes.maghrib, 
+                isFixed: fixedPrayerTimes?.maghribActive || false 
+            },
+            isha: { 
+                time: fixedPrayerTimes?.ishaActive ? fixedPrayerTimes.isha : prayerTimes.isha, 
+                isFixed: fixedPrayerTimes?.ishaActive || false 
+            }
+        };
+
+        if (prayerTimes.mechet) {
+            prayerTimesDict.mechet = {
+                time: fixedPrayerTimes?.mechetActive ? (fixedPrayerTimes.mechet || '') : prayerTimes.mechet,
+                isFixed: fixedPrayerTimes?.mechetActive || false
+            };
+        }
+
+        let closestPrayer = '';
+        let minDifference = Infinity;
+        
+        // Находим ближайший следующий намаз
+        for (const [prayerName, { time }] of Object.entries(prayerTimesDict)) {
+            if (!time) continue;
+            
+            const difference = calculateTimeDifference(time);
+            if (difference < minDifference && difference > 0) {
+                minDifference = difference;
+                closestPrayer = prayerName;
+            }
+        }
+
+        // Находим предыдущий намаз для расчета общего интервала
+        const sortedPrayers = Object.entries(prayerTimesDict)
+            .filter(([_, { time }]) => time)
+            .sort((a, b) => {
+                return getTimeInMinutes(a[1].time) - getTimeInMinutes(b[1].time);
+            });
+
+        const closestPrayerIndex = sortedPrayers.findIndex(([name]) => name === closestPrayer);
+        const previousPrayerIndex = closestPrayerIndex > 0 ? closestPrayerIndex - 1 : sortedPrayers.length - 1;
+        
+        // Расчет общего времени между намазами
+        const currentPrayerTime = getTimeInMinutes(sortedPrayers[closestPrayerIndex][1].time);
+        const prevPrayerTime = getTimeInMinutes(sortedPrayers[previousPrayerIndex][1].time);
+        
+        // Если предыдущий намаз позже текущего, это означает, что он был вчера
+        const timeBetweenPrayers = currentPrayerTime > prevPrayerTime 
+            ? (currentPrayerTime - prevPrayerTime) * 60 * 1000 
+            : ((currentPrayerTime + 24 * 60) - prevPrayerTime) * 60 * 1000;
+
+        return {
+            nextPrayer: closestPrayer,
+            remainingTime: minDifference,
+            totalDuration: timeBetweenPrayers
+        };
     };
 
     return (
@@ -715,16 +983,25 @@ export function Test() {
                     <div className="text-[#17181d] text-center text-[52px] font-[700] pt-[8px] pb-[8px] pr-[48px] pl-[48px]  pc2:pt-[6px] pc2:pb-[6px] pc2:pr-[30px] pc2:pl-[30px]  tv1:pt-[4px] tv1:pb-[4px] tv1:pr-[25px] tv1:pl-[25px] bg-white rounded-[24px]">
                         {(() => {
                             const now = new Date();
-                               const hours = now.getHours().toString().padStart(2, '0');
+                            const hours = now.getHours().toString().padStart(2, '0');
                             const minutes = now.getMinutes().toString().padStart(2, '0');
                             const seconds = now.getSeconds().toString().padStart(2, '0');
                             return (
                                 <div className="flex items-center justify-center">
-                                    <span className="text-[52px] pc1:text-[52px] pc2:text-[42px] tv1:text-[32px]">{hours}:{minutes}</span>
-                                    <span className="text-[32px] font-normal pc1:text-[32px] pc2:text-[22px] tv1:text-[16px] mt-[14px]">:{seconds}</span>
+                                    <span className="text-[52px] pc1:text-[52px] pc2:text-[42px] tv1:text-[32px]">{hours}</span>
+                                    <span className="text-[52px] pc1:text-[52px] pc2:text-[42px] tv1:text-[32px] animate-[softBlink_1.5s_ease-in-out_infinite]">:</span>
+                                    <span className="text-[52px] pc1:text-[52px] pc2:text-[42px] tv1:text-[32px]">{minutes}</span>
+                                    <span className="text-[32px] font-normal pc1:text-[32px] pc2:text-[22px] tv1:text-[16px] mt-[14px] animate-[softBlink_1.5s_ease-in-out_infinite]">:</span>
+                                    <span className="text-[32px] font-normal pc1:text-[32px] pc2:text-[22px] tv1:text-[16px] mt-[14px]">{seconds}</span>
                                 </div>
                             );
                         })()}
+                        <style jsx>{`
+                            @keyframes softBlink {
+                                0%, 100% { opacity: 1; }
+                                50% { opacity: 0.3; }
+                            }
+                        `}</style>
                     </div>
                     <div className='flex gap-[5px] sm-max:flex-col sm-max:items-center sm-max:gap-[0px]'>
                         <div className="text-[#17181d] text-[40px] pc1:text-[40px] pc2:text-[30px] tv1:text-[20px] ">
@@ -742,13 +1019,13 @@ export function Test() {
                     >
                         <div className="text-[#a0a2b1] text-[12px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px] tv1:text-[10px]">
                             Погода
-                        </div>
+                    </div>
                         <div className="text-[#17181d] pc2:text-[18px] tv1:text-[14px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px] flex items-center justify-center">
                             {isLoadingWeather ? (
                                 <div className="flex items-center ">
                                     <span className="animate-spin">⟳</span>
                                     Загрузка...
-                                </div>
+                    </div>
                             ) : weatherData ? (
                                 <div className="flex items-center">
                                     <span className="mr-2 flex items-center pc2:scale-125 tv1:scale-100">
@@ -773,22 +1050,17 @@ export function Test() {
                     <div className="flex items-left gap-[10px] items-center lg-max:w-full justify-center ">
                         <div className='flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 pt-[10px] pc2:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center'>
                             <div className="cursor-pointer relative z-10 text-[#17181d] pc1:text-[24px] pc2:text-[18px] tv1:text-[14px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px]"
-                                onClick={() => setCityDropdownOpen(prev => !prev)}>
+                                onClick={() => setCityDropdownOpen(prev => !prev)} ref={cityDropdownRef}>
                                 <div className="text-[#a0a2b1] pc2:text-[12px] tv1:text-[10px]  font-normal">Город</div>
                                 {selectedCity}
                                 {cityDropdownOpen && (
                                     <div className="absolute bg-white border rounded-lg shadow-lg w-[250px] max-h-[320px] overflow-x-hidden overflow-y-auto z-1000">
                                         {cities.map((city) => (
-                                            <div key={city.id} className="p-2 hover:bg-gray-200 cursor-pointer pc1:text-[24px] pc2:text-[18px] tv1:text-[14px]"
+                                            <div key={city.id} className="p-2 hover:bg-gray-200 cursor-pointer text-left pc1:text-[24px] pc2:text-[18px] tv1:text-[14px]"
                                                 onClick={(e) => {
-                                                    e.stopPropagation(); // Предотвращаем всплытие события
+                                                    e.stopPropagation();
                                                     setCityDropdownOpen(false);
-                                                    setSelectedCity(city.name);
-                                                    // Устанавливаем идентификатор города немедленно
-                                                    setCurrentCityId(city.id);
-                                                    // Немедленно вызываем fetchWeatherData для быстрого обновления
-                                                    fetchWeatherData(city.name);
-                                                    console.log(`Выбран город: ${city.name}, ID: ${city.id}`);
+                                                    handleCitySelect(city);
                                                 }}>
                                                 {city.name}
                                             </div>
@@ -800,14 +1072,17 @@ export function Test() {
 
                         <div className="flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 pt-[10px] pc2:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center">
                             <div className="cursor-pointer relative z-10"
-                                onClick={() => setMosqueDropdownOpen(prev => !prev)}>
+                                onClick={() => setMosqueDropdownOpen(prev => !prev)} ref={mosqueDropdownRef}>
                                 <div className='text-[#a0a2b1] pc2:text-[12px] tv1:text-[10px] pc2:leading-[27.60px] tv1:leading-[17.60px] font-normal'>Мечеть</div>
                                 <div className="text-[#17181d] pc1:text-[24px] pc2:text-[18px] tv1:text-[14px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px]">{selectedMosque}</div>
                                 {mosqueDropdownOpen && (
-                                    <div className="absolute bg-white border rounded-lg shadow-lg w-[250px] max-h-96 overflow-y-auto z-1000">
+                                    <div className="absolute right-0 bg-white border rounded-lg shadow-lg w-[250px] max-h-96 overflow-y-auto z-1000">
                                         {mosques.filter(mosque => mosque.cityId === currentCityId).map((mosque) => (
-                                            <div key={mosque.id} className="p-2 hover:bg-gray-200 cursor-pointer text-[#17181d]"
-                                                onClick={() => handleMosqueSelect(mosque)}>
+                                            <div key={mosque.id} className="p-2 hover:bg-gray-200 text-left cursor-pointer text-[#17181d] whitespace-nowrap overflow-hidden text-ellipsis"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleMosqueSelect(mosque);
+                                                }}>
                                                 {mosque.name}
                                             </div>
                                         ))}
@@ -836,9 +1111,11 @@ export function Test() {
                             highlight={prayer.highlight}
                             pic={prayer.pic}
                             pic2={prayer.pic2}
-                            remainingTime={remainingTime}
-                            progress={calculateProgress(remainingTime, totalDuration)}
-                                className={isNextToHighlighted ? 'w-[211px] pc1:w-[180px] pc2:w-[150px]' : ''}
+                            remainingTime={highlightedIndex !== -1 ? remainingTime : 0}
+                            progress={highlightedIndex !== -1 ? calculateProgress(remainingTime, totalDuration) : 0}
+                            className={isNextToHighlighted ? 'w-[211px] pc1:w-[180px] pc2:w-[150px]' : ''}
+                            fixedTime={prayer.fixedTime}
+                            isFixedTimeActive={prayer.isFixedTimeActive}
                         />
                     </div>
                     );
@@ -850,8 +1127,11 @@ export function Test() {
                 <div className="text-white text-[20px] flex justify-center font-extrabold sm-max:w-full">
                         <div className="pc2:w-[287px] pc2:h-[357px] tv1:w-[247px] tv1:h-[260px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto sm-max:items-center">
                         <div className='flex gap-[11px] items-center justify-between sm-max:flex-col sm-max:items-start'>
-                                <div className="text-white text-left pc2:text-[32px] tv1:text-[20px] font-bold">Помощь "Проект"</div>
-                                <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[30px] sm:w-[35px] sm:h-[35px] md:w-[40px] md:h-[40px]" />
+                            <div className="flex flex-col">
+                                <div className="text-white text-left pc2:text-[32px] tv1:text-[20px] font-bold  max-w-[190px]">Помощь</div>
+                                <div className="text-white text-left pc2:text-[32px] tv1:text-[20px] whitespace-nowrap  font-bold  max-w-[190px]"> {secondaryQrProjectName ? `"${secondaryQrProjectName}"` : '"Проект"'}</div>
+                        </div>
+                            <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[40px] -mt-8" />
                             </div>
                             <div className="flex flex-col items-center">
                                 <img 
@@ -884,18 +1164,21 @@ export function Test() {
                 <div className="text-white text-[20px] flex justify-center font-extrabold sm-max:w-full sm-max:mb-[200px]">
                         <div className="pc2:w-[287px] pc2:h-[357px]  tv1:w-[247px] tv1:h-[260px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto">
                         <div className='flex gap-[11px] items-center justify-between sm-max:flex-col sm-max:items-start'>
-                                <div className="text-white text-left pc2:text-[32px] tv1:text-[20px] font-bold">Помощь мечети</div>
-                                <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[30px] sm:w-[35px] sm:h-[35px] md:w-[40px] md:h-[40px]" />
-                            </div>
+                             <div className="flex flex-col">
+                                <div className="text-white text-left pc2:text-[32px] tv1:text-[20px] font-bold">Помощь</div>
+                                <div className="text-white text-left pc2:text-[32px] tv1:text-[20px] font-bold">мечети</div>
+                        </div>
+                            <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[40px] -mt-8" />
+                    </div>
                             <div className="flex flex-col items-center">
                                 <img 
                                     className="pc2:w-[190px] pc2:h-[190px] tv1:w-[150px] tv1:h-[150px] rounded-[20px] sm-max:mx-auto" 
                                     src={`${API_BASE_URL}${qrCode}`} 
                                     alt="Основной QR код для мечети" 
                                 />
-                            </div>
-                        </div>
-                    </div>
+                </div>
+            </div>
+        </div>
                 )}
             </div>
         </div>
