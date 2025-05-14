@@ -337,20 +337,48 @@ const PrayerPage = () => {
 	};
 
 	const handlePrayerShift = async () => {
-		if (!selectedCityId || !selectedPrayer) return;
+		if (!selectedCityId || !selectedPrayer) {
+			toast.error('Пожалуйста, выберите город и намаз');
+			return;
+		}
 
-		const finalShiftMinutes = isCustomShift ? parseInt(customShiftMinutes, 10) : shiftMinutes;
+		try {
+			setLoading(true);
+			const finalShiftMinutes = isCustomShift ? parseInt(customShiftMinutes, 10) : shiftMinutes;
 
-		await axios.post(`${API_BASE_URL}/api/prayers/shift`, {
-			cityId: parseInt(selectedCityId, 10),
-			prayerName: selectedPrayer === 'mosque' ? 'mechet' : selectedPrayer,
-			shiftMinutes: finalShiftMinutes,
-		}, {
-			headers: {
-				Authorization: `Bearer ${localStorage.getItem('token')}`,
-			},
-		});
-		fetchPrayers(selectedCityId);
+			if (isNaN(finalShiftMinutes)) {
+				toast.error('Пожалуйста, введите корректное значение для смещения времени');
+				return;
+			}
+
+			await axios.post(
+				`${API_BASE_URL}/api/prayers/shift`,
+				{
+					cityId: parseInt(selectedCityId, 10),
+					prayerName: selectedPrayer === 'mosque' ? 'mechet' : selectedPrayer,
+					shiftMinutes: finalShiftMinutes,
+				},
+				{
+					headers: {
+						Authorization: `Bearer ${localStorage.getItem('token')}`,
+					},
+				}
+			);
+
+			await fetchPrayers(selectedCityId);
+			toast.success('Время намаза успешно изменено');
+			
+			// Сброс значений после успешного изменения
+			setSelectedPrayer('');
+			setShiftMinutes(0);
+			setCustomShiftMinutes('');
+			
+		} catch (error: any) {
+			console.error('Ошибка при изменении времени:', error);
+			toast.error(error.response?.data?.message || 'Ошибка при изменении времени намаза');
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	const handleTimeChange = (prayer: string, value: string) => {
