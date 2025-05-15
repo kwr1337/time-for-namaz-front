@@ -128,10 +128,10 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
         >
             <div className="w-full flex justify-between items-center">
                 <div className={`
-                    max-w-[70px] max-h-[70px]
-                    pc1:max-w-[60px] pc1:max-h-[60px]
-                    tv:max-w-[50px] tv:max-h-[50px]
-                    tv1:max-w-[40px] tv1:max-h-[40px]
+                    max-w-[80px] max-h-[80px]
+                    pc1:max-w-[70px] pc1:max-h-[70px]
+                    tv:max-w-[60px] tv:max-h-[60px]
+                    tv1:max-w-[50px] tv1:max-h-[50px]
                     ${highlight ? '!max-w-[120px] !max-h-[120px] pc1:!max-w-[100px] pc1:!max-h-[100px] tv:!max-w-[80px] tv:!max-h-[80px] tv1:!max-w-[60px] tv1:!max-h-[60px]' : 'text-[#17181d]'} flex bg-transparent`}>
                     <Image
                         className={highlight ? 'mt-0' : 'max-w-full max-h-full object-contain'} 
@@ -560,10 +560,12 @@ export function Test() {
         const fetchCities = async () => {
             try {
                 const response = await axios.get<City[]>(`${API_BASE_URL}/api/cities`);
-                setCities(response.data);
+                // Сортировка городов по алфавиту
+                const sortedCities = response.data.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+                setCities(sortedCities);
                 
                 if (!currentCityId || selectedCity) {
-                const selectedCityData = response.data.find(city => city.name === selectedCity);
+                const selectedCityData = sortedCities.find(city => city.name === selectedCity);
                     if (selectedCityData) {
                         setCurrentCityId(selectedCityData.id);
                         localStorage.setItem('currentCityId', selectedCityData.id.toString());
@@ -585,9 +587,13 @@ export function Test() {
         const fetchMosques = async () => {
             try {
                 const response = await axios.get<Mosque[]>(`${API_BASE_URL}/api/mosques`);
-                setMosques(response.data);
+                // Сортировка всех мечетей по алфавиту
+                const sortedMosques = response.data.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+                setMosques(sortedMosques);
 
-                const mosquesInCity = response.data.filter(mosque => mosque.cityId === currentCityId);
+                // Фильтруем и сортируем мечети для текущего города
+                const mosquesInCity = sortedMosques.filter(mosque => mosque.cityId === currentCityId);
+                
                 if (mosquesInCity.length > 0) {
                     // Проверяем, есть ли сохраненная мечеть в списке мечетей текущего города
                     const savedMosque = mosquesInCity.find(mosque => 
@@ -957,10 +963,35 @@ export function Test() {
                 return getTimeInMinutes(a[1].time) - getTimeInMinutes(b[1].time);
             });
 
+        // Проверяем, есть ли хотя бы один намаз
+        if (sortedPrayers.length === 0) {
+            return { nextPrayer: '', remainingTime: 0, totalDuration: 0 };
+        }
+
+        // Проверка наличия ближайшего намаза
+        if (!closestPrayer) {
+            // Если не нашли ближайший намаз, берем первый доступный на следующий день
+            closestPrayer = sortedPrayers[0][0];
+            // Рассчитываем время до первого намаза следующего дня
+            const firstPrayerTime = getTimeInMinutes(sortedPrayers[0][1].time);
+            const currentTimeInMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+            minDifference = ((24 * 60) - currentTimeInMinutes + firstPrayerTime) * 60 * 1000;
+        }
+
         const closestPrayerIndex = sortedPrayers.findIndex(([name]) => name === closestPrayer);
+        
+        // Проверка на корректность индекса ближайшего намаза
+        if (closestPrayerIndex === -1) {
+            return { nextPrayer: '', remainingTime: 0, totalDuration: 0 };
+        }
+
         const previousPrayerIndex = closestPrayerIndex > 0 ? closestPrayerIndex - 1 : sortedPrayers.length - 1;
         
-        // Расчет общего времени между намазами
+        // Расчет общего времени между намазами (с проверкой на валидность индексов)
+        if (!sortedPrayers[closestPrayerIndex] || !sortedPrayers[previousPrayerIndex]) {
+            return { nextPrayer: closestPrayer, remainingTime: minDifference, totalDuration: 24 * 60 * 60 * 1000 };
+        }
+
         const currentPrayerTime = getTimeInMinutes(sortedPrayers[closestPrayerIndex][1].time);
         const prevPrayerTime = getTimeInMinutes(sortedPrayers[previousPrayerIndex][1].time);
         
@@ -1077,15 +1108,18 @@ export function Test() {
                                 <div className="text-[#17181d] pc1:text-[24px] pc2:text-[18px] tv1:text-[14px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px]">{selectedMosque}</div>
                                 {mosqueDropdownOpen && (
                                     <div className="absolute right-0 bg-white border rounded-lg shadow-lg w-[250px] max-h-96 overflow-y-auto z-1000">
-                                        {mosques.filter(mosque => mosque.cityId === currentCityId).map((mosque) => (
-                                            <div key={mosque.id} className="p-2 hover:bg-gray-200 text-left cursor-pointer text-[#17181d] whitespace-nowrap overflow-hidden text-ellipsis"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleMosqueSelect(mosque);
-                                                }}>
-                                                {mosque.name}
-                                            </div>
-                                        ))}
+                                        {mosques
+                                            .filter(mosque => mosque.cityId === currentCityId)
+                                            .sort((a, b) => a.name.localeCompare(b.name, 'ru'))
+                                            .map((mosque) => (
+                                                <div key={mosque.id} className="p-2 hover:bg-gray-200 text-left cursor-pointer text-[#17181d] whitespace-nowrap overflow-hidden text-ellipsis"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleMosqueSelect(mosque);
+                                                    }}>
+                                                    {mosque.name}
+                                                </div>
+                                            ))}
                                     </div>
                                 )}
                             </div>
@@ -1128,8 +1162,8 @@ export function Test() {
                         <div className="pc2:w-[287px] pc2:h-[357px] tv1:w-[247px] tv1:h-[260px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto sm-max:items-center">
                         <div className='flex gap-[11px] items-center justify-between sm-max:flex-col sm-max:items-start'>
                             <div className="flex flex-col">
-                                <div className="text-white text-left pc2:text-[32px] tv1:text-[20px] font-bold  max-w-[190px]">Помощь</div>
-                                <div className="text-white text-left pc2:text-[32px] tv1:text-[20px] whitespace-nowrap  font-bold  max-w-[190px]"> {secondaryQrProjectName ? `"${secondaryQrProjectName}"` : '"Проект"'}</div>
+                                <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold  max-w-[190px]">Помощь</div>
+                                <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] whitespace-nowrap  font-bold  max-w-[190px]"> {secondaryQrProjectName ? `"${secondaryQrProjectName}"` : '"Проект"'}</div>
                         </div>
                             <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[40px] -mt-8" />
                             </div>
@@ -1165,8 +1199,8 @@ export function Test() {
                         <div className="pc2:w-[287px] pc2:h-[357px]  tv1:w-[247px] tv1:h-[260px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto">
                         <div className='flex gap-[11px] items-center justify-between sm-max:flex-col sm-max:items-start'>
                              <div className="flex flex-col">
-                                <div className="text-white text-left pc2:text-[32px] tv1:text-[20px] font-bold">Помощь</div>
-                                <div className="text-white text-left pc2:text-[32px] tv1:text-[20px] font-bold">мечети</div>
+                                <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold">Помощь</div>
+                                <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold">мечети</div>
                         </div>
                             <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[40px] -mt-8" />
                     </div>

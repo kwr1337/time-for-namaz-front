@@ -433,6 +433,20 @@ const PrayerPage = () => {
 		}
 	}, [role, userCityId]);
 
+	// Добавим функцию форматирования даты
+	const formatDate = (dateString: string): string => {
+		try {
+			const date = new Date(dateString);
+			const day = date.getDate().toString().padStart(2, '0');
+			const month = (date.getMonth() + 1).toString().padStart(2, '0');
+			const year = date.getFullYear();
+			return `${day}.${month}.${year}`;
+		} catch (error) {
+			console.error('Ошибка форматирования даты:', error, dateString);
+			return dateString; // Вернем исходную строку, если не удалось отформатировать
+		}
+	};
+
 	return (
 		<div className="h-screen w-full overflow-y-auto bg-gray-100 p-4 max-h-screen" style={{ scrollbarWidth: 'auto' }}>
 			{loading && (
@@ -732,7 +746,7 @@ const PrayerPage = () => {
 						{prayers.map((prayer: PrayerResponse) => (
 							<tr key={prayer.id} className="border-b">
 										{/* <td className="p-2 text-bg text-center">{prayer.city || '-'}</td> */}
-										<td className="p-2 text-black text-center">{prayer.date}</td>
+										<td className="p-2 text-black text-center">{formatDate(prayer.date)}</td>
 										<td className="p-2 text-black text-center">{prayer.fajr}</td>
 										<td className="p-2 text-black text-center">{prayer.mechet || '-'}</td>
 										<td className="p-2 text-black text-center">{prayer.shuruk}</td>
