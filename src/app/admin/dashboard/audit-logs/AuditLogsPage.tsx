@@ -38,6 +38,13 @@ interface CityRef {
   name: string;
 }
 
+// Интерфейс для мечети
+interface MosqueRef {
+  id: number;
+  name: string;
+  cityId: number;
+}
+
 // На начало файла после импортов добавим функцию для форматирования количества элементов
 const formatElementCount = (count: number): string => {
   const lastDigit = count % 10;
@@ -55,13 +62,27 @@ const formatElementCount = (count: number): string => {
 };
 
 // Вспомогательная функция для форматирования изменений
-const formatChanges = (log: AuditLog, cities?: CityRef[], expandState?: {expanded: boolean, setExpanded: (v: boolean) => void}): FormattedChanges => {
+const formatChanges = (log: AuditLog, cities?: CityRef[], expandState?: {expanded: boolean, setExpanded: (v: boolean) => void}, mosques?: MosqueRef[]): FormattedChanges => {
   // Вспомогательная функция для отображения изображений
   const renderImage = (imageUrl: string | null | undefined): JSX.Element | string => {
-    if (!imageUrl) return '-';
+    if (!imageUrl) return <span className="text-gray-400">-</span>;
     // Проверка, является ли URL полным или относительным
-    const src = imageUrl.startsWith('http') ? imageUrl : `${API_BASE_URL}/${imageUrl.replace(/\\/g, '/')}`;
-    return <img src={src} alt="изображение" className="w-16 h-16 object-contain" />;
+    let src: string;
+    if (imageUrl.startsWith('http')) {
+      src = imageUrl;
+    } else if (log.entity === 'QRCode' || log.entity === 'City') {
+      src = `${API_BASE_URL}${imageUrl.replace(/\\/g, '/')}`;
+    } else {
+      src = `${API_BASE_URL}/${imageUrl.replace(/\\/g, '/')}`;
+    }
+    return (
+      <img
+        src={src}
+        alt="изображение"
+        className="w-16 h-16 object-contain border rounded shadow-sm bg-white"
+        style={{maxWidth: 64, maxHeight: 64}}
+      />
+    );
   };
 
   const renderValue = (value: any): JSX.Element | string => {
@@ -86,6 +107,29 @@ const formatChanges = (log: AuditLog, cities?: CityRef[], expandState?: {expande
       cityName = found ? found.name : '-';
     }
     cityName = cityName || '-';
+  } else if (log.entity === 'QRCode') {
+    // Для QRCode ищем город через мечеть
+    let mosque = log.newValue?.mosque || log.oldValue?.mosque || log.newValue?.mosqueInfo || log.oldValue?.mosqueInfo;
+    if (mosque) {
+      cityName = mosque.cityInfo?.name;
+      if (!cityName && cities && mosque.cityId) {
+        const found = cities.find(c => c.id === mosque.cityId);
+        cityName = found ? found.name : '-';
+      }
+    } else if ((log.newValue?.mosqueId || log.oldValue?.mosqueId) && mosques && cities) {
+      // Если есть только mosqueId, ищем мечеть и город
+      const mosqueId = log.newValue?.mosqueId || log.oldValue?.mosqueId;
+      const foundMosque = mosques.find(m => m.id === mosqueId);
+      if (foundMosque) {
+        const foundCity = cities.find(c => Number(c.id) === Number(foundMosque.cityId));
+        cityName = foundCity ? foundCity.name : '-';
+      } else {
+        cityName = '-';
+      }
+    }
+    if (!cityName || cityName === '-') {
+      cityName = '-';
+    }
   } else if (log.entity === 'Prayer' && (log.action === 'bulk-update' || log.action === 'bulk-import')) {
     cityName = log.newValue?.cityInfo?.name || log.oldValue?.cityInfo?.name || '-';
   } else if (log.entity === 'FixedPrayerTime') {
@@ -97,9 +141,16 @@ const formatChanges = (log: AuditLog, cities?: CityRef[], expandState?: {expande
     }
   }
 
-  const mosqueName = log.entity === 'Mosque' 
-    ? (log.oldValue?.name || log.newValue?.name || '-') 
-    : undefined;
+  // Определяем название мечети для QRCode
+  let mosqueName: string | undefined;
+  if (log.entity === 'Mosque') {
+    mosqueName = log.oldValue?.name || log.newValue?.name || '-';
+  } else if (log.entity === 'QRCode') {
+    mosqueName = log.newValue?.mosqueName || log.oldValue?.mosqueName
+      || log.newValue?.mosque?.name || log.oldValue?.mosque?.name
+      || log.newValue?.mosqueInfo?.name || log.oldValue?.mosqueInfo?.name
+      || '-';
+  }
 
   // Проверяем, были ли изменения только в изображениях
   const isOnlyImageChange = log.action === 'update' &&
@@ -253,30 +304,110 @@ const formatChanges = (log: AuditLog, cities?: CityRef[], expandState?: {expande
 
   switch (log.action) {
     case 'create':
-      mainContent = (
-        <div className="flex items-center">
-          <span className="text-green-600 mr-2">➕</span>
-          <div>
-            <div className="font-semibold">Создано:</div>
-            {renderValue(log.newValue)}
+      if (log.entity === 'Mosque') {
+        mainContent = (
+          <div className="flex items-center">
+            <span className="text-green-600 mr-2 text-lg">🕌</span>
+            <span className="text-gray-700 font-medium">
+              Мечеть добавлена:
+              <b className="ml-1">{log.newValue?.name || '-'}</b>
+              {cityName && cityName !== '-' && (
+                <span className="ml-1">({cityName}{log.newValue?.id ? `, ID: ${log.newValue.id}` : ''})</span>
+              )}
+              {(!cityName || cityName === '-') && log.newValue?.id && (
+                <span className="ml-1">(ID: {log.newValue.id})</span>
+              )}
+            </span>
           </div>
-        </div>
-      );
+        );
+      } else {
+        mainContent = (
+          <div className="flex items-center">
+            <span className="text-green-600 mr-2">➕</span>
+            <div>
+              <div className="font-semibold">Создано:</div>
+              {renderValue(log.newValue)}
+            </div>
+          </div>
+        );
+      }
       break;
 
     case 'update':
-      if (isOnlyImageChange) {
+      let imageChangeType: 'added' | 'updated' | 'deleted' | null = null;
+      if ((oldImageUrl || newImageUrl) && (log.entity === 'City' || log.entity === 'Mosque' || log.entity === 'QRCode')) {
+        if (!oldImageUrl && newImageUrl) imageChangeType = 'added';
+        else if (oldImageUrl && !newImageUrl) imageChangeType = 'deleted';
+        else if (oldImageUrl && newImageUrl && oldImageUrl !== newImageUrl) imageChangeType = 'updated';
+      }
+      // Для QRCode: если изменился imageUrl, всегда выводим красивую подпись
+      if (log.entity === 'QRCode' && log.oldValue?.imageUrl !== log.newValue?.imageUrl) {
+        const isPrimary = log.newValue?.isPrimary ?? log.oldValue?.isPrimary;
+        let text = isPrimary ? 'Основной QR-код изменён' : 'Дополнительный QR-код изменён';
         mainContent = (
           <div className="flex items-center">
-            <span className="text-purple-600 mr-2">🖼️</span>
-            <span>Изменено изображение</span>
+            <span className="text-purple-600 mr-2 text-lg">🖼️</span>
+            <span className="text-gray-700 font-medium">{text}</span>
+          </div>
+        );
+      } else if (isOnlyImageChange && imageChangeType) {
+        // Особый вывод для других сущностей
+        let icon = '', text = '';
+        if (imageChangeType === 'added') { icon = '🟢'; text = 'Изображение добавлено'; }
+        if (imageChangeType === 'updated') { icon = '🖼️'; text = 'Изображение обновлено'; }
+        if (imageChangeType === 'deleted') { icon = '❌'; text = 'Изображение удалено'; }
+        mainContent = (
+          <div className="flex items-center">
+            <span className={`mr-2 text-lg ${imageChangeType === 'added' ? 'text-green-600' : imageChangeType === 'deleted' ? 'text-red-600' : 'text-purple-600'}`}>{icon}</span>
+            <span className="text-gray-700 font-medium">{text}</span>
           </div>
         );
       } else if (log.oldValue && log.newValue) {
         const changes: JSX.Element[] = [];
-        // Сравниваем поля и выводим только изменённые, кроме изображений
+        // Для QRCode — красиво выводим смену мечети
+        if (log.entity === 'QRCode') {
+          const oldMosque = log.oldValue?.mosqueName || log.oldValue?.mosque?.name || log.oldValue?.mosqueInfo?.name || '-';
+          const newMosque = log.newValue?.mosqueName || log.newValue?.mosque?.name || log.newValue?.mosqueInfo?.name || '-';
+          if (oldMosque !== newMosque) {
+            changes.push(
+              <div key="mosque-change" className="mb-1">
+                {/* <span className="font-semibold mr-1">Мечеть изменена:</span> */}
+                {/* <span className="text-red-600">{oldMosque}</span> &rarr; <span className="text-green-600">{newMosque}</span> */}
+              </div>
+            );
+          }
+          // Красивый вывод для isPrimary
+          if (log.oldValue?.isPrimary !== undefined && log.newValue?.isPrimary !== undefined && log.oldValue.isPrimary !== log.newValue.isPrimary) {
+            if (log.newValue.isPrimary) {
+              changes.push(
+                <div key="isPrimary-true" className="mb-1">
+                  <span className="text-yellow-500 mr-1">⭐</span>
+                  <span className="font-semibold text-green-700">Сделан основным</span>
+                </div>
+              );
+            } else {
+              changes.push(
+                <div key="isPrimary-false" className="mb-1">
+                  <span className="text-gray-400 mr-1">✖️</span>
+                  <span className="font-semibold text-red-700">Снят с основного</span>
+                </div>
+              );
+            }
+          }
+          // Красивый вывод для projectName
+          if (log.oldValue?.projectName !== undefined && log.newValue?.projectName !== undefined && log.oldValue.projectName !== log.newValue.projectName) {
+            changes.push(
+              <div key="projectName-change" className="mb-1">
+                <span className="font-semibold mr-1">Название проекта изменено:</span>
+                <span className="text-red-600">{log.oldValue. projectName || '-'}</span> &rarr; <span className="text-green-600">{log.newValue.projectName || '-'}</span>
+              </div>
+            );
+          }
+        }
+        // Сравниваем остальные поля и выводим только изменённые, кроме изображений, мечети, projectName, isPrimary и служебных
+        const skipFields = ['logoUrl', 'imageUrl', 'mosqueName', 'mosque', 'mosqueInfo', 'updatedAt', 'createdAt', 'id', 'isPrimary', 'projectName'];
         for (const key in log.newValue) {
-          if ((key !== 'logoUrl' && key !== 'imageUrl') &&
+          if (!skipFields.includes(key) &&
               log.oldValue.hasOwnProperty(key) && log.oldValue[key] !== log.newValue[key]) {
             changes.push(
               <div key={key} className="mb-1">
@@ -286,29 +417,28 @@ const formatChanges = (log: AuditLog, cities?: CityRef[], expandState?: {expande
             );
           }
         }
-        // Если есть новые поля, которых не было в oldValue (кроме изображений)
-         for (const key in log.newValue) {
-          if ((key !== 'logoUrl' && key !== 'imageUrl') && !log.oldValue.hasOwnProperty(key)) {
-             changes.push(
+        // Если есть новые поля, которых не было в oldValue (кроме изображений, мечети, projectName, isPrimary и служебных)
+        for (const key in log.newValue) {
+          if (!skipFields.includes(key) && !log.oldValue.hasOwnProperty(key)) {
+            changes.push(
               <div key={key} className="mb-1 text-green-700">
                 <span className="font-semibold mr-1">{key}:</span>
-                 (добавлено) {renderValue(log.newValue[key])}
+                (добавлено) {renderValue(log.newValue[key])}
               </div>
             );
           }
         }
-         // Если были удалены поля, которые были в oldValue, но нет в newValue (кроме изображений)
-         for (const key in log.oldValue) {
-          if ((key !== 'logoUrl' && key !== 'imageUrl') && !log.newValue.hasOwnProperty(key)) {
-             changes.push(
+        // Если были удалены поля, которые были в oldValue, но нет в newValue (кроме изображений, мечети, projectName, isPrimary и служебных)
+        for (const key in log.oldValue) {
+          if (!skipFields.includes(key) && !log.newValue.hasOwnProperty(key)) {
+            changes.push(
               <div key={key} className="mb-1 text-red-700">
                 <span className="font-semibold mr-1">{key}:</span>
-                 (удалено) {renderValue(log.oldValue[key])}
+                (удалено) {renderValue(log.oldValue[key])}
               </div>
             );
           }
         }
-
         mainContent = changes.length > 0 ? (
           <div className="flex items-start">
             <span className="text-blue-600 mr-2 mt-1">✏️</span>
@@ -336,15 +466,33 @@ const formatChanges = (log: AuditLog, cities?: CityRef[], expandState?: {expande
       break;
 
     case 'delete':
-      mainContent = (
-        <div className="flex items-center">
-          <span className="text-red-600 mr-2">❌</span>
-          <div>
-            <div className="font-semibold">Удалено:</div>
-            {renderValue(log.oldValue)}
+      if (log.entity === 'Mosque') {
+        mainContent = (
+          <div className="flex items-center">
+            <span className="text-red-600 mr-2 text-lg">❌</span>
+            <span className="text-gray-700 font-medium">
+              Мечеть удалена:
+              <b className="ml-1">{log.oldValue?.name || '-'}</b>
+              {cityName && cityName !== '-' && (
+                <span className="ml-1">({cityName}{log.oldValue?.id ? `, ID: ${log.oldValue.id}` : ''})</span>
+              )}
+              {(!cityName || cityName === '-') && log.oldValue?.id && (
+                <span className="ml-1">(ID: {log.oldValue.id})</span>
+              )}
+            </span>
           </div>
-        </div>
-      );
+        );
+      } else {
+        mainContent = (
+          <div className="flex items-center">
+            <span className="text-red-600 mr-2">❌</span>
+            <div>
+              <div className="font-semibold">Удалено:</div>
+              {renderValue(log.oldValue)}
+            </div>
+          </div>
+        );
+      }
       break;
 
     case 'bulk-update':
@@ -624,6 +772,7 @@ const AuditLogsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cities, setCities] = useState<CityRef[]>([]);
+  const [mosques, setMosques] = useState<MosqueRef[]>([]);
   const [expandedCities, setExpandedCities] = useState<{[logId: number]: boolean}>({});
 
   useEffect(() => {
@@ -660,16 +809,31 @@ const AuditLogsPage = () => {
       }
     };
 
+    const fetchMosques = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get<MosqueRef[]>(`${API_BASE_URL}/api/mosques`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setMosques(response.data);
+      } catch (err) {
+        setMosques([]);
+      }
+    };
+
     fetchAuditLogs();
     fetchCities();
+    fetchMosques();
   }, []);
 
   const handleBack = () => {
     window.location.href = DASHBOARD_PAGES.DASHBOARD;
   };
 
-  // Передаём cities в formatChanges
-  const formatChangesWithCities = (log: AuditLog, expandState?: {expanded: boolean, setExpanded: (v: boolean) => void}) => formatChanges(log, cities, expandState);
+  // Передаём cities и mosques в formatChanges
+  const formatChangesWithCities = (log: AuditLog, expandState?: {expanded: boolean, setExpanded: (v: boolean) => void}) => formatChanges(log, cities, expandState, mosques);
 
   return (
     <div className="h-screen w-full overflow-y-auto bg-gray-100 p-4">

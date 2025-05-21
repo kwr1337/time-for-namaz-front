@@ -615,7 +615,7 @@ const PrayerPage = () => {
 												<div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-green-400 transition-colors relative">
 													<div className={`absolute left-1 top-1 w-3 h-3 bg-white rounded-full shadow transition-transform ${fixedPrayerTime.fajrActive ? 'translate-x-5' : ''}`}></div>
 												</div>
-												<span className="ml-2 text-xs">{fixedPrayerTime.fajrActive ? 'Активно' : 'Отключено'}</span>
+												<span className={`ml-2 text-xs ${fixedPrayerTime.fajrActive ? 'text-green-600' : 'text-red-600'}`}>{fixedPrayerTime.fajrActive ? 'Включено' : 'Выключено'}</span>
 											</label>
 										</div>
 									</div>
@@ -634,7 +634,7 @@ const PrayerPage = () => {
 												<div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-green-400 transition-colors relative">
 													<div className={`absolute left-1 top-1 w-3 h-3 bg-white rounded-full shadow transition-transform ${fixedPrayerTime.mechetActive ? 'translate-x-5' : ''}`}></div>
 												</div>
-												<span className="ml-2 text-xs">{fixedPrayerTime.mechetActive ? 'Активно' : 'Отключено'}</span>
+												<span className={`ml-2 text-xs ${fixedPrayerTime.mechetActive ? 'text-green-600' : 'text-red-600'}`}>{fixedPrayerTime.mechetActive ? 'Включено' : 'Выключено'}</span>
 											</label>
 										</div>
 									</div>
@@ -653,7 +653,7 @@ const PrayerPage = () => {
 												<div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-green-400 transition-colors relative">
 													<div className={`absolute left-1 top-1 w-3 h-3 bg-white rounded-full shadow transition-transform ${fixedPrayerTime.shurukActive ? 'translate-x-5' : ''}`}></div>
 												</div>
-												<span className="ml-2 text-xs">{fixedPrayerTime.shurukActive ? 'Активно' : 'Отключено'}</span>
+												<span className={`ml-2 text-xs ${fixedPrayerTime.shurukActive ? 'text-green-600' : 'text-red-600'}`}>{fixedPrayerTime.shurukActive ? 'Включено' : 'Выключено'}</span>
 											</label>
 										</div>
 									</div>
@@ -671,7 +671,7 @@ const PrayerPage = () => {
 												<div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-green-400 transition-colors relative">
 													<div className={`absolute left-1 top-1 w-3 h-3 bg-white rounded-full shadow transition-transform ${fixedPrayerTime.zuhrActive ? 'translate-x-5' : ''}`}></div>
 												</div>
-												<span className="ml-2 text-xs">{fixedPrayerTime.zuhrActive ? 'Активно' : 'Отключено'}</span>
+												<span className={`ml-2 text-xs ${fixedPrayerTime.zuhrActive ? 'text-green-600' : 'text-red-600'}`}>{fixedPrayerTime.zuhrActive ? 'Включено' : 'Выключено'}</span>
 											</label>
 										</div>
 									</div>
@@ -689,7 +689,7 @@ const PrayerPage = () => {
 												<div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-green-400 transition-colors relative">
 													<div className={`absolute left-1 top-1 w-3 h-3 bg-white rounded-full shadow transition-transform ${fixedPrayerTime.asrActive ? 'translate-x-5' : ''}`}></div>
 												</div>
-												<span className="ml-2 text-xs">{fixedPrayerTime.asrActive ? 'Активно' : 'Отключено'}</span>
+												<span className={`ml-2 text-xs ${fixedPrayerTime.asrActive ? 'text-green-600' : 'text-red-600'}`}>{fixedPrayerTime.asrActive ? 'Включено' : 'Выключено'}</span>
 											</label>
 										</div>
 									</div>
@@ -707,7 +707,7 @@ const PrayerPage = () => {
 												<div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-green-400 transition-colors relative">
 													<div className={`absolute left-1 top-1 w-3 h-3 bg-white rounded-full shadow transition-transform ${fixedPrayerTime.maghribActive ? 'translate-x-5' : ''}`}></div>
 												</div>
-												<span className="ml-2 text-xs">{fixedPrayerTime.maghribActive ? 'Активно' : 'Отключено'}</span>
+												<span className={`ml-2 text-xs ${fixedPrayerTime.maghribActive ? 'text-green-600' : 'text-red-600'}`}>{fixedPrayerTime.maghribActive ? 'Включено' : 'Выключено'}</span>
 											</label>
 										</div>
 									</div>
@@ -725,7 +725,7 @@ const PrayerPage = () => {
 												<div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-green-400 transition-colors relative">
 													<div className={`absolute left-1 top-1 w-3 h-3 bg-white rounded-full shadow transition-transform ${fixedPrayerTime.ishaActive ? 'translate-x-5' : ''}`}></div>
 												</div>
-												<span className="ml-2 text-xs">{fixedPrayerTime.ishaActive ? 'Активно' : 'Отключено'}</span>
+												<span className={`ml-2 text-xs ${fixedPrayerTime.ishaActive ? 'text-green-600' : 'text-red-600'}`}>{fixedPrayerTime.ishaActive ? 'Включено' : 'Выключено'}</span>
 											</label>
 										</div>
 									</div>
