@@ -57,8 +57,8 @@ const LoginPage = () => {
 			<div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
 				<h2 className="text-2xl font-bold text-center text-gray-700">Вход в админку</h2>
 				<input
-					type="email"
-					placeholder="Email"
+					type="login"
+					placeholder="Логин"
 					value={email}
 					onChange={(e) => setEmail(e.target.value)}
 					className="w-full px-4 py-2 mb-4 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500"

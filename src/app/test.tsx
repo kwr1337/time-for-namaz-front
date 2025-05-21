@@ -129,10 +129,10 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
             <div className="w-full flex justify-between items-center">
                 <div className={`
                     max-w-[80px] max-h-[80px]
-                    pc1:max-w-[70px] pc1:max-h-[70px]
-                    tv:max-w-[60px] tv:max-h-[60px]
-                    tv1:max-w-[50px] tv1:max-h-[50px]
-                    ${highlight ? '!max-w-[120px] !max-h-[120px] pc1:!max-w-[100px] pc1:!max-h-[100px] tv:!max-w-[80px] tv:!max-h-[80px] tv1:!max-w-[60px] tv1:!max-h-[60px]' : 'text-[#17181d]'} flex bg-transparent`}>
+                    pc1:max-w-[100px] pc1:max-h-[100px]
+                    tv:max-w-[70px] tv:max-h-[70px]
+                    tv1:max-w-[60px] tv1:max-h-[60px]
+                    ${highlight ? '!max-w-[120px] !max-h-[120px] pc1:!max-w-[130px] pc1:!max-h-[130px] tv:!max-w-[90px] tv:!max-h-[90px] tv1:!max-w-[70px] tv1:!max-h-[70px]' : 'text-[#17181d]'} flex bg-transparent`}>
                     <Image
                         className={highlight ? 'mt-0' : 'max-w-full max-h-full object-contain'} 
                         src={highlight ? pic2 : pic}
@@ -163,13 +163,13 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
             </div>
 
             <div className="flex flex-col items-start mt-[15%] w-full">
-                {highlight && isFixedTimeActive && fixedTime && (
+                {isFixedTimeActive && fixedTime && (
                     <div className={`text-center text-[60px] pc:text-[60px] pc1:text-[50px] tv:text-[40px] tv1:text-[35px] leading-none font-[700] ${highlight ? 'text-white !text-[60px] pc:!text-[60px] pc1:!text-[55px] tv:!text-[50px] tv1:!text-[45px]' : 'text-[#17181d]'}`}>
                         {fixedTime}*
                     </div>
                 )}
                 
-                <div className={`text-center ${highlight && isFixedTimeActive && fixedTime ? 'text-[40px] pc:text-[40px] pc1:text-[35px] tv:text-[30px] tv1:text-[25px]' : 'text-[60px] pc:text-[60px] pc1:text-[50px] tv:text-[40px] tv1:text-[35px]'} leading-none font-[700] ${highlight ? `text-white ${isFixedTimeActive && fixedTime ? '!text-[40px] pc:!text-[40px] pc1:!text-[35px] tv:!text-[30px] tv1:!text-[25px]' : '!text-[60px] pc:!text-[60px] pc1:!text-[55px] tv:!text-[50px] tv1:!text-[45px]'}` : 'text-[#17181d]'}`}>
+                <div className={`text-center ${ isFixedTimeActive && fixedTime ? 'text-[40px] pc:text-[40px] pc1:text-[35px] tv:text-[30px] tv1:text-[25px]' : 'text-[60px] pc:text-[60px] pc1:text-[50px] tv:text-[40px] tv1:text-[35px]'} leading-none font-[700] ${highlight ? `text-white ${isFixedTimeActive && fixedTime ? '!text-[40px] pc:!text-[40px] pc1:!text-[35px] tv:!text-[30px] tv1:!text-[25px]' : '!text-[60px] pc:!text-[60px] pc1:!text-[55px] tv:!text-[50px] tv1:!text-[45px]'}` : 'text-[#17181d]'}`}>
                     {time}
                 </div>
 
@@ -325,6 +325,33 @@ const mapOpenWeatherCodeToInternalCode = (openWeatherCode: string) => {
     
     // По умолчанию - солнечно
     return '1000';
+};
+
+const DigitalClock: React.FC = () => {
+    const [time, setTime] = useState(new Date());
+    const [blink, setBlink] = useState(true);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTime(new Date());
+            setBlink(prev => !prev);
+        }, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const hours = String(time.getHours()).padStart(2, '0');
+    const minutes = String(time.getMinutes()).padStart(2, '0');
+    const seconds = String(time.getSeconds()).padStart(2, '0');
+
+    return (
+        <div className="flex items-center justify-center">
+            <span className="text-[52px] pc1:text-[52px] pc2:text-[42px] tv1:text-[32px]">{hours}</span>
+            <span style={{ opacity: blink ? 1 : 0.2, transition: 'opacity 0.2s' }} className="text-[52px] pc1:text-[52px] pc2:text-[42px] tv1:text-[32px]">:</span>
+            <span className="text-[52px] pc1:text-[52px] pc2:text-[42px] tv1:text-[32px]">{minutes}</span>
+            <span style={{ opacity: blink ? 1 : 0.2, transition: 'opacity 0.2s', marginLeft: 1 }} className="text-[32px] font-normal pc1:text-[32px] pc2:text-[22px] tv1:text-[16px] mt-[14px]">:</span>
+            <span className="text-[32px] font-normal pc1:text-[32px] pc2:text-[22px] tv1:text-[16px] mt-[14px]">{seconds}</span>
+        </div>
+    );
 };
 
 export function Test() {
@@ -786,7 +813,7 @@ export function Test() {
             if (response.data && response.data.length > 0) {
                 const weatherInfo = response.data[0];
                 const weatherData: WeatherData = {
-                    temperature: Math.round(weatherInfo.temp_2 - 273.15),
+                    temperature: Math.round(weatherInfo.temp_100_cel),
                     description: getWeatherDescription(weatherInfo.oblachnost_atmo, weatherInfo.vlaga_2f),
                     icon: getWeatherIcon(weatherInfo.oblachnost_atmo, weatherInfo.vlaga_2f),
                     city: cityName,
@@ -1012,27 +1039,7 @@ export function Test() {
             <div className="w-full border-[5px] border-white bg-[#eeeeee] rounded-[40px] flex flex-wrap xl:justify-between items-center p-[10px] xl-max:justify-center lg-max:flex-col sm-max:flex-col sm-max:gap-[20px] sm-max:items-center">
                 <div className="flex flex-wrap items-center space-x-6 sm-max:flex-col sm-max:space-x-0 sm-max:gap-[10px] sm-max:items-center ">
                     <div className="text-[#17181d] text-center text-[52px] font-[700] pt-[8px] pb-[8px] pr-[48px] pl-[48px]  pc2:pt-[6px] pc2:pb-[6px] pc2:pr-[30px] pc2:pl-[30px]  tv1:pt-[4px] tv1:pb-[4px] tv1:pr-[25px] tv1:pl-[25px] bg-white rounded-[24px]">
-                        {(() => {
-                            const now = new Date();
-                            const hours = now.getHours().toString().padStart(2, '0');
-                            const minutes = now.getMinutes().toString().padStart(2, '0');
-                            const seconds = now.getSeconds().toString().padStart(2, '0');
-                            return (
-                                <div className="flex items-center justify-center">
-                                    <span className="text-[52px] pc1:text-[52px] pc2:text-[42px] tv1:text-[32px]">{hours}</span>
-                                    <span className="text-[52px] pc1:text-[52px] pc2:text-[42px] tv1:text-[32px] animate-[softBlink_1.5s_ease-in-out_infinite]">:</span>
-                                    <span className="text-[52px] pc1:text-[52px] pc2:text-[42px] tv1:text-[32px]">{minutes}</span>
-                                    <span className="text-[32px] font-normal pc1:text-[32px] pc2:text-[22px] tv1:text-[16px] mt-[14px] animate-[softBlink_1.5s_ease-in-out_infinite]">:</span>
-                                    <span className="text-[32px] font-normal pc1:text-[32px] pc2:text-[22px] tv1:text-[16px] mt-[14px]">{seconds}</span>
-                                </div>
-                            );
-                        })()}
-                        <style jsx>{`
-                            @keyframes softBlink {
-                                0%, 100% { opacity: 1; }
-                                50% { opacity: 0.3; }
-                            }
-                        `}</style>
+                        <DigitalClock />
                     </div>
                     <div className='flex gap-[5px] sm-max:flex-col sm-max:items-center sm-max:gap-[0px]'>
                         <div className="text-[#17181d] text-[40px] pc1:text-[40px] pc2:text-[30px] tv1:text-[20px] ">
@@ -1045,7 +1052,7 @@ export function Test() {
                 </div>
 
                 <div className="flex flex-wrap items-center text-center space-x-6 pc2:space-x-4 tv1:space-x-2 lg-max:justify-center lg:flex-row sm-max:flex-col sm-max:gap-[15px]">
-                    <div 
+                    {/* <div 
                         className="flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 py-[10px] pc2:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center"
                     >
                         <div className="text-[#a0a2b1] text-[12px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px] tv1:text-[10px]">
@@ -1073,7 +1080,7 @@ export function Test() {
                                 </div>
                             )}
                         </div>
-                    </div>
+                    </div> */}
                     <div className="flex flex-col bg-white rounded-[25px] pc2:px-1 tv1:px-0  px-3 py-[10px] pc2:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center">
                         <div className="text-[#a0a2b1] pc2:text-[12px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px] tv1:text-[10px] ">Дата по хиджре</div>
                         <div className="text-[#17181d] pc1:text-[24px] pc2:text-[18px] tv1:text-[14px] font-normal  pc2:leading-[27.60px] tv1:leading-[17.60px]">{getHijriDate()}</div>
@@ -1156,7 +1163,7 @@ export function Test() {
                 })}
             </div>
 
-            <div className="w-full gap-[24px] pc2:h-[357px]  rounded-[50px] flex sm-max:flex-col justify-between items-center px-3 tv1:mt-[30px] pc2:mt-[40px] sm-max:h-auto">
+            <div className="w-full gap-[24px] pc2:h-[357px] rounded-[50px] flex sm-max:flex-col justify-between items-center p-[24px] tv1:mt-[30px] pc2:mt-[40px] sm-max:h-auto">
                 {secondaryQrCode && (
                 <div className="text-white text-[20px] flex justify-center font-extrabold sm-max:w-full">
                         <div className="pc2:w-[287px] pc2:h-[357px] tv1:w-[247px] tv1:h-[260px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto sm-max:items-center">
@@ -1165,7 +1172,7 @@ export function Test() {
                                 <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold  max-w-[190px]">Помощь</div>
                                 <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] whitespace-nowrap  font-bold  max-w-[190px]"> {secondaryQrProjectName ? `"${secondaryQrProjectName}"` : '"Проект"'}</div>
                         </div>
-                            <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[40px] -mt-8" />
+                            <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[50px] -mt-8" />
                             </div>
                             <div className="flex flex-col items-center">
                                 <img 
@@ -1178,9 +1185,9 @@ export function Test() {
                     </div>
                 )}
 
-                <div className={`${!secondaryQrCode ? 'flex-grow' : 'max-w-[1200px]'} w-full max-h-[387px] pc2:h-full tv1:h-[260px] bg-[rgba(217,217,217,1)] rounded-[32px] flex items-center justify-center`}>
+                <div className={`${!secondaryQrCode ? 'flex-grow' : 'max-w-[1200px]'} w-full h-full pc2:h-[357px] tv1:h-[260px] bg-[rgba(217,217,217,1)] rounded-[20px] flex items-center justify-center p-[12px]`}>
                     <div className="w-full h-full flex flex-col items-center justify-center">
-                        <div className="bg-white rounded-[24px] p-6 shadow-md border-[2px] border-[#5ec262] mx-auto w-[95%] h-[90%] flex flex-col items-center justify-center">
+                        <div className="bg-white rounded-[16px] p-6 shadow-md border-[2px] border-[#5ec262] mx-auto w-full h-full flex flex-col items-center justify-center">
                             <div className="text-[50px] pc:text-[60px] pc1:text-[50px] pc2:text-[40px] font-bold text-[#5ec262] mb-4 text-center">
                                 {currentName.arabic}
                             </div>
@@ -1195,14 +1202,14 @@ export function Test() {
                 </div>
 
                 {qrCode && (
-                <div className="text-white text-[20px] flex justify-center font-extrabold sm-max:w-full sm-max:mb-[200px]">
-                        <div className="pc2:w-[287px] pc2:h-[357px]  tv1:w-[247px] tv1:h-[260px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto">
+                <div className="text-white text-[20px] flex justify-center font-extrabold sm-max:w-full">
+                        <div className="pc2:w-[287px] pc2:h-[357px] tv1:w-[247px] tv1:h-[260px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto">
                         <div className='flex gap-[11px] items-center justify-between sm-max:flex-col sm-max:items-start'>
                              <div className="flex flex-col">
                                 <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold">Помощь</div>
                                 <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold">мечети</div>
                         </div>
-                            <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[40px] -mt-8" />
+                            <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[50px] -mt-8" />
                     </div>
                             <div className="flex flex-col items-center">
                                 <img 
@@ -1210,11 +1217,16 @@ export function Test() {
                                     src={`${API_BASE_URL}${qrCode}`} 
                                     alt="Основной QR код для мечети" 
                                 />
+                            </div>
+                    </div>
                 </div>
-            </div>
-        </div>
                 )}
             </div>
+
+            <div className="w-full text-center text-[16px] text-gray-500 mt-2">
+                * — время, принятое мечетью для проведения коллективного намаза
+            </div>
+            
         </div>
     );
 }

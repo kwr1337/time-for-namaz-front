@@ -9,6 +9,7 @@ class ADMIN {
 	QRCODE = `${this.root}/dashboard/qrcode`
 	ADMINMANAGMENT  = `${this.root}/dashboard/adminManagement`
 	MEDIA = `${this.root}/dashboard/media`
+	AUDIT_LOGS = `${this.root}/dashboard/audit-logs`
 
 }
 

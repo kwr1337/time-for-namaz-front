@@ -54,6 +54,10 @@ const DashboardPage = () => {
 		window.location.href = DASHBOARD_PAGES.ADMINMANAGMENT;
 	};
 
+	const handleGoToAuditLogs = () => {
+		window.location.href = DASHBOARD_PAGES.AUDIT_LOGS;
+	};
+
 	const handleLogout = () => {
 		localStorage.removeItem('token');
 		window.location.href = '/auth';
@@ -100,6 +104,15 @@ const DashboardPage = () => {
 						className="mt-4 bg-blue-500 w-full text-white p-2 rounded hover:bg-blue-600 transition"
 					>
 						Перейти к редактирование админов
+					</button>
+				)}
+
+				{role === 'SUPER_ADMIN' && (
+					<button
+						onClick={handleGoToAuditLogs}
+						className="mt-4 bg-blue-500 w-full text-white p-2 rounded hover:bg-blue-600 transition"
+					>
+						Перейти к логам аудита
 					</button>
 				)}
 
