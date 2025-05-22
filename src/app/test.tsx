@@ -497,47 +497,41 @@ export function Test() {
                 try {
                     const response = await fetch(`${API_BASE_URL}${API.GET_MOSQUE_QRCODES(currentMosqueId)}`);
                     if (!response.ok) {
-                        throw new Error('Network response was not ok');
+                        throw new Error(`Ошибка сети при загрузке QR-кодов: ${response.status}`);
                     }
+                    
                     const data = await response.json();
-                    if (data && Array.isArray(data) && data.length > 0) {
-                        // Ищем основной QR-код (isPrimary === true)
-                        const primaryQR = data.find(qr => qr.isPrimary === true);
-                        // Ищем второстепенный QR-код (isPrimary === false)
-                        const secondaryQR = data.find(qr => qr.isPrimary === false);
-                        
-                        // Устанавливаем основной QR-код
-                        if (primaryQR) {
-                            setQrCode(primaryQR.imageUrl);
-                        } else if (data.length > 0) {
-                            // Если основного нет, берем первый доступный
-                            setQrCode(data[0].imageUrl);
-                        } else {
-                            setQrCode(null);
-                        }
-                        
-                        // Устанавливаем второстепенный QR-код, если есть
-                        if (secondaryQR) {
-                            setSecondaryQrCode(secondaryQR.imageUrl);
-                            setSecondaryQrProjectName(secondaryQR.projectName);
-                           
-                        } else {
-                            setQrCode(null);
-                            setSecondaryQrCode(null);
-                            setSecondaryQrProjectName(null);
-                            
-                        }
-                    } else {
-                        setQrCode(null);
-                        setSecondaryQrCode(null);
-                        setSecondaryQrProjectName(null);
-                        
-                    }
-                } catch (error) {
+                    
+                    // Сначала сбрасываем все значения, чтобы избежать отображения старых данных
                     setQrCode(null);
                     setSecondaryQrCode(null);
                     setSecondaryQrProjectName(null);
                     
+                    if (!data || !Array.isArray(data) || data.length === 0) {
+                        return;
+                    }
+                    
+                    // Обработка основного QR-кода
+                    const primaryQR = data.find(qr => qr.isPrimary === true);
+                    if (primaryQR) {
+                        setQrCode(primaryQR.imageUrl);
+                    } else if (data.length > 0) {
+                        setQrCode(data[0].imageUrl);
+                    }
+                    
+                    // Обработка дополнительного QR-кода (отдельно от основного)
+                    const secondaryQR = data.find(qr => qr.isPrimary === false);
+                    if (secondaryQR) {
+                        setSecondaryQrCode(secondaryQR.imageUrl);
+                        setSecondaryQrProjectName(secondaryQR.projectName);
+                    }
+                    
+                } catch (error) {
+                    console.error("Ошибка при загрузке QR-кодов:", error);
+                    // При ошибке сбрасываем все значения
+                    setQrCode(null);
+                    setSecondaryQrCode(null);
+                    setSecondaryQrProjectName(null);
                 }
             };
 
@@ -547,7 +541,6 @@ export function Test() {
             setQrCode(null);
             setSecondaryQrCode(null);
             setSecondaryQrProjectName(null);
-            console.log('Мечеть не выбрана, QR-коды сброшены');
         }
     }, [currentMosqueId]);
 
@@ -1035,7 +1028,7 @@ export function Test() {
     };
 
     return (
-        <div className="w-[100%] h-screen bg-[#f6f6f6] p-[20px] overflow-auto pc1:p-[10px] pc2:p-[5px]  ">
+        <div className="w-[100%] h-screen bg-[#f6f6f6] pt-[20px] pl-[20px] pr-[20px] overflow-auto pc1:p-[10px] pc2:p-[5px]  ">
             <div className="w-full border-[5px] border-white bg-[#eeeeee] rounded-[40px] flex flex-wrap xl:justify-between items-center p-[10px] xl-max:justify-center lg-max:flex-col sm-max:flex-col sm-max:gap-[20px] sm-max:items-center">
                 <div className="flex flex-wrap items-center space-x-6 sm-max:flex-col sm-max:space-x-0 sm-max:gap-[10px] sm-max:items-center ">
                     <div className="text-[#17181d] text-center text-[52px] font-[700] pt-[8px] pb-[8px] pr-[48px] pl-[48px]  pc2:pt-[6px] pc2:pb-[6px] pc2:pr-[30px] pc2:pl-[30px]  tv1:pt-[4px] tv1:pb-[4px] tv1:pr-[25px] tv1:pl-[25px] bg-white rounded-[24px]">
@@ -1163,7 +1156,7 @@ export function Test() {
                 })}
             </div>
 
-            <div className="w-full gap-[24px] pc2:h-[357px] rounded-[50px] flex sm-max:flex-col justify-between items-center p-[24px] tv1:mt-[30px] pc2:mt-[40px] sm-max:h-auto">
+            <div className="w-full gap-[24px] pc2:h-[357px] rounded-[50px] flex sm-max:flex-col justify-between items-center pt-[14px] pl-[24px] pr-[24px] tv1:mt-[19px] pc2:mt-[40px] sm-max:h-auto">
                 {secondaryQrCode && (
                 <div className="text-white text-[20px] flex justify-center font-extrabold sm-max:w-full">
                         <div className="pc2:w-[287px] pc2:h-[357px] tv1:w-[247px] tv1:h-[260px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto sm-max:items-center">
@@ -1214,8 +1207,12 @@ export function Test() {
                             <div className="flex flex-col items-center">
                                 <img 
                                     className="pc2:w-[190px] pc2:h-[190px] tv1:w-[150px] tv1:h-[150px] rounded-[20px] sm-max:mx-auto" 
-                                    src={`${API_BASE_URL}${qrCode}`} 
+                                    src={`${API_BASE_URL}${qrCode.startsWith('/') ? qrCode : '/' + qrCode}`} 
                                     alt="Основной QR код для мечети" 
+                                    onError={(e) => {
+                                        console.error('Ошибка загрузки QR-кода:', qrCode);
+                                        (e.target as HTMLImageElement).style.display = 'none';
+                                    }}
                                 />
                             </div>
                     </div>
@@ -1223,7 +1220,7 @@ export function Test() {
                 )}
             </div>
 
-            <div className="w-full text-center text-[16px] text-gray-500 mt-2">
+            <div className="w-full text-center text-[16px] text-gray-500 pc:mt-[10px] ">
                 * — время, принятое мечетью для проведения коллективного намаза
             </div>
             
