@@ -478,9 +478,9 @@ export function Test() {
     ];
 
     const hijriMonths = [
-        'Мухаррам', 'Сафар', 'Раби аль-авваль', 'Раби ас-сани',
-        'Джумад аль-уля', 'Джумад ас-сания', 'Раджаб', 'Шаабан',
-        'Рамадан', 'Шавваль', 'Зу-ль-када', 'Зу-ль-хиджа'
+        'Мухаррам', 'Сафар', 'Раби\'уль авваль', 'Раби\'у сани',
+        'Джумадуль уля', 'Джумадуль ахир', 'Раджаб', 'Ша\'абан',
+        'Рамадан', 'Шавваль', 'Зуль-ка\'да', 'Зуль-хиджа'
     ];
 
     const getHijriDate = () => {
@@ -1185,10 +1185,10 @@ export function Test() {
                                 {currentName.arabic}
                             </div>
                             <div className="text-[34px] pc:text-[40px] pc1:text-[34px] pc2:text-[28px] font-medium text-center text-[#17181d]">
-                                {currentName.pronunciation}
+                                {currentName.transcription}
                             </div>
                             <div className="text-[28px] pc:text-[32px] pc1:text-[28px] pc2:text-[24px] text-gray-600 text-center mt-2">
-                                {currentName.explanation}
+                                {currentName.meaning}
                             </div>
                         </div>
                     </div>

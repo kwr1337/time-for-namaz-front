@@ -1,153 +1,510 @@
-const namesOfAllah = [
-    { arabic: "الرَّحْمَـٰنُ", pronunciation: "Ар-Рахман", explanation: "Милостивый" },
-    { arabic: "الرَّحِيمُ", pronunciation: "Ар-Рахим", explanation: "Милосердный" },
-    { arabic: "الْمَلِكُ", pronunciation: "Ал-Малик", explanation: "Царь" },
-    { arabic: "الْقُدُّوسُ", pronunciation: "Ал-Куддус", explanation: "Святой" },
-    { arabic: "السَّلاَمُ", pronunciation: "Ас-Салам", explanation: "Мир" },
-    { arabic: "الْمُؤْمِنُ", pronunciation: "Ал-Му'мин", explanation: "Укрепляющий веру" },
-    { arabic: "الْمُهَيْمِنُ", pronunciation: "Ал-Мухаймин", explanation: "Обладающий контролем" },
-    { arabic: "الْعَزِيزُ", pronunciation: "Ал-'Azиз", explanation: "Могущественный" },
-    { arabic: "الْجَبَّارُ", pronunciation: "Ал-Джаббар", explanation: "Всевышний" },
-    { arabic: "الْمُتَكَبِّر", pronunciation: "Ал-Мутакабир", explanation: "Великолепный" },
-    { arabic: "الْخَالِقُ", pronunciation: "Ал-Халик", explanation: "Творец" },
-    { arabic: "الْبَارِئُ", pronunciation: "Ал-Бари'", explanation: "Создатель" },
-    { arabic: "الْمُصَوِّرُ", pronunciation: "Ал-Мусаввир", explanation: "Формирующий" },
-    { arabic: "الْغَفَّارُ", pronunciation: "Ал-Гаффар", explanation: "Прощающий" },
-    { arabic: "الْقَهَّارُ", pronunciation: "Ал-Каххар", explanation: "Побеждающий" },
-    { arabic: "الْوَهَّابُ", pronunciation: "Ал-Ваххаб", explanation: "Дарующий" },
-    { arabic: "الرَّزَّاقُ", pronunciation: "Ар-Раззак", explanation: "Подающий" },
-    { arabic: "الْفَتَّاحُ", pronunciation: "Ал-Фаттах", explanation: "Открывающий" },
-    { arabic: "العَلِيمُ", pronunciation: "Ал-'Алим", explanation: "Знающий" },
-    { arabic: "الْقَابِضُ", pronunciation: "Ал-Кабид", explanation: "Удерживающий" },
-    { arabic: "الْبَاسِطُ", pronunciation: "Ал-Басит", explanation: "Распространяющий" },
-    { arabic: "الْخَافِضُ", pronunciation: "Ал-Хафид", explanation: "Понижающий" },
-    { arabic: "الرَّافِعُ", pronunciation: "Ар-Раф'и", explanation: "Возвышающий" },
-    { arabic: "المُعِزُّ", pronunciation: "Ал-Му'изз", explanation: "Укрепляющий" },
-    { arabic: "المُذِلُّ", pronunciation: "Ал-Мудил", explanation: "Унижающий" },
-    { arabic: "السَّمِيعُ", pronunciation: "Ас-Сами'", explanation: "Слышащий" },
-    { arabic: "الْبَصِيرُ", pronunciation: "Ал-Басир", explanation: "Видящий" },
-    { arabic: "الْحَكَمُ", pronunciation: "Ал-Хакам", explanation: "Судья" },
-    { arabic: "الْعَدْلُ", pronunciation: "Ал-'Адл", explanation: "Справедливый" },
-    { arabic: "اللَّطِيفُ", pronunciation: "Ал-Латиф", explanation: "Милостивый" },
-    { arabic: "الْخَبِيرُ", pronunciation: "Ал-Хабир", explanation: "Знающий в глубине" },
-    { arabic: "الْحَلِيمُ", pronunciation: "Ал-Халим", explanation: "Милосердный" },
-    { arabic: "الْكَبِيرُ", pronunciation: "Ал-Кабир", explanation: "Великий" },
-    { arabic: "الْحَفِيظُ", pronunciation: "Ал-Хафиз", explanation: "Хранящий" },
-    { arabic: "الْمُقيِتُ", pronunciation: "Ал-Му'ит", explanation: "Поддерживающий" },
-    { arabic: "الْحسِيبُ", pronunciation: "Ал-Хасиб", explanation: "Достаточный" },
-    { arabic: "الْجَلِيلُ", pronunciation: "Ал-Джалӣл", explanation: "Величественный" },
-    { arabic: "الْكَرِيمُ", pronunciation: "Ал-Карим", explanation: "Щедрый" },
-    { arabic: "الرَّقِيبُ", pronunciation: "Ар-Ракӣб", explanation: "Наблюдающий" },
-    { arabic: "الْمُجِيبُ", pronunciation: "Ал-Муджиб", explanation: "Отвечающий" },
-    { arabic: "الْوَاسِعُ", pronunciation: "Ал-Вас'и", explanation: "Обширный" },
-    { arabic: "الْحَكِيمُ", pronunciation: "Ал-Хаким", explanation: "Мудрый" },
-    { arabic: "الْوَدُودُ", pronunciation: "Ал-Вадуд", explanation: "Любящий" },
-    { arabic: "الْمَجِيدُ", pronunciation: "Ал-Маджид", explanation: "Славный" },
-    { arabic: "الْبَاعِثُ", pronunciation: "Ал-Ба'ис", explanation: "Воскрешающий" },
-    { arabic: "الشَّهِيدُ", pronunciation: "Аш-Шахид", explanation: "Свидетель" },
-    { arabic: "الْحَقُ", pronunciation: "Ал-Хакк", explanation: "Истина" },
-    { arabic: "الْوَكِيلُ", pronunciation: "Ал-Вакӣл", explanation: "Покровитель" },
-    { arabic: "الْقَوِيُ", pronunciation: "Ал-Кавӣ", explanation: "Сильный" },
-    { arabic: "الْمَتِينُ", pronunciation: "Ал-Матӣн", explanation: "Устойчивый" },
-    { arabic: "الْوَلِيُّ", pronunciation: "Ал-Валӣ", explanation: "Покровитель" },
-    { arabic: "الْحَمِيدُ", pronunciation: "Ал-Хамид", explanation: "Достойный хвалы" },
-    { arabic: "الْمُحْصِي", pronunciation: "Ал-Мухси", explanation: "Подсчитывающий" },
-    { arabic: "الْمُبْسِطُ", pronunciation: "Ал-Мубсит", explanation: "Расширяющий" },
-    { arabic: "الْمُعَزِّزُ", pronunciation: "Ал-Му'аззиз", explanation: "Укрепляющий" },
-    { arabic: "الْمُذِلُّ", pronunciation: "Ал-Муддил", explanation: "Унижающий" },
-    { arabic: "السَّمِيعُ", pronunciation: "Ас-Сами'", explanation: "Слышащий" },
-    { arabic: "الْبَصِيرُ", pronunciation: "Ал-Басир", explanation: "Видящий" },
-    { arabic: "الْحَكَمُ", pronunciation: "Ал-Хакам", explanation: "Судья" },
-    { arabic: "الْعَدْلُ", pronunciation: "Ал-'Адл", explanation: "Справедливый" },
-    { arabic: "اللَّطِيفُ", pronunciation: "Ал-Латиф", explanation: "Милостивый" },
-    { arabic: "الْخَبِيرُ", pronunciation: "Ал-Хабир", explanation: "Знающий в глубине" },
-    { arabic: "الْحَلِيمُ", pronunciation: "Ал-Халим", explanation: "Милосердный" },
-    { arabic: "الْكَبِيرُ", pronunciation: "Ал-Кабир", explanation: "Великий" },
-    { arabic: "الْحَفِيظُ", pronunciation: "Ал-Хафиз", explanation: "Хранящий" },
-    { arabic: "الْمُقيِتُ", pronunciation: "Ал-Му'ит", explanation: "Поддерживающий" },
-    { arabic: "الْحسِيبُ", pronunciation: "Ал-Хасиб", explanation: "Достаточный" },
-    { arabic: "الْجَلِيلُ", pronunciation: "Ал-Джалӣл", explanation: "Величественный" },
-    { arabic: "الْكَرِيمُ", pronunciation: "Ал-Карим", explanation: "Щедрый" },
-    { arabic: "الرَّقِيبُ", pronunciation: "Ар-Ракӣб", explanation: "Наблюдающий" },
-    { arabic: "الْمُجِيبُ", pronunciation: "Ал-Муджиб", explanation: "Отвечающий" },
-    { arabic: "الْوَاسِعُ", pronunciation: "Ал-Вас'и", explanation: "Обширный" },
-    { arabic: "الْحَكِيمُ", pronunciation: "Ал-Хаким", explanation: "Мудрый" },
-    { arabic: "الْوَدُودُ", pronunciation: "Ал-Вадуд", explanation: "Любящий" },
-    { arabic: "الْمَجِيدُ", pronunciation: "Ал-Маджид", explanation: "Славный" },
-    { arabic: "الْبَاعِثُ", pronunciation: "Ал-Ба'ис", explanation: "Воскрешающий" },
-    { arabic: "الشَّهِيدُ", pronunciation: "Аш-Шахид", explanation: "Свидетель" },
-    { arabic: "الْحَقُ", pronunciation: "Ал-Хакк", explanation: "Истина" },
-    { arabic: "الْوَكِيلُ", pronunciation: "Ал-Вакӣл", explanation: "Покровитель" },
-    { arabic: "الْقَوِيُ", pronunciation: "Ал-Кавӣ", explanation: "Сильный" },
-    { arabic: "الْمَتِينُ", pronunciation: "Ал-Матӣн", explanation: "Устойчивый" },
-    { arabic: "الْوَلِيُّ", pronunciation: "Ал-Валӣ", explanation: "Покровитель" },
-    { arabic: "الْحَمِيدُ", pronunciation: "Ал-Хамид", explanation: "Достойный хвалы" },
-    { arabic: "الْمُحْصِي", pronunciation: "Ал-Мухси", explanation: "Подсчитывающий" },
-    { arabic: "الْمُبْسِطُ", pronunciation: "Ал-Мубсит", explanation: "Расширяющий" },
-    { arabic: "الْمُعَزِّزُ", pronunciation: "Ал-Му'аззиз", explanation: "Укрепляющий" },
-    { arabic: "الْمُذِلُّ", pronunciation: "Ал-Муддил", explanation: "Унижающий" },
-    { arabic: "السَّمِيعُ", pronunciation: "Ас-Сами'", explanation: "Слышащий" },
-    { arabic: "الْبَصِيرُ", pronunciation: "Ал-Басир", explanation: "Видящий" },
-    { arabic: "الْحَكَمُ", pronunciation: "Ал-Хакам", explanation: "Судья" },
-    { arabic: "الْعَدْلُ", pronunciation: "Ал-'Адл", explanation: "Справедливый" },
-    { arabic: "اللَّطِيفُ", pronunciation: "Ал-Латиф", explanation: "Милостивый" },
-    { arabic: "الْخَبِيرُ", pronunciation: "Ал-Хабир", explanation: "Знающий в глубине" },
-    { arabic: "الْحَلِيمُ", pronunciation: "Ал-Халим", explanation: "Милосердный" },
-    { arabic: "الْكَبِيرُ", pronunciation: "Ал-Кабир", explanation: "Великий" },
-    { arabic: "الْحَفِيظُ", pronunciation: "Ал-Хафиз", explanation: "Хранящий" },
-    { arabic: "الْمُقيِتُ", pronunciation: "Ал-Му'ит", explanation: "Поддерживающий" },
-    { arabic: "الْحسِيبُ", pronunciation: "Ал-Хасиб", explanation: "Достаточный" },
-    { arabic: "الْجَلِيلُ", pronunciation: "Ал-Джалӣл", explanation: "Величественный" },
-    { arabic: "الْكَرِيمُ", pronunciation: "Ал-Карим", explanation: "Щедрый" },
-    { arabic: "الرَّقِيبُ", pronunciation: "Ар-Ракӣб", explanation: "Наблюдающий" },
-    { arabic: "الْمُجِيبُ", pronunciation: "Ал-Муджиб", explanation: "Отвечающий" },
-    { arabic: "الْوَاسِعُ", pronunciation: "Ал-Вас'и", explanation: "Обширный" },
-    { arabic: "الْحَكِيمُ", pronunciation: "Ал-Хаким", explanation: "Мудрый" },
-    { arabic: "الْوَدُودُ", pronunciation: "Ал-Вадуд", explanation: "Любящий" },
-    { arabic: "الْمَجِيدُ", pronunciation: "Ал-Маджид", explanation: "Славный" },
-    { arabic: "الْبَاعِثُ", pronunciation: "Ал-Ба'ис", explanation: "Воскрешающий" },
-    { arabic: "الشَّهِيدُ", pronunciation: "Аш-Шахид", explanation: "Свидетель" },
-    { arabic: "الْحَقُ", pronunciation: "Ал-Хакк", explanation: "Истина" },
-    { arabic: "الْوَكِيلُ", pronunciation: "Ал-Вакӣл", explanation: "Покровитель" },
-    { arabic: "الْقَوِيُ", pronunciation: "Ал-Кавӣ", explanation: "Сильный" },
-    { arabic: "الْمَتِينُ", pronunciation: "Ал-Матӣн", explanation: "Устойчивый" },
-    { arabic: "الْوَلِيُّ", pronunciation: "Ал-Валӣ", explanation: "Покровитель" },
-    { arabic: "الْحَمِيدُ", pronunciation: "Ал-Хамид", explanation: "Достойный хвалы" },
-    { arabic: "الْمُحْصِي", pronunciation: "Ал-Мухси", explanation: "Подсчитывающий" },
-    { arabic: "الْمُبْسِطُ", pronunciation: "Ал-Мубсит", explanation: "Расширяющий" },
-    { arabic: "الْمُعَزِّزُ", pronunciation: "Ал-Му'аззиз", explanation: "Укрепляющий" },
-    { arabic: "الْمُذِلُّ", pronunciation: "Ал-Муддил", explanation: "Унижающий" },
-    { arabic: "السَّمِيعُ", pronunciation: "Ас-Сами'", explanation: "Слышащий" },
-    { arabic: "الْبَصِيرُ", pronunciation: "Ал-Басир", explanation: "Видящий" },
-    { arabic: "الْحَكَمُ", pronunciation: "Ал-Хакам", explanation: "Судья" },
-    { arabic: "الْعَدْلُ", pronunciation: "Ал-'Адл", explanation: "Справедливый" },
-    { arabic: "اللَّطِيفُ", pronunciation: "Ал-Латиф", explanation: "Милостивый" },
-    { arabic: "الْخَبِيرُ", pronunciation: "Ал-Хабир", explanation: "Знающий в глубине" },
-    { arabic: "الْحَلِيمُ", pronunciation: "Ал-Халим", explanation: "Милосердный" },
-    { arabic: "الْكَبِيرُ", pronunciation: "Ал-Кабир", explanation: "Великий" },
-    { arabic: "الْحَفِيظُ", pronunciation: "Ал-Хафиз", explanation: "Хранящий" },
-    { arabic: "الْمُقيِتُ", pronunciation: "Ал-Му'ит", explanation: "Поддерживающий" },
-    { arabic: "الْحسِيبُ", pronunciation: "Ал-Хасиб", explanation: "Достаточный" },
-    { arabic: "الْجَلِيلُ", pronunciation: "Ал-Джалӣл", explanation: "Величественный" },
-    { arabic: "الْكَرِيمُ", pronunciation: "Ал-Карим", explanation: "Щедрый" },
-    { arabic: "الرَّقِيبُ", pronunciation: "Ар-Ракӣб", explanation: "Наблюдающий" },
-    { arabic: "الْمُجِيبُ", pronunciation: "Ал-Муджиб", explanation: "Отвечающий" },
-    { arabic: "الْوَاسِعُ", pronunciation: "Ал-Вас'и", explanation: "Обширный" },
-    { arabic: "الْحَكِيمُ", pronunciation: "Ал-Хаким", explanation: "Мудрый" },
-    { arabic: "الْوَدُودُ", pronunciation: "Ал-Вадуд", explanation: "Любящий" },
-    { arabic: "الْمَجِيدُ", pronunciation: "Ал-Маджид", explanation: "Славный" },
-    { arabic: "الْبَاعِثُ", pronunciation: "Ал-Ба'ис", explanation: "Воскрешающий" },
-    { arabic: "الشَّهِيدُ", pronunciation: "Аш-Шахид", explanation: "Свидетель" },
-    { arabic: "الْحَقُ", pronunciation: "Ал-Хакк", explanation: "Истина" },
-    { arabic: "الْوَكِيلُ", pronunciation: "Ал-Вакӣл", explanation: "Покровитель" },
-    { arabic: "الْقَوِيُ", pronunciation: "Ал-Кавӣ", explanation: "Сильный" },
-    { arabic: "الْمَتِينُ", pronunciation: "Ал-Матӣн", explanation: "Устойчивый" },
-    { arabic: "الْوَلِيُّ", pronunciation: "Ал-Валӣ", explanation: "Покровитель" },
-    { arabic: "الْحَمِيدُ", pronunciation: "Ал-Хамид", explanation: "Достойный хвалы" },
-    { arabic: "الْمُحْصِي", pronunciation: "Ал-Мухси", explanation: "Подсчитывающий" },
-    { arabic: "الْمُبْسِطُ", pronunciation: "Ал-Мубсит", explanation: "Расширяющий" },
-    { arabic: "الْمُعَزِّزُ", pronunciation: "Ал-Му'аззиз", explanation: "Укрепляющий" },
-    { arabic: "الْمُذِلُّ", pronunciation: "Ал-Муддил", explanation: "Унижающий" }
+interface NameOfAllah {
+    arabic: string;
+    transcription: string;
+    meaning: string;
+}
+
+const namesOfAllah: NameOfAllah[] = [
+    {
+        arabic: 'الله',
+        transcription: 'Аллах',
+        meaning: 'Единый Бог, достойный поклонения'
+    },
+    {
+        arabic: 'الرحمن',
+        transcription: 'Ар-Рахман',
+        meaning: 'Всемилостивый'
+    },
+    {
+        arabic: 'الرحيم',
+        transcription: 'Ар-Рахим',
+        meaning: 'Милосердный'
+    },
+    {
+        arabic: 'الملك',
+        transcription: 'Аль-Малик',
+        meaning: 'Властелин всего сущего'
+    },
+    {
+        arabic: 'القدوس',
+        transcription: 'Аль-Куддус',
+        meaning: 'Святой'
+    },
+    {
+        arabic: 'السلام',
+        transcription: 'Ас-Салям',
+        meaning: 'Миротворец'
+    },
+    {
+        arabic: 'المؤمن',
+        transcription: 'Аль-Мумин',
+        meaning: 'Дарующий безопасность'
+    },
+    {
+        arabic: 'المهيمن',
+        transcription: 'Аль-Мухаймин',
+        meaning: 'Хранитель'
+    },
+    {
+        arabic: 'العزيز',
+        transcription: 'Аль-Азиз',
+        meaning: 'Могущественный'
+    },
+    {
+        arabic: 'الجبار',
+        transcription: 'Аль-Джаббар',
+        meaning: 'Могучий'
+    },
+    {
+        arabic: 'المتكبر',
+        transcription: 'Аль-Мутакаббир',
+        meaning: 'Превосходящий'
+    },
+    {
+        arabic: 'الخالق',
+        transcription: 'Аль-Халик',
+        meaning: 'Творец'
+    },
+    {
+        arabic: 'البارئ',
+        transcription: 'Аль-Бари',
+        meaning: 'Создатель'
+    },
+    {
+        arabic: 'المصور',
+        transcription: 'Аль-Мусаввир',
+        meaning: 'Дарующий облик'
+    },
+    {
+        arabic: 'الغفار',
+        transcription: 'Аль-Гаффар',
+        meaning: 'Прощающий'
+    },
+    {
+        arabic: 'القهار',
+        transcription: 'Аль-Каххар',
+        meaning: 'Господствующий'
+    },
+    {
+        arabic: 'الوهاب',
+        transcription: 'Аль-Ваххаб',
+        meaning: 'Дарующий'
+    },
+    {
+        arabic: 'الرزاق',
+        transcription: 'Ар-Раззак',
+        meaning: 'Наделяющий'
+    },
+    {
+        arabic: 'الفتاح',
+        transcription: 'Аль-Фаттах',
+        meaning: 'Раскрывающий'
+    },
+    {
+        arabic: 'العليم',
+        transcription: 'Аль-Алим',
+        meaning: 'Всезнающий'
+    },
+    {
+        arabic: 'القابض',
+        transcription: 'Аль-Кабид',
+        meaning: 'Уменьшающий'
+    },
+    {
+        arabic: 'الباسط',
+        transcription: 'Аль-Басит',
+        meaning: 'Увеличивающий'
+    },
+    {
+        arabic: 'الخافض',
+        transcription: 'Аль-Хафид',
+        meaning: 'Принижающий'
+    },
+    {
+        arabic: 'الرافع',
+        transcription: 'Ар-Рафи',
+        meaning: 'Возвышающий'
+    },
+    {
+        arabic: 'المعز',
+        transcription: 'Аль-Муизз',
+        meaning: 'Возвеличивающий'
+    },
+    {
+        arabic: 'المذل',
+        transcription: 'Аль-Музилль',
+        meaning: 'Унижающий'
+    },
+    {
+        arabic: 'السميع',
+        transcription: 'Ас-Сами',
+        meaning: 'Всеслышащий'
+    },
+    {
+        arabic: 'البصير',
+        transcription: 'Аль-Басыр',
+        meaning: 'Всевидящий'
+    },
+    {
+        arabic: 'الحكم',
+        transcription: 'Аль-Хакам',
+        meaning: 'Судья'
+    },
+    {
+        arabic: 'العدل',
+        transcription: 'Аль-Адль',
+        meaning: 'Справедливый'
+    },
+    {
+        arabic: 'اللطيف',
+        transcription: 'Аль-Латыф',
+        meaning: 'Добрый'
+    },
+    {
+        arabic: 'الخبير',
+        transcription: 'Аль-Хабир',
+        meaning: 'Сведущий'
+    },
+    {
+        arabic: 'الحليم',
+        transcription: 'Аль-Халим',
+        meaning: 'Сдержанный'
+    },
+    {
+        arabic: 'العظيم',
+        transcription: 'Аль-Азым',
+        meaning: 'Величайший'
+    },
+    {
+        arabic: 'الغفور',
+        transcription: 'Аль-Гафур',
+        meaning: 'Всепрощающий'
+    },
+    {
+        arabic: 'الشكور',
+        transcription: 'Аш-Шакур',
+        meaning: 'Благодарный'
+    },
+    {
+        arabic: 'العلي',
+        transcription: 'Аль-Алий',
+        meaning: 'Всевышний'
+    },
+    {
+        arabic: 'الكبير',
+        transcription: 'Аль-Кабир',
+        meaning: 'Великий'
+    },
+    {
+        arabic: 'الحفيظ',
+        transcription: 'Аль-Хафиз',
+        meaning: 'Хранитель'
+    },
+    {
+        arabic: 'المقيت',
+        transcription: 'Аль-Мукыт',
+        meaning: 'Поддерживающий'
+    },
+    {
+        arabic: 'الحسيب',
+        transcription: 'Аль-Хасиб',
+        meaning: 'Достаточный'
+    },
+    {
+        arabic: 'الجليل',
+        transcription: 'Аль-Джалиль',
+        meaning: 'Величественный'
+    },
+    {
+        arabic: 'الكريم',
+        transcription: 'Аль-Карим',
+        meaning: 'Щедрый'
+    },
+    {
+        arabic: 'الرقيب',
+        transcription: 'Ар-Ракыб',
+        meaning: 'Наблюдающий'
+    },
+    {
+        arabic: 'المجيب',
+        transcription: 'Аль-Муджиб',
+        meaning: 'Отвечающий'
+    },
+    {
+        arabic: 'الواسع',
+        transcription: 'Аль-Васи',
+        meaning: 'Всеобъемлющий'
+    },
+    {
+        arabic: 'الحكيم',
+        transcription: 'Аль-Хаким',
+        meaning: 'Мудрый'
+    },
+    {
+        arabic: 'الودود',
+        transcription: 'Аль-Вадуд',
+        meaning: 'Любящий'
+    },
+    {
+        arabic: 'المجيد',
+        transcription: 'Аль-Маджид',
+        meaning: 'Славный'
+    },
+    {
+        arabic: 'الباعث',
+        transcription: 'Аль-Баис',
+        meaning: 'Воскрешающий'
+    },
+    {
+        arabic: 'الشهيد',
+        transcription: 'Аш-Шахид',
+        meaning: 'Свидетель'
+    },
+    {
+        arabic: 'الحق',
+        transcription: 'Аль-Хакк',
+        meaning: 'Истинный'
+    },
+    {
+        arabic: 'الوكيل',
+        transcription: 'Аль-Вакиль',
+        meaning: 'Попечитель'
+    },
+    {
+        arabic: 'القوي',
+        transcription: 'Аль-Кавий',
+        meaning: 'Сильный'
+    },
+    {
+        arabic: 'المتين',
+        transcription: 'Аль-Матин',
+        meaning: 'Крепкий'
+    },
+    {
+        arabic: 'الولي',
+        transcription: 'Аль-Валий',
+        meaning: 'Покровитель'
+    },
+    {
+        arabic: 'الحميد',
+        transcription: 'Аль-Хамид',
+        meaning: 'Достохвальный'
+    },
+    {
+        arabic: 'المحصي',
+        transcription: 'Аль-Мухсы',
+        meaning: 'Учитывающий'
+    },
+    {
+        arabic: 'المبدئ',
+        transcription: 'Аль-Мубди',
+        meaning: 'Начинающий'
+    },
+    {
+        arabic: 'المعيد',
+        transcription: 'Аль-Муид',
+        meaning: 'Возвращающий'
+    },
+    {
+        arabic: 'المحيي',
+        transcription: 'Аль-Мухйи',
+        meaning: 'Оживляющий'
+    },
+    {
+        arabic: 'المميت',
+        transcription: 'Аль-Мумит',
+        meaning: 'Умертвляющий'
+    },
+    {
+        arabic: 'الحي',
+        transcription: 'Аль-Хайй',
+        meaning: 'Живой'
+    },
+    {
+        arabic: 'القيوم',
+        transcription: 'Аль-Каййум',
+        meaning: 'Сущий'
+    },
+    {
+        arabic: 'الواجد',
+        transcription: 'Аль-Ваджид',
+        meaning: 'Находящий'
+    },
+    {
+        arabic: 'الماجد',
+        transcription: 'Аль-Маджид',
+        meaning: 'Славный'
+    },
+    {
+        arabic: 'الواحد',
+        transcription: 'Аль-Вахид',
+        meaning: 'Единственный'
+    },
+    {
+        arabic: 'الاحد',
+        transcription: 'Аль-Ахад',
+        meaning: 'Единый'
+    },
+    {
+        arabic: 'الصمد',
+        transcription: 'Ас-Самад',
+        meaning: 'Вечный'
+    },
+    {
+        arabic: 'القادر',
+        transcription: 'Аль-Кадир',
+        meaning: 'Всемогущий'
+    },
+    {
+        arabic: 'المقتدر',
+        transcription: 'Аль-Муктадир',
+        meaning: 'Могущественный'
+    },
+    {
+        arabic: 'المقدم',
+        transcription: 'Аль-Мукаддим',
+        meaning: 'Выдвигающий вперед'
+    },
+    {
+        arabic: 'المؤخر',
+        transcription: 'Аль-Муаххир',
+        meaning: 'Отодвигающий'
+    },
+    {
+        arabic: 'الأول',
+        transcription: 'Аль-Авваль',
+        meaning: 'Первый'
+    },
+    {
+        arabic: 'الآخر',
+        transcription: 'Аль-Ахир',
+        meaning: 'Последний'
+    },
+    {
+        arabic: 'الظاهر',
+        transcription: 'Аз-Захир',
+        meaning: 'Явный'
+    },
+    {
+        arabic: 'الباطن',
+        transcription: 'Аль-Батын',
+        meaning: 'Скрытый'
+    },
+    {
+        arabic: 'الوالي',
+        transcription: 'Аль-Вали',
+        meaning: 'Правитель'
+    },
+    {
+        arabic: 'المتعالي',
+        transcription: 'Аль-Мутаали',
+        meaning: 'Высочайший'
+    },
+    {
+        arabic: 'البر',
+        transcription: 'Аль-Барр',
+        meaning: 'Благостный'
+    },
+    {
+        arabic: 'التواب',
+        transcription: 'Ат-Тавваб',
+        meaning: 'Принимающий покаяние'
+    },
+    {
+        arabic: 'المنتقم',
+        transcription: 'Аль-Мунтаким',
+        meaning: 'Мстящий'
+    },
+    {
+        arabic: 'العفو',
+        transcription: 'Аль-Афувв',
+        meaning: 'Прощающий'
+    },
+    {
+        arabic: 'الرؤوف',
+        transcription: 'Ар-Рауф',
+        meaning: 'Сострадательный'
+    },
+    {
+        arabic: 'مالك الملك',
+        transcription: 'Маликуль-Мульк',
+        meaning: 'Владыка царства'
+    },
+    {
+        arabic: 'ذو الجلال والإكرام',
+        transcription: 'Зуль-Джаляли валь-Икрам',
+        meaning: 'Обладатель величия и почета'
+    },
+    {
+        arabic: 'المقسط',
+        transcription: 'Аль-Муксит',
+        meaning: 'Справедливый'
+    },
+    {
+        arabic: 'الجامع',
+        transcription: 'Аль-Джами',
+        meaning: 'Собирающий'
+    },
+    {
+        arabic: 'الغني',
+        transcription: 'Аль-Гани',
+        meaning: 'Богатый'
+    },
+    {
+        arabic: 'المغني',
+        transcription: 'Аль-Мугни',
+        meaning: 'Обогащающий'
+    },
+    {
+        arabic: 'المانع',
+        transcription: 'Аль-Мани',
+        meaning: 'Защищающий'
+    },
+    {
+        arabic: 'الضار',
+        transcription: 'Ад-Дарр',
+        meaning: 'Создающий вред'
+    },
+    {
+        arabic: 'النافع',
+        transcription: 'Ан-Нафи',
+        meaning: 'Создающий пользу'
+    },
+    {
+        arabic: 'النور',
+        transcription: 'Ан-Нур',
+        meaning: 'Свет'
+    },
+    {
+        arabic: 'الهادي',
+        transcription: 'Аль-Хади',
+        meaning: 'Ведущий прямым путем'
+    },
+    {
+        arabic: 'البديع',
+        transcription: 'Аль-Бади',
+        meaning: 'Создатель необычного'
+    },
+    {
+        arabic: 'الباقي',
+        transcription: 'Аль-Бакы',
+        meaning: 'Вечный'
+    },
+    {
+        arabic: 'الوارث',
+        transcription: 'Аль-Варис',
+        meaning: 'Наследующий'
+    },
+    {
+        arabic: 'الرشيد',
+        transcription: 'Ар-Рашид',
+        meaning: 'Направляющий'
+    },
+    {
+        arabic: 'الصبور',
+        transcription: 'Ас-Сабур',
+        meaning: 'Терпеливый'
+    }
 ];
 
 export default namesOfAllah;
