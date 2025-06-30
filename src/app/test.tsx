@@ -23,6 +23,7 @@ import namesOfAllah from "@/namesOfAllah/namesOfAllah";
 import { API_BASE_URL } from '@/config/config'
 import { API } from '@/constants/api.constants';
 import { toast } from 'react-hot-toast';
+import LogoLoader from '../components/ui/LogoLoader';
 
 // Импорт иконок погоды
 import sunnyIcon from '../pic/weather/sunny.png'; // Солнечно
@@ -120,9 +121,12 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
                 tv:w-[150px] tv:h-[280px]
                 pc1:w-[190px] pc1:h-[272x]
                 pc:w-[229px] pc:h-[349px]
+                md-max:w-[140px] md-max:h-[220px] 
+                sm-max:w-[120px] sm-max:h-[200px]
                 rounded-[20px] p-[20px] flex flex-col justify-start items-start transition-all duration-300 ease-in-out sm-max:mx-auto
+                md-max:p-[15px] sm-max:p-[12px]
                     ${highlight
-                    ? 'bg-[#5ec262] transform text-white !h-[429px] !w-[353px]  pc:!w-[353px] pc:!h-[429px] pc1:!w-[283px]  pc1:!h-[352px] tv:!h-[342px] tv:!w-[243px]  tv1:!h-[302px] tv1:!w-[203px]  pc: pt-[20px] pr-[20px] pl-[20px] pb-[20px] sm-max:!h-[270px]  flex justify-between'
+                    ? 'bg-[#5ec262] transform text-white !h-[429px] !w-[353px]  pc:!w-[353px] pc:!h-[429px] pc1:!w-[283px]  pc1:!h-[352px] tv:!h-[342px] tv:!w-[243px]  tv1:!h-[302px] tv1:!w-[203px] md-max:!h-[320px] md-max:!w-[240px] sm-max:!h-[270px] sm-max:!w-[200px] pc: pt-[20px] pr-[20px] pl-[20px] pb-[20px] flex justify-between'
                     : `bg-white justify-between ${className}`}
             `}
         >
@@ -132,9 +136,11 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
                     pc1:max-w-[100px] pc1:max-h-[100px]
                     tv:max-w-[70px] tv:max-h-[70px]
                     tv1:max-w-[60px] tv1:max-h-[60px]
-                    ${highlight ? '!max-w-[120px] !max-h-[120px] pc1:!max-w-[130px] pc1:!max-h-[130px] tv:!max-w-[90px] tv:!max-h-[90px] tv1:!max-w-[70px] tv1:!max-h-[70px]' : 'text-[#17181d]'} flex bg-transparent`}>
+                    md-max:max-w-[60px] md-max:max-h-[60px]
+                    sm-max:max-w-[50px] sm-max:max-h-[50px]
+                    ${highlight ? '!max-w-[120px] !max-h-[120px] pc1:!max-w-[130px] pc1:!max-h-[130px] tv:!max-w-[90px] tv:!max-h-[90px] tv1:!max-w-[70px] tv1:!max-h-[70px] md-max:!max-w-[80px] md-max:!max-h-[80px] sm-max:!max-w-[70px] sm-max:!max-h-[70px]' : 'text-[#17181d]'} flex bg-transparent`}>
                     <Image
-                        className={highlight ? 'mt-0' : 'max-w-full max-h-full object-contain'} 
+                        className={highlight ? 'mt-0' : 'max-w-full max-h-full object-contain'}
                         src={highlight ? pic2 : pic}
                         alt={label}
                     />
@@ -142,19 +148,15 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
 
                 {isFixedTimeActive && (
                     <div className="absolute top-2 right-2 flex items-center">
-                        {/* <span className="flex h-3 w-3 relative">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                        </span> */}
-                        {/* <span className="ml-1 text-[10px] text-green-600 font-bold">ФИКС.</span> */}
+                        {/* ... */}
                     </div>
                 )}
 
                 {highlight && (
-                    <div className="absolute pc:max-w-[175px] pc1:max-w-[155px] tv:max-w-[125px] tv1:max-w-[105px] h-[112px] right-[4px] top-[4px] flex flex-col items-end">
+                    <div className="absolute pc:max-w-[175px] pc1:max-w-[155px] tv:max-w-[125px] tv1:max-w-[105px] md-max:max-w-[110px] sm-max:max-w-[90px] h-[112px] right-[4px] top-[4px] flex flex-col items-end">
                         <div className="w-[100%] text-right bg-white rounded-bl-[40px] rounded-[8px] rounded-tr-[19px] py-[4px] px-[8px] flex flex-col">
-                            <div className="text-[#17181d] pc:text-[22px] tv:text-[16px] tv1:text-[12px]  font-normal">Через</div>
-                            <div className="text-[#17181d] text-[30px] pc:text-[30px] pc1:text-[25px] tv:text-[20px] tv1:text-[18px] font-bold">
+                            <div className="text-[#17181d] pc:text-[22px] tv:text-[16px] tv1:text-[12px] md-max:text-[14px] sm-max:text-[12px] font-normal">Через</div>
+                            <div className="text-[#17181d] text-[30px] pc:text-[30px] pc1:text-[25px] tv:text-[20px] tv1:text-[18px] md-max:text-[22px] sm-max:text-[18px] font-bold">
                                 {formatTime(remainingTime)}
                             </div>
                         </div>
@@ -162,32 +164,34 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
                 )}
             </div>
 
-            <div className="flex flex-col items-start mt-[15%] w-full">
+            <div className="flex flex-col items-start mt-[15%] w-full md-max:mt-[10%] sm-max:mt-[5%]">
                 {isFixedTimeActive && fixedTime && (
-                    <div className={`text-center text-[60px] pc:text-[60px] pc1:text-[50px] tv:text-[40px] tv1:text-[35px] leading-none font-[700] ${highlight ? 'text-white !text-[60px] pc:!text-[60px] pc1:!text-[55px] tv:!text-[50px] tv1:!text-[45px]' : 'text-[#17181d]'}`}>
+                    <div className={`text-center text-[60px] pc:text-[60px] pc1:text-[50px] tv:text-[40px] tv1:text-[35px] md-max:text-[42px] sm-max:text-[36px] leading-none font-[700] ${highlight ? 'text-white !text-[60px] pc:!text-[60px] pc1:!text-[55px] tv:!text-[50px] tv1:!text-[45px] md-max:!text-[48px] sm-max:!text-[40px]' : 'text-[#17181d]'}`}>
                         {fixedTime}*
                     </div>
                 )}
-                
-                <div className={`text-center ${ isFixedTimeActive && fixedTime ? 'text-[40px] pc:text-[40px] pc1:text-[35px] tv:text-[30px] tv1:text-[25px]' : 'text-[60px] pc:text-[60px] pc1:text-[50px] tv:text-[40px] tv1:text-[35px]'} leading-none font-[700] ${highlight ? `text-white ${isFixedTimeActive && fixedTime ? '!text-[40px] pc:!text-[40px] pc1:!text-[35px] tv:!text-[30px] tv1:!text-[25px]' : '!text-[60px] pc:!text-[60px] pc1:!text-[55px] tv:!text-[50px] tv1:!text-[45px]'}` : 'text-[#17181d]'}`}>
+
+                <div className={`text-center ${isFixedTimeActive && fixedTime ? 'text-[40px] pc:text-[40px] pc1:text-[35px] tv:text-[30px] tv1:text-[25px]' : 'text-[60px] pc:text-[60px] pc1:text-[50px] tv:text-[40px] tv1:text-[35px]'} leading-none font-[700] 
+                    ${isFixedTimeActive && fixedTime ? 'md-max:text-[32px] sm-max:text-[28px]' : 'md-max:text-[46px] sm-max:text-[40px]'}
+                    ${highlight ? `text-white ${isFixedTimeActive && fixedTime ? '!text-[40px] pc:!text-[40px] pc1:!text-[35px] tv:!text-[30px] tv1:!text-[25px] md-max:!text-[32px] sm-max:!text-[28px]' : '!text-[60px] pc:!text-[60px] pc1:!text-[55px] tv:!text-[50px] tv1:!text-[45px] md-max:!text-[48px] sm-max:!text-[40px]'}` : 'text-[#17181d]'}`}>
                     {time}
                 </div>
 
-                <div className={`text-center text-[40px] tv:text-[25px] tv1:text-[20px] font-[400] ${highlight ? 'text-white !text-[48px] pc:!text-[48px] tv:!text-[35px] tv1:!text-[30px]' : 'text-[#17181d]'}`}>
+                <div className={`text-center text-[40px] tv:text-[25px] tv1:text-[20px] md-max:text-[28px] sm-max:text-[24px] font-[400] ${highlight ? 'text-white !text-[48px] pc:!text-[48px] tv:!text-[35px] tv1:!text-[30px] md-max:!text-[34px] sm-max:!text-[28px]' : 'text-[#17181d]'}`}>
                     {label}
                 </div>
 
                 {highlight && (
-                    <div className="w-full flex flex-col items-start justify-between mt-[20px]">
-                        <div className="w-full h-[8px] bg-[rgba(255,255,255,0.2)] rounded-full">
+                    <div className="w-full flex flex-col items-start justify-between mt-[20px] md-max:mt-[15px] sm-max:mt-[10px]">
+                        <div className="w-full h-[8px] bg-[rgba(255,255,255,0.2)] rounded-full sm-max:h-[6px]">
                             <div
                                 className="h-full bg-white rounded-full transition-all duration-1000"
-                                style={{ 
+                                style={{
                                     width: `${progress}%`,
                                     animation: 'pulseAndGrow 1s ease-in-out infinite alternate',
                                 }}
-                                ></div>
-                            </div>
+                            ></div>
+                        </div>
                         <style jsx>{`
                             @keyframes pulseAndGrow {
                                 0% {
@@ -239,64 +243,64 @@ const calculateProgress = (remainingTime: number, totalDuration: number): number
 
 // Заменяем компоненты SVG на компоненты с изображениями
 const WeatherIcon = ({ iconType }: { iconType: string }) => {
-  let iconSrc;
-  
-  // Определяем, какую иконку использовать
-  switch(iconType) {
-    case 'sunny':
-      iconSrc = sunnyIcon;
-      break;
-    case 'cloudy':
-      iconSrc = cloudyIcon;
-      break;
-    case 'partly_cloudy':
-      iconSrc = partlyCloudyIcon;
-      break;
-    case 'rainy':
-      iconSrc = rainyIcon;
-      break;
-    case 'snowy':
-      iconSrc = snowyIcon;
-      break;
-    case 'stormy':
-      iconSrc = rainyIcon; // Используем rainyIcon вместо stormyIcon, так как файл отсутствует
-      break;
-    default:
-      iconSrc = sunnyIcon; // По умолчанию
-  }
-  
-  return (
-    <Image 
-      src={iconSrc} 
-      alt={`Weather icon: ${iconType}`} 
-      width={24} 
-      height={24} 
-      className="weather-icon"
-    />
-  );
+    let iconSrc;
+
+    // Определяем, какую иконку использовать
+    switch (iconType) {
+        case 'sunny':
+            iconSrc = sunnyIcon;
+            break;
+        case 'cloudy':
+            iconSrc = cloudyIcon;
+            break;
+        case 'partly_cloudy':
+            iconSrc = partlyCloudyIcon;
+            break;
+        case 'rainy':
+            iconSrc = rainyIcon;
+            break;
+        case 'snowy':
+            iconSrc = snowyIcon;
+            break;
+        case 'stormy':
+            iconSrc = rainyIcon; // Используем rainyIcon вместо stormyIcon, так как файл отсутствует
+            break;
+        default:
+            iconSrc = sunnyIcon; // По умолчанию
+    }
+
+    return (
+        <Image
+            src={iconSrc}
+            alt={`Weather icon: ${iconType}`}
+            width={24}
+            height={24}
+            className="weather-icon"
+        />
+    );
 };
 
 // Заменяем функцию mapWeatherCodeToIcon для использования нового компонента
 const mapWeatherCodeToIcon = (code: string) => {
     const codeNum = parseInt(code);
-    
+
     // Солнечно
     if (codeNum === 1000) return <WeatherIcon iconType="sunny" />;
-    
+
     // Облачно
     if ([1003, 1006, 1009, 1030, 1135, 1147].includes(codeNum)) return <WeatherIcon iconType="cloudy" />;
-    
+
     // Дождь
-    if ([1063, 1069, 1072, 1150, 1153, 1168, 1171, 1180, 1183, 1186, 1189, 1192, 1195, 1198, 1201, 1240, 1243, 1246].includes(codeNum)) 
+    if ([1063, 1069, 1072, 1150, 1153, 1168, 1171, 1180, 1183, 1186, 1189, 1192, 1195, 1198, 1201, 1240, 1243, 1246].includes(codeNum))
         return <WeatherIcon iconType="rainy" />;
-    
+
     // Гроза
     if ([1087, 1273, 1276, 1279, 1282].includes(codeNum)) return <WeatherIcon iconType="stormy" />;
-    
+
     // Снег
     if ([1066, 1114, 1117, 1210, 1213, 1216, 1219, 1222, 1225, 1237, 1255, 1258, 1261, 1264].includes(codeNum))
         return <WeatherIcon iconType="snowy" />;
-    
+
     // По умолчанию
     return <WeatherIcon iconType="sunny" />;
 };
@@ -304,25 +308,25 @@ const mapWeatherCodeToIcon = (code: string) => {
 // Преобразование кодов погоды OpenWeatherMap в наши внутренние коды
 const mapOpenWeatherCodeToInternalCode = (openWeatherCode: string) => {
     const code = parseInt(openWeatherCode);
-    
+
     // Ясно, солнечно
     if (code >= 800 && code <= 801) return '1000';
-    
+
     // Облачно
     if (code >= 802 && code <= 804) return '1003';
-    
+
     // Туман
     if (code >= 700 && code <= 799) return '1030';
-    
+
     // Дождь
     if (code >= 300 && code <= 599) return '1183';
-    
+
     // Гроза
     if (code >= 200 && code <= 299) return '1087';
-    
+
     // Снег
     if (code >= 600 && code <= 699) return '1213';
-    
+
     // По умолчанию - солнечно
     return '1000';
 };
@@ -399,6 +403,7 @@ export function Test() {
     const [currentName, setCurrentName] = useState(namesOfAllah[0]);
     const cityDropdownRef = useRef<HTMLDivElement>(null);
     const mosqueDropdownRef = useRef<HTMLDivElement>(null);
+    const [loading, setLoading] = useState(true);
 
     // Интервал для обновления имени Аллаха каждые 30 секунд
     useEffect(() => {
@@ -448,11 +453,11 @@ export function Test() {
             fixedTime: fixedPrayerTimes?.zuhrActive ? fixedPrayerTimes?.zuhr : null,
             isFixedTimeActive: fixedPrayerTimes?.zuhrActive || false
         },
-        { 
-            time: prayerTimes?.asr || '00:00', 
-            label: 'Аср', 
-            highlight: nearestPrayer === 'asr', 
-            pic: asr, 
+        {
+            time: prayerTimes?.asr || '00:00',
+            label: 'Аср',
+            highlight: nearestPrayer === 'asr',
+            pic: asr,
             pic2: asr2,
             fixedTime: fixedPrayerTimes?.asrActive ? fixedPrayerTimes?.asr : null,
             isFixedTimeActive: fixedPrayerTimes?.asrActive || false
@@ -466,11 +471,11 @@ export function Test() {
             fixedTime: fixedPrayerTimes?.maghribActive ? fixedPrayerTimes?.maghrib : null,
             isFixedTimeActive: fixedPrayerTimes?.maghribActive || false
         },
-        { 
-            time: prayerTimes?.isha || '00:00', 
-            label: 'Иша', 
-            highlight: nearestPrayer === 'isha', 
-            pic: isha, 
+        {
+            time: prayerTimes?.isha || '00:00',
+            label: 'Иша',
+            highlight: nearestPrayer === 'isha',
+            pic: isha,
             pic2: isha2,
             fixedTime: fixedPrayerTimes?.ishaActive ? fixedPrayerTimes?.isha : null,
             isFixedTimeActive: fixedPrayerTimes?.ishaActive || false
@@ -499,18 +504,18 @@ export function Test() {
                     if (!response.ok) {
                         throw new Error(`Ошибка сети при загрузке QR-кодов: ${response.status}`);
                     }
-                    
+
                     const data = await response.json();
-                    
+
                     // Сначала сбрасываем все значения, чтобы избежать отображения старых данных
                     setQrCode(null);
                     setSecondaryQrCode(null);
                     setSecondaryQrProjectName(null);
-                    
+
                     if (!data || !Array.isArray(data) || data.length === 0) {
                         return;
                     }
-                    
+
                     // Обработка основного QR-кода
                     const primaryQR = data.find(qr => qr.isPrimary === true);
                     if (primaryQR) {
@@ -518,14 +523,14 @@ export function Test() {
                     } else if (data.length > 0) {
                         setQrCode(data[0].imageUrl);
                     }
-                    
+
                     // Обработка дополнительного QR-кода (отдельно от основного)
                     const secondaryQR = data.find(qr => qr.isPrimary === false);
                     if (secondaryQR) {
                         setSecondaryQrCode(secondaryQR.imageUrl);
                         setSecondaryQrProjectName(secondaryQR.projectName);
                     }
-                    
+
                 } catch (error) {
                     console.error("Ошибка при загрузке QR-кодов:", error);
                     // При ошибке сбрасываем все значения
@@ -549,7 +554,7 @@ export function Test() {
         // При первоначальной загрузке компонента или изменении города
         let isMounted = true;
         let lastFetchTime = 0;
-        
+
         // Функция для проверки необходимости запроса погоды
         const updateWeather = () => {
             const now = new Date().getTime();
@@ -560,15 +565,15 @@ export function Test() {
                 fetchWeatherData(selectedCity);
             }
         };
-        
+
         // Обновляем погоду сразу при смене города
         if (selectedCity) {
             updateWeather();
         }
-        
+
         // Устанавливаем интервал обновления каждые 5 минут
         const weatherUpdateInterval = setInterval(updateWeather, 300000); // 5 минут в миллисекундах
-        
+
         // Очищаем интервал при размонтировании компонента
         return () => {
             isMounted = false;
@@ -583,13 +588,13 @@ export function Test() {
                 // Сортировка городов по алфавиту
                 const sortedCities = response.data.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
                 setCities(sortedCities);
-                
+
                 if (!currentCityId || selectedCity) {
-                const selectedCityData = sortedCities.find(city => city.name === selectedCity);
+                    const selectedCityData = sortedCities.find(city => city.name === selectedCity);
                     if (selectedCityData) {
                         setCurrentCityId(selectedCityData.id);
                         localStorage.setItem('currentCityId', selectedCityData.id.toString());
-                        
+
                         // Получаем фиксированное время намаза при изменении города
                         fetchFixedPrayerTime(selectedCityData.id);
                     }
@@ -598,7 +603,7 @@ export function Test() {
                 console.error('Ошибка при загрузке списка городов:', error);
             }
         };
-        
+
         getHijriDate();
         fetchCities();
     }, [selectedCity]);
@@ -613,10 +618,10 @@ export function Test() {
 
                 // Фильтруем и сортируем мечети для текущего города
                 const mosquesInCity = sortedMosques.filter(mosque => mosque.cityId === currentCityId);
-                
+
                 if (mosquesInCity.length > 0) {
                     // Проверяем, есть ли сохраненная мечеть в списке мечетей текущего города
-                    const savedMosque = mosquesInCity.find(mosque => 
+                    const savedMosque = mosquesInCity.find(mosque =>
                         mosque.id === currentMosqueId && mosque.cityId === currentCityId
                     );
 
@@ -624,7 +629,7 @@ export function Test() {
                         // Если сохраненная мечеть найдена, используем её
                         setSelectedMosque(savedMosque.name);
                         setCurrentMosqueId(savedMosque.id);
-                } else {
+                    } else {
                         // Если сохраненной мечети нет в списке, берем первую мечеть из города
                         setSelectedMosque(mosquesInCity[0].name);
                         setCurrentMosqueId(mosquesInCity[0].id);
@@ -685,9 +690,9 @@ export function Test() {
         if (!prayerTimes) return;
 
         // Используем функцию для расчета времени до следующего намаза с учетом фиксированного времени
-        const { nextPrayer, remainingTime: nextRemainingTime, totalDuration: nextTotalDuration } = 
+        const { nextPrayer, remainingTime: nextRemainingTime, totalDuration: nextTotalDuration } =
             calculateTimeToNextPrayer(prayerTimes, fixedPrayerTimes);
-        
+
         setNearestPrayer(nextPrayer);
         setRemainingTime(nextRemainingTime);
         setTotalDuration(nextTotalDuration);
@@ -703,12 +708,12 @@ export function Test() {
             setRemainingTime((prevTime) => {
                 if (prevTime <= 1000) {
                     // Когда время до намаза закончилось, пересчитываем следующий намаз
-                    const { nextPrayer: newNextPrayer, remainingTime: newRemainingTime, totalDuration: newTotalDuration } = 
+                    const { nextPrayer: newNextPrayer, remainingTime: newRemainingTime, totalDuration: newTotalDuration } =
                         calculateTimeToNextPrayer(prayerTimes, fixedPrayerTimes);
-                    
+
                     setNearestPrayer(newNextPrayer);
                     setTotalDuration(newTotalDuration);
-                    
+
                     return newRemainingTime;
                 }
                 return Math.max(0, prevTime - deltaTime);
@@ -779,17 +784,17 @@ export function Test() {
     const fetchWeatherData = async (cityName: string) => {
         try {
             setIsLoadingWeather(true);
-            
-            
+
+
             // Получаем координаты через геокодинг
             const geocodeResponse = await axios.get(
                 `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityName)},Россия&limit=1`
             );
-    
+
             if (!geocodeResponse.data || geocodeResponse.data.length === 0) {
                 throw new Error('Город не найден');
             }
-    
+
             const { lat, lon } = geocodeResponse.data[0];
             const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ3MDY1MDYwLCJpYXQiOjE3NDcwNjQ3NjAsImp0aSI6ImFiOTgzM2YyNjAzZTQ4Mjk4ODc5ZDBmMzk2Y2I3NzZjIiwidXNlcl9pZCI6ODkzfQ.hPqzVC8BOUff9JoOXLQHEfZFPJ3GR2aJHnfroReTYus';
             const now = new Date();
@@ -802,7 +807,7 @@ export function Test() {
             const response = await axios.get(
                 `https://projecteol.ru/api/weather/?lat=${lat}&lon=${lon}&date=${dateHour}&token=${token}`
             );
-    
+
             if (response.data && response.data.length > 0) {
                 const weatherInfo = response.data[0];
                 const weatherData: WeatherData = {
@@ -812,7 +817,7 @@ export function Test() {
                     city: cityName,
                     updatedAt: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
                 };
-                
+
                 setWeatherData(weatherData);
             }
         } catch (error) {
@@ -828,7 +833,7 @@ export function Test() {
             setIsLoadingWeather(false);
         }
     };
-    
+
     // Функция для определения описания погоды
     const getWeatherDescription = (cloudiness: number, humidity: number): string => {
         if (cloudiness < 20) return 'Ясно';
@@ -837,7 +842,7 @@ export function Test() {
         if (humidity > 80) return 'Дождливо';
         return 'Облачно';
     };
-    
+
     // Функция для определения иконки погоды
     const getWeatherIcon = (cloudiness: number, humidity: number): string => {
         if (cloudiness < 20) return 'sunny';
@@ -846,29 +851,29 @@ export function Test() {
         if (humidity > 80) return 'rainy';
         return 'cloudy';
     };
-    
+
     // Обновляем интервал обновления погоды
     useEffect(() => {
         let isMounted = true;
         let lastFetchTime = 0;
-        
+
         const updateWeather = () => {
             const now = new Date().getTime();
             if (selectedCity && now - lastFetchTime > 3600000 && isMounted) { // 1 час
-                
+
                 lastFetchTime = now;
                 fetchWeatherData(selectedCity);
             }
         };
-        
+
         // Обновляем погоду сразу при смене города
         if (selectedCity) {
             updateWeather();
         }
-        
+
         // Устанавливаем интервал обновления каждый час
         const weatherUpdateInterval = setInterval(updateWeather, 3600000);
-        
+
         return () => {
             isMounted = false;
             clearInterval(weatherUpdateInterval);
@@ -929,29 +934,29 @@ export function Test() {
 
         // Создаем словарь времен намазов с учетом фиксированного времени, если оно активно
         const prayerTimesDict: Record<string, { time: string, isFixed: boolean }> = {
-            fajr: { 
-                time: fixedPrayerTimes?.fajrActive ? fixedPrayerTimes.fajr : prayerTimes.fajr, 
-                isFixed: fixedPrayerTimes?.fajrActive || false 
+            fajr: {
+                time: fixedPrayerTimes?.fajrActive ? fixedPrayerTimes.fajr : prayerTimes.fajr,
+                isFixed: fixedPrayerTimes?.fajrActive || false
             },
-            shuruk: { 
-                time: fixedPrayerTimes?.shurukActive ? fixedPrayerTimes.shuruk : prayerTimes.shuruk, 
-                isFixed: fixedPrayerTimes?.shurukActive || false 
+            shuruk: {
+                time: fixedPrayerTimes?.shurukActive ? fixedPrayerTimes.shuruk : prayerTimes.shuruk,
+                isFixed: fixedPrayerTimes?.shurukActive || false
             },
-            zuhr: { 
-                time: fixedPrayerTimes?.zuhrActive ? fixedPrayerTimes.zuhr : prayerTimes.zuhr, 
-                isFixed: fixedPrayerTimes?.zuhrActive || false 
+            zuhr: {
+                time: fixedPrayerTimes?.zuhrActive ? fixedPrayerTimes.zuhr : prayerTimes.zuhr,
+                isFixed: fixedPrayerTimes?.zuhrActive || false
             },
-            asr: { 
-                time: fixedPrayerTimes?.asrActive ? fixedPrayerTimes.asr : prayerTimes.asr, 
-                isFixed: fixedPrayerTimes?.asrActive || false 
+            asr: {
+                time: fixedPrayerTimes?.asrActive ? fixedPrayerTimes.asr : prayerTimes.asr,
+                isFixed: fixedPrayerTimes?.asrActive || false
             },
-            maghrib: { 
-                time: fixedPrayerTimes?.maghribActive ? fixedPrayerTimes.maghrib : prayerTimes.maghrib, 
-                isFixed: fixedPrayerTimes?.maghribActive || false 
+            maghrib: {
+                time: fixedPrayerTimes?.maghribActive ? fixedPrayerTimes.maghrib : prayerTimes.maghrib,
+                isFixed: fixedPrayerTimes?.maghribActive || false
             },
-            isha: { 
-                time: fixedPrayerTimes?.ishaActive ? fixedPrayerTimes.isha : prayerTimes.isha, 
-                isFixed: fixedPrayerTimes?.ishaActive || false 
+            isha: {
+                time: fixedPrayerTimes?.ishaActive ? fixedPrayerTimes.isha : prayerTimes.isha,
+                isFixed: fixedPrayerTimes?.ishaActive || false
             }
         };
 
@@ -964,11 +969,11 @@ export function Test() {
 
         let closestPrayer = '';
         let minDifference = Infinity;
-        
+
         // Находим ближайший следующий намаз
         for (const [prayerName, { time }] of Object.entries(prayerTimesDict)) {
             if (!time) continue;
-            
+
             const difference = calculateTimeDifference(time);
             if (difference < minDifference && difference > 0) {
                 minDifference = difference;
@@ -999,14 +1004,14 @@ export function Test() {
         }
 
         const closestPrayerIndex = sortedPrayers.findIndex(([name]) => name === closestPrayer);
-        
+
         // Проверка на корректность индекса ближайшего намаза
         if (closestPrayerIndex === -1) {
             return { nextPrayer: '', remainingTime: 0, totalDuration: 0 };
         }
 
         const previousPrayerIndex = closestPrayerIndex > 0 ? closestPrayerIndex - 1 : sortedPrayers.length - 1;
-        
+
         // Расчет общего времени между намазами (с проверкой на валидность индексов)
         if (!sortedPrayers[closestPrayerIndex] || !sortedPrayers[previousPrayerIndex]) {
             return { nextPrayer: closestPrayer, remainingTime: minDifference, totalDuration: 24 * 60 * 60 * 1000 };
@@ -1014,10 +1019,10 @@ export function Test() {
 
         const currentPrayerTime = getTimeInMinutes(sortedPrayers[closestPrayerIndex][1].time);
         const prevPrayerTime = getTimeInMinutes(sortedPrayers[previousPrayerIndex][1].time);
-        
+
         // Если предыдущий намаз позже текущего, это означает, что он был вчера
-        const timeBetweenPrayers = currentPrayerTime > prevPrayerTime 
-            ? (currentPrayerTime - prevPrayerTime) * 60 * 1000 
+        const timeBetweenPrayers = currentPrayerTime > prevPrayerTime
+            ? (currentPrayerTime - prevPrayerTime) * 60 * 1000
             : ((currentPrayerTime + 24 * 60) - prevPrayerTime) * 60 * 1000;
 
         return {
@@ -1027,167 +1032,223 @@ export function Test() {
         };
     };
 
+    useEffect(() => {
+        const timer = setTimeout(() => setLoading(false), 2000); // 2 секунды
+        return () => clearTimeout(timer);
+    }, []);
+
+    if (loading) {
+        return <LogoLoader />;
+    }
+
     return (
         <div className="w-[100%] h-screen bg-[#f6f6f6] pt-[20px] pl-[20px] pr-[20px] overflow-auto pc1:p-[10px] pc2:p-[5px]  ">
-            <div className="w-full border-[5px] border-white bg-[#eeeeee] rounded-[40px] flex flex-wrap xl:justify-between items-center p-[10px] xl-max:justify-center lg-max:flex-col sm-max:flex-col sm-max:gap-[20px] sm-max:items-center">
-                <div className="flex flex-wrap items-center space-x-6 sm-max:flex-col sm-max:space-x-0 sm-max:gap-[10px] sm-max:items-center ">
-                    <div className="text-[#17181d] text-center text-[52px] font-[700] pt-[8px] pb-[8px] pr-[48px] pl-[48px]  pc2:pt-[6px] pc2:pb-[6px] pc2:pr-[30px] pc2:pl-[30px]  tv1:pt-[4px] tv1:pb-[4px] tv1:pr-[25px] tv1:pl-[25px] bg-white rounded-[24px]">
+            {/* Основной контейнер */}
+            <div className="w-full border-[5px] border-white bg-[#eeeeee] rounded-[40px] flex flex-wrap lg:justify-between items-center p-[10px] 
+                lg-max:flex-col lg-max:gap-4
+                md-max:border-[3px] md-max:rounded-[30px] md-max:p-4">
+
+                {/* Левый блок (часы и дата) - без изменений для ПК */}
+                <div className="flex flex-wrap items-center space-x-6 
+                    lg-max:flex-col lg-max:space-x-0 lg-max:gap-4 lg-max:w-full
+                    md-max:flex-col md-max:space-x-0 md-max:gap-[10px] md-max:items-center">
+
+                    <div className="text-[#17181d] text-center text-[52px] font-[700] pt-[8px] pb-[8px] pr-[48px] pl-[48px] pc2:pt-[6px] pc2:pb-[6px] pc2:pr-[30px] pc2:pl-[30px] tv1:pt-[4px] tv1:pb-[4px] tv1:pr-[25px] tv1:pl-[25px] bg-white rounded-[24px]
+                        lg-max:text-[46px] lg-max:px-10 lg-max:py-3
+                        md-max:text-[36px] md-max:px-8 md-max:py-3">
                         <DigitalClock />
                     </div>
-                    <div className='flex gap-[5px] sm-max:flex-col sm-max:items-center sm-max:gap-[0px]'>
-                        <div className="text-[#17181d] text-[40px] pc1:text-[40px] pc2:text-[30px] tv1:text-[20px] ">
+
+                    <div className='flex gap-[5px] 
+                        lg-max:flex-col lg-max:items-center lg-max:gap-1
+                        md-max:flex-col md-max:items-center md-max:gap-0'>
+                        <div className="text-[#17181d] text-[40px] pc1:text-[40px] pc2:text-[30px] tv1:text-[20px] 
+                            lg-max:text-[34px]
+                            md-max:text-[28px]">
                             {new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })},
                         </div>
-                        <div className="text-[#17181d] text-[40px] pc1:text-[40px] pc2:text-[30px] tv1:text-[20px] ">
+                        <div className="text-[#17181d] text-[40px] pc1:text-[40px] pc2:text-[30px] tv1:text-[20px] 
+                            lg-max:text-[34px]
+                            md-max:text-[28px]">
                             {new Date().toLocaleDateString('ru-RU', { weekday: 'long' })}
                         </div>
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center text-center space-x-6 pc2:space-x-4 tv1:space-x-2 lg-max:justify-center lg:flex-row sm-max:flex-col sm-max:gap-[15px]">
-                    {/* <div 
-                        className="flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 py-[10px] pc2:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center"
-                    >
-                        <div className="text-[#a0a2b1] text-[12px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px] tv1:text-[10px]">
-                            Погода
-                    </div>
-                        <div className="text-[#17181d] pc2:text-[18px] tv1:text-[14px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px] flex items-center justify-center">
-                            {isLoadingWeather ? (
-                                <div className="flex items-center ">
-                                    <span className="animate-spin">⟳</span>
-                                    Загрузка...
-                    </div>
-                            ) : weatherData ? (
-                                <div className="flex items-center">
-                                    <span className="mr-2 flex items-center pc2:scale-125 tv1:scale-100">
-                                        {mapWeatherCodeToIcon(weatherData.icon)}
-                                    </span>
-                                    <span className="font-normal">{weatherData.temperature}°C</span>
-                                </div>
-                            ) : (
-                                <div className="flex items-center">
-                                    <span className="mr-2 scale-125">
-                                        <WeatherIcon iconType="cloudy" />
-                                    </span>
-                                    4°C
-                                </div>
-                            )}
-                        </div>
-                    </div> */}
-                    <div className="flex flex-col bg-white rounded-[25px] pc2:px-1 tv1:px-0  px-3 py-[10px] pc2:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center">
-                        <div className="text-[#a0a2b1] pc2:text-[12px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px] tv1:text-[10px] ">Дата по хиджре</div>
-                        <div className="text-[#17181d] pc1:text-[24px] pc2:text-[18px] tv1:text-[14px] font-normal  pc2:leading-[27.60px] tv1:leading-[17.60px]">{getHijriDate()}</div>
-                    </div>
-                    <div className="flex items-left gap-[10px] items-center lg-max:w-full justify-center ">
-                        <div className='flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 pt-[10px] pc2:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center'>
-                            <div className="cursor-pointer relative z-10 text-[#17181d] pc1:text-[24px] pc2:text-[18px] tv1:text-[14px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px]"
-                                onClick={() => setCityDropdownOpen(prev => !prev)} ref={cityDropdownRef}>
-                                <div className="text-[#a0a2b1] pc2:text-[12px] tv1:text-[10px]  font-normal">Город</div>
-                                {selectedCity}
-                                {cityDropdownOpen && (
-                                    <div className="absolute bg-white border rounded-lg shadow-lg w-[250px] max-h-[320px] overflow-x-hidden overflow-y-auto z-1000">
-                                        {cities.map((city) => (
-                                            <div key={city.id} className="p-2 hover:bg-gray-200 cursor-pointer text-left pc1:text-[24px] pc2:text-[18px] tv1:text-[14px]"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setCityDropdownOpen(false);
-                                                    handleCitySelect(city);
-                                                }}>
-                                                {city.name}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                {/* Правый блок (информация) - без изменений для ПК */}
+                <div className="flex flex-wrap items-center text-center space-x-6 pc2:space-x-4 tv1:space-x-2 
+                    lg-max:space-x-0 lg-max:justify-center lg-max:w-full
+                    md-max:flex-col md-max:gap-4 md-max:w-full">
 
-                        <div className="flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 pt-[10px] pc2:h-[86px] tv1:h-[56px] sm-max:px-3 sm-max:w-full sm-max:items-center">
-                            <div className="cursor-pointer relative z-10"
-                                onClick={() => setMosqueDropdownOpen(prev => !prev)} ref={mosqueDropdownRef}>
-                                <div className='text-[#a0a2b1] pc2:text-[12px] tv1:text-[10px] pc2:leading-[27.60px] tv1:leading-[17.60px] font-normal'>Мечеть</div>
-                                <div className="text-[#17181d] pc1:text-[24px] pc2:text-[18px] tv1:text-[14px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px]">{selectedMosque}</div>
-                                {mosqueDropdownOpen && (
-                                    <div className="absolute right-0 bg-white border rounded-lg shadow-lg w-[250px] max-h-96 overflow-y-auto z-1000">
-                                        {mosques
-                                            .filter(mosque => mosque.cityId === currentCityId)
-                                            .sort((a, b) => a.name.localeCompare(b.name, 'ru'))
-                                            .map((mosque) => (
-                                                <div key={mosque.id} className="p-2 hover:bg-gray-200 text-left cursor-pointer text-[#17181d] whitespace-nowrap overflow-hidden text-ellipsis"
+                    {/* Блок хиджры */}
+                    <div className="flex flex-col bg-white rounded-[25px] pc2:px-1 tv1:px-0 px-3 py-[10px] pc2:h-[86px] tv1:h-[56px] 
+                        lg-max:px-4 lg-max:py-2 lg-max:min-w-[180px]
+                        md-max:px-3 md-max:w-full md-max:items-center">
+                        <div className="text-[#a0a2b1] pc2:text-[12px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px] tv1:text-[10px] 
+                            lg-max:text-sm
+                            md-max:text-sm">Дата по хиджре</div>
+                        <div className="text-[#17181d] pc1:text-[24px] pc2:text-[18px] tv1:text-[14px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px]
+                            lg-max:text-[24px]
+                            md-max:text-[22px]">{getHijriDate()}</div>
+                    </div>
+
+                    {/* Контейнер города, мечети и аватара */}
+                    <div className="flex items-left gap-[10px] items-center 
+                        lg-max:gap-4 lg-max:flex-nowrap
+                        md-max:flex-col md-max:w-full md-max:gap-4">
+
+                        {/* Контейнер города и мечети */}
+                        <div className="flex gap-[10px] 
+                            lg-max:flex-1 lg-max:gap-3
+                            md-max:w-full md-max:flex-col md-max:gap-4">
+
+                            {/* Выбор города */}
+                            <div className='flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 pt-[10px] pc2:h-[86px] tv1:h-[56px] 
+                                lg-max:flex-1 lg-max:px-4 lg-max:py-2 relative
+                                md-max:px-3 md-max:w-full md-max:items-center'>
+                                <div className="cursor-pointer relative z-10 text-[#17181d] pc1:text-[24px] pc2:text-[18px] tv1:text-[14px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px]
+                                lg-max:text-[20px]
+                                md-max:text-[22px]"
+                                    onClick={() => setCityDropdownOpen(prev => !prev)} ref={cityDropdownRef}>
+                                    <div className="text-[#a0a2b1] pc2:text-[12px] tv1:text-[10px] font-normal
+                                        lg-max:text-sm">Город</div>
+                                    {selectedCity}
+                                    {cityDropdownOpen && (
+                                        <div className="absolute bg-white border rounded-lg shadow-lg w-[250px] max-h-[320px] overflow-x-hidden overflow-y-auto z-1000
+                                            lg-max:w-full lg-max:max-h-[200px]
+                                            md-max:w-[90%] md-max:max-h-[200px] md-max:top-full md-max:mt-1">
+                                            {cities.map((city) => (
+                                                <div key={city.id} className="p-2 hover:bg-gray-200 cursor-pointer text-left pc1:text-[24px] pc2:text-[18px] tv1:text-[14px]
+                                                    lg-max:text-[18px] lg-max:text-center
+                                                    md-max:text-[18px] md-max:text-center"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        handleMosqueSelect(mosque);
+                                                        setCityDropdownOpen(false);
+                                                        handleCitySelect(city);
                                                     }}>
-                                                    {mosque.name}
+                                                    {city.name}
                                                 </div>
                                             ))}
-                                    </div>
-                                )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Выбор мечети */}
+                            <div className="flex flex-col bg-white rounded-[25px] px-3 sm:px-4 md:px-5 lg:px-6 pt-[10px] pc2:h-[86px] tv1:h-[56px] 
+                                lg-max:flex-1 lg-max:px-4 lg-max:py-2 relative
+                                md-max:px-3 md-max:w-full md-max:items-center">
+                                <div className="cursor-pointer relative z-10"
+                                    onClick={() => setMosqueDropdownOpen(prev => !prev)} ref={mosqueDropdownRef}>
+                                    <div className='text-[#a0a2b1] pc2:text-[12px] tv1:text-[10px] pc2:leading-[27.60px] tv1:leading-[17.60px] font-normal
+                                        lg-max:text-sm'>Мечеть</div>
+                                    <div className="text-[#17181d] pc1:text-[24px] pc2:text-[18px] tv1:text-[14px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px]
+                                        lg-max:text-[20px]
+                                        md-max:text-[22px]">{selectedMosque}</div>
+                                    {mosqueDropdownOpen && (
+                                        <div className="absolute right-0 bg-white border rounded-lg shadow-lg w-[250px] max-h-96 overflow-y-auto z-1000
+                                            lg-max:w-full lg-max:max-h-[200px] lg-max:left-0
+                                            md-max:w-[90%] md-max:max-h-[200px] md-max:left-0 md-max:right-auto md-max:top-full md-max:mt-1">
+                                            {mosques
+                                                .filter(mosque => mosque.cityId === currentCityId)
+                                                .sort((a, b) => a.name.localeCompare(b.name, 'ru'))
+                                                .map((mosque) => (
+                                                    <div key={mosque.id} className="p-2 hover:bg-gray-200 text-left cursor-pointer text-[#17181d] whitespace-nowrap overflow-hidden text-ellipsis
+                                                        lg-max:text-[18px] lg-max:text-center lg-max:whitespace-normal
+                                                        md-max:text-center md-max:whitespace-normal"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleMosqueSelect(mosque);
+                                                        }}>
+                                                        {mosque.name}
+                                                    </div>
+                                                ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
+                        {/* Аватар (остается на своем месте) */}
                         <div className="sm-max:mt-2">
-                            <img className="w-[45px] h-[45px] sm:w-[50px] sm:h-[50px] md:w-[55px] md:h-[55px] lg:w-[61px] lg:h-[61px] rounded-[20px]" src={getLogoUrl()} alt="avatar" />
+                            <img className="w-[45px] h-[45px] sm:w-[50px] sm:h-[50px] md:w-[55px] md:h-[55px] lg:w-[61px] lg:h-[61px] rounded-[20px]
+                                lg-max:w-[55px] lg-max:h-[55px]
+                                md-max:w-[50px] md-max:h-[50px]"
+                                src={getLogoUrl()}
+                                alt="avatar" />
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="flex items-center h-[397px] pc:h-[397px] pc1:h-[320px] tv:h-[300px] tv1:h-[250px] gap justify-between w-full border-[5px] border-white rounded-[48px] pt-[20px] pb-[20px] pl-[15px] pr-[15px] sm:pl-[20px] sm:pr-[20px] md:pl-[25px] md:pr-[25px] mt-[40px] sm-max:flex-wrap sm-max:justify-center sm-max:gap-[15px]">
+            <div className="flex items-center h-[397px] pc:h-[397px] pc1:h-[320px] tv:h-[300px] tv1:h-auto gap justify-between w-full border-[5px] border-white rounded-[48px] pt-[20px] pb-[20px] pl-[15px] pr-[15px] sm:pl-[20px] sm:pr-[20px] md:pl-[25px] md:pr-[25px] mt-[40px] 
+                sm-max:flex-wrap sm-max:justify-center sm-max:gap-[15px] sm-max:h-auto sm-max:pt-[15px] sm-max:pb-[15px]
+                xl-max:flex-wrap xl-max:justify-center xl-max:gap-[12px] xl-max:h-auto xl-max:pt-[15px] xl-max:pb-[15px]">
                 {prayers.map((prayer, index) => {
                     const highlightedIndex = getHighlightedPrayerIndex();
                     const isNextToHighlighted = (highlightedIndex !== -1) && (index === highlightedIndex - 1 || index === highlightedIndex + 1);
-                    
+
                     return (
                         <div key={index} className="mx-[3px] sm:mx-1 md:mx-2">
-                        <PrayerTime
-                            time={prayer.time}
-                            label={prayer.label}
-                            highlight={prayer.highlight}
-                            pic={prayer.pic}
-                            pic2={prayer.pic2}
-                            remainingTime={highlightedIndex !== -1 ? remainingTime : 0}
-                            progress={highlightedIndex !== -1 ? calculateProgress(remainingTime, totalDuration) : 0}
-                            className={isNextToHighlighted ? 'w-[211px] pc1:w-[180px] pc2:w-[150px]' : ''}
-                            fixedTime={prayer.fixedTime}
-                            isFixedTimeActive={prayer.isFixedTimeActive}
-                        />
-                    </div>
+                            <PrayerTime
+                                time={prayer.time}
+                                label={prayer.label}
+                                highlight={prayer.highlight}
+                                pic={prayer.pic}
+                                pic2={prayer.pic2}
+                                remainingTime={highlightedIndex !== -1 ? remainingTime : 0}
+                                progress={highlightedIndex !== -1 ? calculateProgress(remainingTime, totalDuration) : 0}
+                                className={isNextToHighlighted ? 'w-[211px] pc1:w-[180px] pc2:w-[150px]' : ''}
+                                fixedTime={prayer.fixedTime}
+                                isFixedTimeActive={prayer.isFixedTimeActive}
+                            />
+                        </div>
                     );
                 })}
             </div>
 
-            <div className="w-full gap-[24px] pc2:h-[357px] rounded-[50px] flex sm-max:flex-col justify-between items-center pt-[14px] pl-[24px] pr-[24px] tv1:mt-[19px] pc2:mt-[40px] sm-max:h-auto">
+            <div className="w-full gap-[24px] pc2:h-[357px] rounded-[50px] flex sm-max:flex-col justify-between items-center pt-[14px] pl-[24px] pr-[24px] tv1:mt-[19px] pc2:mt-[40px] sm-max:h-auto
+                md-max:flex-wrap md-max:justify-center md-max:gap-y-6">
                 {secondaryQrCode && (
-                <div className="text-white text-[20px] flex justify-center font-extrabold sm-max:w-full">
-                        <div className="pc2:w-[287px] pc2:h-[357px] tv1:w-[247px] tv1:h-[260px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto sm-max:items-center">
-                        <div className='flex gap-[11px] items-center justify-between sm-max:flex-col sm-max:items-start'>
-                            <div className="flex flex-col">
-                                <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold  max-w-[190px]">Помощь</div>
-                                <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] whitespace-nowrap  font-bold  max-w-[190px]"> {secondaryQrProjectName ? `"${secondaryQrProjectName}"` : '"Проект"'}</div>
-                        </div>
-                            <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[50px] -mt-8" />
+                    <div className="text-white text-[20px] flex justify-center font-extrabold sm-max:w-full md-max:w-full md-max:order-1">
+                        <div className="pc2:w-[287px] pc2:h-[357px] tv1:w-[247px] tv1:h-[260px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto sm-max:items-center
+                            md-max:h-[300px] md-max:flex md-max:flex-col md-max:justify-between">
+                            <div className='flex gap-[11px] items-center justify-between sm-max:flex-col sm-max:items-start md-max:flex-row md-max:w-full'>
+                                <div className="flex flex-col">
+                                    <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold max-w-[190px] md-max:text-[24px]">Помощь</div>
+                                    <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] whitespace-nowrap font-bold max-w-[190px] md-max:text-[24px]">
+                                        {secondaryQrProjectName ? `"${secondaryQrProjectName}"` : '"Проект"'}
+                                    </div>
+                                </div>
+                                <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[50px] -mt-8 md-max:mt-0" />
                             </div>
-                            <div className="flex flex-col items-center">
-                                <img 
-                                    className="pc2:w-[190px] pc2:h-[190px] tv1:w-[150px] tv1:h-[150px] rounded-[20px] sm-max:mx-auto" 
-                                    src={`${API_BASE_URL}${secondaryQrCode}`} 
-                                    alt="Дополнительный QR код для проекта" 
+                            <div className="flex flex-col items-center md-max:mt-2">
+                                <img
+                                    className="pc2:w-[190px] pc2:h-[190px] tv1:w-[150px] tv1:h-[150px] rounded-[20px] sm-max:mx-auto
+                                    md-max:w-[160px] md-max:h-[160px]"
+                                    src={`${API_BASE_URL}${secondaryQrCode}`}
+                                    alt="Дополнительный QR код для проекта"
                                 />
                             </div>
                         </div>
                     </div>
                 )}
 
-                <div className={`${!secondaryQrCode ? 'flex-grow' : 'max-w-[1200px]'} w-full h-full pc2:h-[357px] tv1:h-[260px] bg-[rgba(217,217,217,1)] rounded-[20px] flex items-center justify-center p-[12px]`}>
-                    <div className="w-full h-full flex flex-col items-center justify-center">
-                        <div className="bg-white rounded-[16px] p-6 shadow-md border-[2px] border-[#5ec262] mx-auto w-full h-full flex flex-col items-center justify-center">
-                            <div className="text-[50px] pc:text-[60px] pc1:text-[50px] pc2:text-[40px] font-bold text-[#5ec262] mb-4 text-center">
+                <div className={`${!secondaryQrCode ? 'flex-grow' : 'max-w-[1200px]'} w-full h-full pc2:h-[357px] tv1:h-[260px] bg-[rgba(217,217,217,1)] rounded-[20px] flex items-center justify-center p-[12px]
+                    md-max:w-full md-max:order-3 md-max:mt-0 md-max:h-auto`}>
+                    <div className="w-full h-full flex flex-col items-center justify-center md-max:py-6">
+                        <div className="bg-white rounded-[16px] p-6 shadow-md border-[2px] border-[#5ec262] mx-auto w-full h-full flex flex-col items-center justify-center
+                            md-max:p-4">
+                            <div className="text-[50px] pc:text-[60px] pc1:text-[50px] pc2:text-[40px] font-bold text-[#5ec262] mb-4 text-center
+                                md-max:text-[40px]">
                                 {currentName.arabic}
                             </div>
-                            <div className="text-[34px] pc:text-[40px] pc1:text-[34px] pc2:text-[28px] font-medium text-center text-[#17181d]">
+                            <div className="text-[34px] pc:text-[40px] pc1:text-[34px] pc2:text-[28px] font-medium text-center text-[#17181d]
+                                md-max:text-[28px]">
                                 {currentName.transcription}
                             </div>
-                            <div className="text-[28px] pc:text-[32px] pc1:text-[28px] pc2:text-[24px] text-gray-600 text-center mt-2">
+                            <div className="text-[28px] pc:text-[32px] pc1:text-[28px] pc2:text-[24px] text-gray-600 text-center mt-2
+                                md-max:text-[22px]">
                                 {currentName.meaning}
                             </div>
                         </div>
@@ -1195,35 +1256,36 @@ export function Test() {
                 </div>
 
                 {qrCode && (
-                <div className="text-white text-[20px] flex justify-center font-extrabold sm-max:w-full">
-                        <div className="pc2:w-[287px] pc2:h-[357px] tv1:w-[247px] tv1:h-[260px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto">
-                        <div className='flex gap-[11px] items-center justify-between sm-max:flex-col sm-max:items-start'>
-                             <div className="flex flex-col">
-                                <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold">Помощь</div>
-                                <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold">мечети</div>
-                        </div>
-                            <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[50px] -mt-8" />
-                    </div>
-                            <div className="flex flex-col items-center">
-                                <img 
-                                    className="pc2:w-[190px] pc2:h-[190px] tv1:w-[150px] tv1:h-[150px] rounded-[20px] sm-max:mx-auto" 
-                                    src={`${API_BASE_URL}${qrCode.startsWith('/') ? qrCode : '/' + qrCode}`} 
-                                    alt="Основной QR код для мечети" 
+                    <div className="text-white text-[20px] flex justify-center font-extrabold sm-max:w-full md-max:w-full md-max:order-2">
+                        <div className="pc2:w-[287px] pc2:h-[357px] tv1:w-[247px] tv1:h-[260px] space-y-4 bg-[#5EC262] rounded-[32px] p-[24px] sm-max:w-full sm-max:h-auto
+                             md-max:h-[300px] md-max:flex md-max:flex-col md-max:justify-between">
+                            <div className='flex gap-[11px] items-center justify-between sm-max:flex-col sm-max:items-start md-max:flex-row md-max:w-full'>
+                                <div className="flex flex-col">
+                                    <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold md-max:text-[24px]">Помощь</div>
+                                    <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold md-max:text-[24px]">мечети</div>
+                                </div>
+                                <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[50px] -mt-8 md-max:mt-0" />
+                            </div>
+                            <div className="flex flex-col items-center md-max:mt-2">
+                                <img
+                                    className="pc2:w-[190px] pc2:h-[190px] tv1:w-[150px] tv1:h-[150px] rounded-[20px] sm-max:mx-auto
+                                    md-max:w-[160px] md-max:h-[160px]"
+                                    src={`${API_BASE_URL}${qrCode.startsWith('/') ? qrCode : '/' + qrCode}`}
+                                    alt="Основной QR код для мечети"
                                     onError={(e) => {
                                         console.error('Ошибка загрузки QR-кода:', qrCode);
                                         (e.target as HTMLImageElement).style.display = 'none';
                                     }}
                                 />
                             </div>
+                        </div>
                     </div>
-                </div>
                 )}
             </div>
 
-            <div className="w-full text-center text-[16px] text-gray-500 pc:mt-[10px] ">
+            <div className="w-full text-center text-[16px] text-gray-500 pc:mt-[10px] md-max:mt-4">
                 * — время, принятое мечетью для проведения коллективного намаза
             </div>
-            
         </div>
     );
 }
