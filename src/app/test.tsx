@@ -1181,7 +1181,7 @@ export function Test() {
                 </div>
             </div>
 
-            <div className="flex items-center h-[397px] pc:h-[397px] pc1:h-[320px] tv:h-[300px] tv1:h-auto gap justify-between w-full border-[5px] border-white rounded-[48px] pt-[20px] pb-[20px] pl-[15px] pr-[15px] sm:pl-[20px] sm:pr-[20px] md:pl-[25px] md:pr-[25px] mt-[40px] 
+            <div className="flex items-center h-[397px] pc:h-[397px] pc1:h-[320px] tv:h-[300px] tv1:h-[260px] gap justify-between w-full border-[5px] border-white rounded-[48px] pt-[20px] pb-[20px] pl-[15px] pr-[15px] sm:pl-[20px] sm:pr-[20px] md:pl-[25px] md:pr-[25px] mt-[40px] 
                 sm-max:flex-wrap sm-max:justify-center sm-max:gap-[15px] sm-max:h-auto sm-max:pt-[15px] sm-max:pb-[15px]
                 xl-max:flex-wrap xl-max:justify-center xl-max:gap-[12px] xl-max:h-auto xl-max:pt-[15px] xl-max:pb-[15px]">
                 {prayers.map((prayer, index) => {
