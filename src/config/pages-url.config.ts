@@ -10,7 +10,10 @@ class ADMIN {
 	ADMINMANAGMENT  = `${this.root}/dashboard/adminManagement`
 	MEDIA = `${this.root}/dashboard/media`
 	AUDIT_LOGS = `${this.root}/dashboard/audit-logs`
+<<<<<<< HEAD
 	DICTIONARY = `${this.root}/dashboard/dictionary`
+=======
+>>>>>>> origin/master
 
 }
 

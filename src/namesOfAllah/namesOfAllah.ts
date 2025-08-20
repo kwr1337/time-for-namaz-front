@@ -2,87 +2,134 @@ interface NameOfAllah {
     arabic: string;
     transcription: string;
     meaning: string;
+<<<<<<< HEAD
     meaningTatar?: string;
     transcriptionTatar?: string;
+=======
+>>>>>>> origin/master
 }
 
 const namesOfAllah: NameOfAllah[] = [
     {
         arabic: 'الله',
         transcription: 'Аллах',
+<<<<<<< HEAD
         transcriptionTatar: 'Аллаһ',
         meaning: 'Единый Бог, достойный поклонения',
         meaningTatar: 'Гыйбадәткә лаек бердәнбер Аллаһ'
+=======
+        meaning: 'Единый Бог, достойный поклонения'
+>>>>>>> origin/master
     },
     {
         arabic: 'الرحمن',
         transcription: 'Ар-Рахман',
+<<<<<<< HEAD
         transcriptionTatar: 'Ар-Рахман',
         meaning: 'Всемилостивый',
         meaningTatar: 'Иң мәрхәмәтле'
+=======
+        meaning: 'Всемилостивый'
+>>>>>>> origin/master
     },
     {
         arabic: 'الرحيم',
         transcription: 'Ар-Рахим',
+<<<<<<< HEAD
         transcriptionTatar: 'Ар-Рахим',
         meaning: 'Милосердный',
         meaningTatar: 'Иң рәхимле'
+=======
+        meaning: 'Милосердный'
+>>>>>>> origin/master
     },
     {
         arabic: 'الملك',
         transcription: 'Аль-Малик',
+<<<<<<< HEAD
         transcriptionTatar: 'Әл-Мәлик',
         meaning: 'Властелин всего сущего',
         meaningTatar: 'Барча булганның Хуҗасы'
+=======
+        meaning: 'Властелин всего сущего'
+>>>>>>> origin/master
     },
     {
         arabic: 'القدوس',
         transcription: 'Аль-Куддус',
+<<<<<<< HEAD
         transcriptionTatar: 'Әл-Куддүс',
         meaning: 'Святой',
         meaningTatar: 'Изге'
+=======
+        meaning: 'Святой'
+>>>>>>> origin/master
     },
     {
         arabic: 'السلام',
         transcription: 'Ас-Салям',
+<<<<<<< HEAD
         transcriptionTatar: 'Әс-Сәләм',
         meaning: 'Миротворец',
         meaningTatar: 'Тынычлык бирүче'
+=======
+        meaning: 'Миротворец'
+>>>>>>> origin/master
     },
     {
         arabic: 'المؤمن',
         transcription: 'Аль-Мумин',
+<<<<<<< HEAD
         transcriptionTatar: 'Әл-Мөэмин',
         meaning: 'Дарующий безопасность',
         meaningTatar: 'Иминлек бирүче'
+=======
+        meaning: 'Дарующий безопасность'
+>>>>>>> origin/master
     },
     {
         arabic: 'المهيمن',
         transcription: 'Аль-Мухаймин',
+<<<<<<< HEAD
         transcriptionTatar: 'Әл-Мөһәймин',
         meaning: 'Хранитель',
         meaningTatar: 'Саклаучы'
+=======
+        meaning: 'Хранитель'
+>>>>>>> origin/master
     },
     {
         arabic: 'العزيز',
         transcription: 'Аль-Азиз',
+<<<<<<< HEAD
         transcriptionTatar: 'Әл-Газиз',
         meaning: 'Могущественный',
         meaningTatar: 'Кодрәтле'
+=======
+        meaning: 'Могущественный'
+>>>>>>> origin/master
     },
     {
         arabic: 'الجبار',
         transcription: 'Аль-Джаббар',
+<<<<<<< HEAD
         transcriptionTatar: 'Әл-Джәббар',
         meaning: 'Могучий',
         meaningTatar: 'Җәбер Итүче, Кодрәт Иясе'
+=======
+        meaning: 'Могучий'
+>>>>>>> origin/master
     },
     {
         arabic: 'المتكبر',
         transcription: 'Аль-Мутакаббир',
+<<<<<<< HEAD
         transcriptionTatar: 'Әл-Мөтәкаббир',
         meaning: 'Превосходящий',
         meaningTatar: 'Бөеклек Иясе'
+=======
+        meaning: 'Превосходящий'
+>>>>>>> origin/master
     },
     {
         arabic: 'الخالق',
@@ -531,6 +578,7 @@ const namesOfAllah: NameOfAllah[] = [
     }
 ];
 
+<<<<<<< HEAD
 // Татарские названия (Исеме) и толкования (Татарча), сопоставленные по арабскому написанию
 const tatarOverridesByArabic = new Map<string, { transcriptionTatar: string; meaningTatar: string }>([
     ['الله', { transcriptionTatar: 'Аллаһ', meaningTatar: 'Аллаһ' }],
@@ -644,3 +692,6 @@ const namesOfAllahLocalized: NameOfAllah[] = namesOfAllah.map(n => {
 });
 
 export default namesOfAllahLocalized;
+=======
+export default namesOfAllah;
+>>>>>>> origin/master
