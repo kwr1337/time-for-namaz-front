@@ -58,13 +58,10 @@ const DashboardPage = () => {
 		window.location.href = DASHBOARD_PAGES.AUDIT_LOGS;
 	};
 
-<<<<<<< HEAD
 	const handleGoToDictionary = () => {
 		window.location.href = DASHBOARD_PAGES.DICTIONARY;
 	};
 
-=======
->>>>>>> origin/master
 	const handleLogout = () => {
 		localStorage.removeItem('token');
 		window.location.href = '/auth';
@@ -123,7 +120,6 @@ const DashboardPage = () => {
 					</button>
 				)}
 
-<<<<<<< HEAD
 				{role === 'SUPER_ADMIN' && (
 					<button
 						onClick={handleGoToDictionary}
@@ -133,8 +129,6 @@ const DashboardPage = () => {
 					</button>
 				)}
 
-=======
->>>>>>> origin/master
 				<button
 					onClick={handleLogout}
 					className="mt-4 bg-red-500 w-full text-white p-2 rounded hover:bg-red-600 transition"
