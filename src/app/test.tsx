@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import asr from '../pic/asr-1.png';
 import asr2 from '../pic/asr-2.png';
 import fadjr from '../pic/fadjr-1.png';
@@ -158,8 +158,8 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
                 {highlight && (
                     <div className="absolute pc:max-w-[175px] pc1:max-w-[155px] tv:max-w-[125px] tv1:max-w-[105px] md-max:max-w-[110px] sm-max:max-w-[90px] h-[112px] right-[4px] top-[4px] flex flex-col items-end">
                         <div className="w-[100%] text-right bg-white rounded-bl-[40px] rounded-[8px] rounded-tr-[19px] py-[4px] px-[8px] flex flex-col">
-                            <div className={`text-[#17181d] font-normal ${currentLang === 'tt' ? 'pc:text-[18px] tv:text-[14px] tv1:text-[10px] md-max:text-[12px] sm-max:text-[10px]' : 'pc:text-[22px] tv:text-[16px] tv1:text-[12px] md-max:text-[14px] sm-max:text-[12px]'}`}>{t('time.until', 'Через')}</div>
-                            <div className={`text-[#17181d] font-bold ${currentLang === 'tt' ? 'text-[24px] pc:text-[24px] pc1:text-[20px] tv:text-[16px] tv1:text-[14px] md-max:text-[18px] sm-max:text-[14px]' : 'text-[30px] pc:text-[30px] pc1:text-[25px] tv:text-[20px] tv1:text-[18px] md-max:text-[22px] sm-max:text-[18px]'}`}>
+                            <div className={`text-[#17181d] font-normal break-words overflow-wrap-anywhere ${currentLang === 'tt' ? 'pc:text-[18px] tv:text-[14px] tv1:text-[10px] md-max:text-[12px] sm-max:text-[10px]' : 'pc:text-[22px] tv:text-[16px] tv1:text-[12px] md-max:text-[14px] sm-max:text-[12px]'}`}>{t('time.until', 'Через')}</div>
+                            <div className={`text-[#17181d] font-bold break-all overflow-wrap-anywhere ${currentLang === 'tt' ? 'text-[24px] pc:text-[24px] pc1:text-[20px] tv:text-[16px] tv1:text-[14px] md-max:text-[18px] sm-max:text-[14px]' : 'text-[30px] pc:text-[30px] pc1:text-[25px] tv:text-[20px] tv1:text-[18px] md-max:text-[22px] sm-max:text-[18px]'}`}>
                                 {formatTime(remainingTime, t)}
                             </div>
                         </div>
@@ -180,9 +180,7 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
                     {time}
                 </div>
 
-                <div className={`text-center text-[40px] tv:text-[25px] tv1:text-[20px] md-max:text-[28px] sm-max:text-[24px] font-[400] ${highlight ? 'text-white !text-[48px] pc:!text-[48px] tv:!text-[35px] tv1:!text-[30px] md-max:!text-[34px] sm-max:!text-[28px]' : 'text-[#17181d]'}`}>
-                    {label}
-                </div>
+                <div className={`text-center text-[40px] tv:text-[25px] tv1:text-[20px] md-max:text-[28px] sm-max:text-[24px] font-[400] ${highlight ? 'text-white !text-[48px] pc:!text-[48px] tv:!text-[35px] tv1:!text-[30px] md-max:!text-[34px] sm-max:!text-[28px]' : 'text-[#17181d]'}`}>{label}</div>
 
                 {highlight && (
                     <div className="w-full flex flex-col items-start justify-between mt-[20px] md-max:mt-[15px] sm-max:mt-[10px]">
@@ -238,6 +236,11 @@ const formatTime = (milliseconds: number, t: (key: string, fallback: string) => 
 };
 
 const calculateProgress = (remainingTime: number, totalDuration: number): number => {
+    // Если нет активного намаза или totalDuration равно 0, возвращаем 0
+    if (totalDuration === 0 || remainingTime === 0) {
+        return 0;
+    }
+
     // Вычисляем пройденное время
     const elapsedTime = totalDuration - remainingTime;
     // Возвращаем процент прогресса
@@ -352,11 +355,11 @@ const DigitalClock: React.FC = () => {
 
     return (
         <div className="flex items-center justify-center">
-            <span className="text-[52px] pc1:text-[52px] pc2:text-[42px] tv1:text-[32px]">{hours}</span>
+            <span className="text-[52px] pc1:text-[52px] pc2:text-[42px] tv1:text-[32px] break-all overflow-wrap-anywhere">{hours}</span>
             <span style={{ opacity: blink ? 1 : 0.2, transition: 'opacity 0.2s' }} className="text-[52px] pc1:text-[52px] pc2:text-[42px] tv1:text-[32px]">:</span>
-            <span className="text-[52px] pc1:text-[52px] pc2:text-[42px] tv1:text-[32px]">{minutes}</span>
+            <span className="text-[52px] pc1:text-[52px] pc2:text-[42px] tv1:text-[32px] break-all overflow-wrap-anywhere">{minutes}</span>
             <span style={{ opacity: blink ? 1 : 0.2, transition: 'opacity 0.2s', marginLeft: 1 }} className="text-[32px] font-normal pc1:text-[32px] pc2:text-[22px] tv1:text-[16px] mt-[14px]">:</span>
-            <span className="text-[32px] font-normal pc1:text-[32px] pc2:text-[22px] tv1:text-[16px] mt-[14px]">{seconds}</span>
+            <span className="text-[32px] font-normal pc1:text-[32px] pc2:text-[22px] tv1:text-[16px] mt-[14px] break-all overflow-wrap-anywhere">{seconds}</span>
         </div>
     );
 };
@@ -716,32 +719,89 @@ export function Test() {
         fetchMosques();
     }, [currentCityId]);
 
-    useEffect(() => {
-        const fetchPrayerTimes = async () => {
-            try {
-                const response = await axios.get<PrayerResponse>(
-                    `${API_BASE_URL}/api/prayers/today?cityName=${selectedCity}`
-                );
-                const { fajr, shuruk, zuhr, asr, maghrib, isha, mechet } = response.data;
+    // Функция для загрузки времени намазов
+    const fetchPrayerTimes = useCallback(async () => {
+        try {
+            const response = await axios.get<PrayerResponse>(
+                `${API_BASE_URL}/api/prayers/today?cityName=${selectedCity}`
+            );
+            const { fajr, shuruk, zuhr, asr, maghrib, isha, mechet } = response.data;
 
-                setPrayerTimes({
-                    fajr,
-                    shuruk,
-                    zuhr,
-                    asr,
-                    maghrib,
-                    isha,
-                    mechet,
-                });
-                // toast.success('Время намазов успешно обновлено');
-            } catch (error) {
-                console.error('Ошибка при загрузке данных:', error);
-                // toast.error('Ошибка при загрузке времени намазов');
+            setPrayerTimes({
+                fajr,
+                shuruk,
+                zuhr,
+                asr,
+                maghrib,
+                isha,
+                mechet,
+            });
+            console.log('Время намазов обновлено:', new Date().toLocaleString());
+        } catch (error) {
+            console.error('Ошибка при загрузке данных:', error);
+            // toast.error('Ошибка при загрузке времени намазов');
+        }
+    }, [selectedCity]);
+
+    // Загрузка времени намазов при изменении города или мечети
+    useEffect(() => {
+        fetchPrayerTimes();
+    }, [fetchPrayerTimes, selectedMosque]);
+
+    // Автоматическое обновление времени намазов в полночь
+    useEffect(() => {
+        const scheduleNextUpdate = () => {
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0); // 00:00:00 следующего дня
+
+            const timeUntilMidnight = tomorrow.getTime() - now.getTime();
+
+            return setTimeout(() => {
+                console.log('Автоматическое обновление времени намазов в полночь');
+                fetchPrayerTimes();
+
+                // Планируем следующее обновление через 24 часа
+                const interval = setInterval(() => {
+                    console.log('Ежедневное обновление времени намазов в полночь');
+                    fetchPrayerTimes();
+                }, 24 * 60 * 60 * 1000); // 24 часа
+
+                return interval;
+            }, timeUntilMidnight);
+        };
+
+        const timeoutId = scheduleNextUpdate();
+        
+        return () => {
+            clearTimeout(timeoutId);
+        };
+    }, [fetchPrayerTimes]); // Перепланируем при изменении функции загрузки
+
+    // Обновление времени намазов при возвращении на вкладку (если прошло больше 6 часов)
+    useEffect(() => {
+        let lastFetchTime = Date.now();
+        
+        const handleVisibilityChange = () => {
+            if (!document.hidden) {
+                const timeSinceLastFetch = Date.now() - lastFetchTime;
+                const sixHours = 6 * 60 * 60 * 1000; // 6 часов в миллисекундах
+                
+                if (timeSinceLastFetch > sixHours) {
+                    console.log('Обновление времени намазов после длительного отсутствия');
+                    fetchPrayerTimes();
+                    lastFetchTime = Date.now();
+                }
             }
         };
 
-        fetchPrayerTimes();
-    }, [selectedCity, selectedMosque]);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [fetchPrayerTimes]);
 
     useEffect(() => {
         if (!prayerTimes) return;
@@ -753,6 +813,11 @@ export function Test() {
         setNearestPrayer(nextPrayer);
         setRemainingTime(nextRemainingTime);
         setTotalDuration(nextTotalDuration);
+
+        // Если нет ближайшего намаза (все времена за день прошли), то не запускаем таймер
+        if (!nextPrayer) {
+            return;
+        }
 
         let animationFrameId: number;
         let lastUpdateTime = Date.now();
@@ -984,7 +1049,9 @@ export function Test() {
 
     // Функция расчета времени до ближайшего намаза с учетом фиксированного времени
     const calculateTimeToNextPrayer = (prayerTimes: PrayerTimes, fixedPrayerTimes: FixedPrayerTime | null): { nextPrayer: string, remainingTime: number, totalDuration: number } => {
-        if (!prayerTimes) return { nextPrayer: '', remainingTime: 0, totalDuration: 0 };
+        if (!prayerTimes) {
+            return { nextPrayer: '', remainingTime: 0, totalDuration: 0 };
+        }
 
         const currentTime = new Date();
         currentTime.setSeconds(0, 0);
@@ -1024,69 +1091,74 @@ export function Test() {
             };
         }
 
-        let closestPrayer = '';
-        let minDifference = Infinity;
+        // Получаем текущее время в минутах
+        const currentTimeInMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
 
-        // Находим ближайший следующий намаз
+        // Фильтруем только будущие намазы
+        const futurePrayers: Array<{ name: string, time: string, timeInMinutes: number }> = [];
+
         for (const [prayerName, { time }] of Object.entries(prayerTimesDict)) {
             if (!time) continue;
 
-            const difference = calculateTimeDifference(time);
-            if (difference < minDifference && difference > 0) {
-                minDifference = difference;
-                closestPrayer = prayerName;
+            const prayerTimeInMinutes = getTimeInMinutes(time);
+
+            // Если время намаза еще не прошло сегодня
+            if (prayerTimeInMinutes > currentTimeInMinutes) {
+                futurePrayers.push({
+                    name: prayerName,
+                    time: time,
+                    timeInMinutes: prayerTimeInMinutes
+                });
             }
         }
 
-        // Находим предыдущий намаз для расчета общего интервала
-        const sortedPrayers = Object.entries(prayerTimesDict)
-            .filter(([_, { time }]) => time)
-            .sort((a, b) => {
-                return getTimeInMinutes(a[1].time) - getTimeInMinutes(b[1].time);
-            });
-
-        // Проверяем, есть ли хотя бы один намаз
-        if (sortedPrayers.length === 0) {
+        // Проверяем, есть ли хотя бы один намаз в словаре
+        const hasAnyPrayer = Object.values(prayerTimesDict).some(({ time }) => time);
+        if (!hasAnyPrayer) {
             return { nextPrayer: '', remainingTime: 0, totalDuration: 0 };
         }
 
-        // Проверка наличия ближайшего намаза
-        if (!closestPrayer) {
-            // Если не нашли ближайший намаз, берем первый доступный на следующий день
-            closestPrayer = sortedPrayers[0][0];
-            // Рассчитываем время до первого намаза следующего дня
-            const firstPrayerTime = getTimeInMinutes(sortedPrayers[0][1].time);
-            const currentTimeInMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
-            minDifference = ((24 * 60) - currentTimeInMinutes + firstPrayerTime) * 60 * 1000;
+        // Если есть будущие намазы сегодня
+        if (futurePrayers.length > 0) {
+            // Находим ближайший
+            const nextPrayer = futurePrayers.reduce((closest, current) =>
+                current.timeInMinutes < closest.timeInMinutes ? current : closest
+            );
+
+            const difference = (nextPrayer.timeInMinutes - currentTimeInMinutes) * 60 * 1000;
+
+            // Находим предыдущий намаз для расчета интервала
+            const sortedPrayers = Object.entries(prayerTimesDict)
+                .filter(([_, { time }]) => time)
+                .sort((a, b) => getTimeInMinutes(a[1].time) - getTimeInMinutes(b[1].time));
+
+            const nextIndex = sortedPrayers.findIndex(([name]) => name === nextPrayer.name);
+            if (nextIndex === -1) {
+                return { nextPrayer: '', remainingTime: 0, totalDuration: 0 };
+            }
+
+            const prevIndex = nextIndex > 0 ? nextIndex - 1 : sortedPrayers.length - 1;
+            const prevPrayer = sortedPrayers[prevIndex];
+            if (!prevPrayer || !prevPrayer[1].time) {
+                return { nextPrayer: '', remainingTime: 0, totalDuration: 0 };
+            }
+
+            const currentPrayerTime = nextPrayer.timeInMinutes;
+            const prevPrayerTime = getTimeInMinutes(prevPrayer[1].time);
+
+            const timeBetweenPrayers = currentPrayerTime > prevPrayerTime
+                ? (currentPrayerTime - prevPrayerTime) * 60 * 1000
+                : ((currentPrayerTime + 24 * 60) - prevPrayerTime) * 60 * 1000;
+
+            return {
+                nextPrayer: nextPrayer.name,
+                remainingTime: difference,
+                totalDuration: timeBetweenPrayers
+            };
         }
 
-        const closestPrayerIndex = sortedPrayers.findIndex(([name]) => name === closestPrayer);
-
-        // Проверка на корректность индекса ближайшего намаза
-        if (closestPrayerIndex === -1) {
-            return { nextPrayer: '', remainingTime: 0, totalDuration: 0 };
-        }
-
-        const previousPrayerIndex = closestPrayerIndex > 0 ? closestPrayerIndex - 1 : sortedPrayers.length - 1;
-
-        // Расчет общего времени между намазами (с проверкой на валидность индексов)
-        if (!sortedPrayers[closestPrayerIndex] || !sortedPrayers[previousPrayerIndex]) {
-            return { nextPrayer: closestPrayer, remainingTime: minDifference, totalDuration: 24 * 60 * 60 * 1000 };
-        }
-
-        const currentPrayerTime = getTimeInMinutes(sortedPrayers[closestPrayerIndex][1].time);
-        const prevPrayerTime = getTimeInMinutes(sortedPrayers[previousPrayerIndex][1].time);
-
-        // Если предыдущий намаз позже текущего, это означает, что он был вчера
-        const timeBetweenPrayers = currentPrayerTime > prevPrayerTime
-            ? (currentPrayerTime - prevPrayerTime) * 60 * 1000
-            : ((currentPrayerTime + 24 * 60) - prevPrayerTime) * 60 * 1000;
-
-        return {
-            nextPrayer: closestPrayer,
-            remainingTime: minDifference,
-            totalDuration: timeBetweenPrayers
-        };
+        // Если нет будущих намазов, возвращаем пустой результат
+        return { nextPrayer: '', remainingTime: 0, totalDuration: 0 };
     };
 
     useEffect(() => {
@@ -1119,7 +1191,7 @@ export function Test() {
                     <div className='flex gap-[5px] 
                         lg-max:flex-col lg-max:items-center lg-max:gap-1
                         md-max:flex-col md-max:items-center md-max:gap-0'>
-                        <div className="text-[#17181d] text-[40px] pc1:text-[40px] pc2:text-[30px] tv1:text-[20px] 
+                        <div className="text-[#17181d] text-[40px] pc1:text-[40px] pc2:text-[30px] tv1:text-[20px] break-words overflow-wrap-anywhere
                             lg-max:text-[34px]
                             md-max:text-[28px]">
                             {(() => {
@@ -1130,7 +1202,7 @@ export function Test() {
                                 return `${dayNum} ${monthName}`;
                             })()},
                         </div>
-                        <div className="text-[#17181d] text-[40px] pc1:text-[40px] pc2:text-[30px] tv1:text-[20px] 
+                        <div className="text-[#17181d] text-[40px] pc1:text-[40px] pc2:text-[30px] tv1:text-[20px] break-words overflow-wrap-anywhere
                             lg-max:text-[34px]
                             md-max:text-[28px]">
                             {(() => {
@@ -1160,10 +1232,10 @@ export function Test() {
                     <div className="flex flex-col bg-white rounded-[25px] pc2:px-1 tv1:px-0 px-3 py-[10px] pc2:h-[86px] tv1:h-[56px] 
                         lg-max:px-4 lg-max:py-2 lg-max:min-w-[180px]
                         md-max:px-3 md-max:w-full md-max:items-center">
-                        <div className="text-[#a0a2b1] pc2:text-[12px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px] tv1:text-[10px] 
+                        <div className="text-[#a0a2b1] pc2:text-[12px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px] tv1:text-[10px] break-words overflow-wrap-anywhere
                             lg-max:text-sm
                             md-max:text-sm">{t('hijri.label', 'Дата по хиджре')}</div>
-                        <div className="text-[#17181d] pc1:text-[24px] pc2:text-[18px] tv1:text-[14px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px]
+                        <div className="text-[#17181d] pc1:text-[24px] pc2:text-[18px] tv1:text-[14px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px] break-words overflow-wrap-anywhere
                             lg-max:text-[24px]
                             md-max:text-[22px]">{getHijriDate()}</div>
                     </div>
@@ -1188,13 +1260,13 @@ export function Test() {
                                     onClick={() => setCityDropdownOpen(prev => !prev)} ref={cityDropdownRef}>
                                     <div className="text-[#a0a2b1] pc2:text-[12px] tv1:text-[10px] font-normal
                                         lg-max:text-sm">{t('city.label', 'Город')}</div>
-                                    {t(`city.${selectedCity}`, selectedCity)}
+                                    <div className="text-ellipsis overflow-hidden whitespace-nowrap">{t(`city.${selectedCity}`, selectedCity)}</div>
                                     {cityDropdownOpen && (
                                         <div className="absolute bg-white border rounded-lg shadow-lg w-[250px] max-h-[320px] overflow-x-hidden overflow-y-auto z-1000
                                             lg-max:w-full lg-max:max-h-[200px]
                                             md-max:w-[90%] md-max:max-h-[200px] md-max:top-full md-max:mt-1">
                                             {cities.map((city) => (
-                                                <div key={city.id} className="p-2 hover:bg-gray-200 cursor-pointer text-left pc1:text-[24px] pc2:text-[18px] tv1:text-[14px]
+                                                <div key={city.id} className="p-2 hover:bg-gray-200 cursor-pointer text-left pc1:text-[24px] pc2:text-[18px] tv1:text-[14px] break-words overflow-wrap-anywhere
                                                     lg-max:text-[18px] lg-max:text-center
                                                     md-max:text-[18px] md-max:text-center"
                                                     onClick={(e) => {
@@ -1218,7 +1290,7 @@ export function Test() {
                                     onClick={() => setMosqueDropdownOpen(prev => !prev)} ref={mosqueDropdownRef}>
                                     <div className='text-[#a0a2b1] pc2:text-[12px] tv1:text-[10px] pc2:leading-[27.60px] tv1:leading-[17.60px] font-normal
                                         lg-max:text-sm'>{t('mosque.label', 'Мечеть')}</div>
-                                    <div className="text-[#17181d] pc1:text-[24px] pc2:text-[18px] tv1:text-[14px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px]
+                                    <div className="text-[#17181d] pc1:text-[24px] pc2:text-[18px] tv1:text-[14px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px] text-ellipsis overflow-hidden whitespace-nowrap break-words overflow-wrap-anywhere
                                         lg-max:text-[20px]
                                         md-max:text-[22px]">{selectedMosque}</div>
                                     {mosqueDropdownOpen && (
@@ -1229,7 +1301,7 @@ export function Test() {
                                                 .filter(mosque => mosque.cityId === currentCityId)
                                                 .sort((a, b) => a.name.localeCompare(b.name, 'ru'))
                                                 .map((mosque) => (
-                                                    <div key={mosque.id} className="p-2 hover:bg-gray-200 text-left cursor-pointer text-[#17181d] whitespace-nowrap overflow-hidden text-ellipsis
+                                                    <div key={mosque.id} className="p-2 hover:bg-gray-200 text-left cursor-pointer text-[#17181d] break-words overflow-wrap-anywhere
                                                         lg-max:text-[18px] lg-max:text-center lg-max:whitespace-normal
                                                         md-max:text-center md-max:whitespace-normal"
                                                         onClick={(e) => {
@@ -1272,8 +1344,8 @@ export function Test() {
                                 highlight={prayer.highlight}
                                 pic={prayer.pic}
                                 pic2={prayer.pic2}
-                                remainingTime={highlightedIndex !== -1 ? remainingTime : 0}
-                                progress={highlightedIndex !== -1 ? calculateProgress(remainingTime, totalDuration) : 0}
+                                remainingTime={prayer.highlight ? remainingTime : 0}
+                                progress={prayer.highlight ? calculateProgress(remainingTime, totalDuration) : 0}
                                 className={isNextToHighlighted ? 'w-[211px] pc1:w-[180px] pc2:w-[150px]' : ''}
                                 fixedTime={prayer.fixedTime}
                                 isFixedTimeActive={prayer.isFixedTimeActive}
@@ -1293,8 +1365,8 @@ export function Test() {
                             md-max:h-[300px] md-max:flex md-max:flex-col md-max:justify-between">
                             <div className='flex gap-[11px] items-center justify-between sm-max:flex-col sm-max:items-start md-max:flex-row md-max:w-full'>
                                 <div className="flex flex-col">
-                                    <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold max-w-[190px] md-max:text-[24px]">{t('help.label', 'Помощь')}</div>
-                                    <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] whitespace-nowrap font-bold max-w-[190px] md-max:text-[24px]">
+                                    <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold max-w-[190px] md-max:text-[24px] break-words overflow-wrap-anywhere">{t('help.label', 'Помощь')}</div>
+                                    <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold max-w-[190px] md-max:text-[24px] break-words overflow-wrap-anywhere">
                                         {secondaryQrProjectName ? `"${secondaryQrProjectName}"` : `"${t('help.project', 'Проект')}"`}
                                     </div>
                                 </div>
@@ -1317,15 +1389,15 @@ export function Test() {
                     <div className="w-full h-full flex flex-col items-center justify-center md-max:py-6">
                         <div className="bg-white rounded-[16px] p-6 shadow-md border-[2px] border-[#5ec262] mx-auto w-full h-full flex flex-col items-center justify-center
                             md-max:p-4">
-                            <div className="text-[50px] pc:text-[60px] pc1:text-[50px] pc2:text-[40px] font-bold text-[#5ec262] mb-4 text-center
+                            <div className="text-[50px] pc:text-[60px] pc1:text-[50px] pc2:text-[40px] font-bold text-[#5ec262] mb-4 text-center break-words overflow-wrap-anywhere
                                 md-max:text-[40px]">
                                 {currentName.arabic}
                             </div>
-                            <div className="text-[34px] pc:text-[40px] pc1:text-[34px] pc2:text-[28px] font-medium text-center text-[#17181d]
+                            <div className="text-[34px] pc:text-[40px] pc1:text-[34px] pc2:text-[28px] font-medium text-center text-[#17181d] break-words overflow-wrap-anywhere
                                 md-max:text-[28px]">
                                 {allahLang === 'tt' ? (currentName as any).transcriptionTatar || currentName.transcription : currentName.transcription}
                             </div>
-                            <div className="text-[28px] pc:text-[32px] pc1:text-[28px] pc2:text-[24px] text-gray-600 text-center mt-2
+                            <div className="text-[28px] pc:text-[32px] pc1:text-[28px] pc2:text-[24px] text-gray-600 text-center mt-2 break-words overflow-wrap-anywhere
                                 md-max:text-[22px]">
                                 {allahLang === 'tt' ? (currentName as any).meaningTatar || currentName.meaning : currentName.meaning}
                             </div>
@@ -1339,8 +1411,8 @@ export function Test() {
                              md-max:h-[300px] md-max:flex md-max:flex-col md-max:justify-between">
                             <div className='flex gap-[11px] items-center justify-between sm-max:flex-col sm-max:items-start md-max:flex-row md-max:w-full'>
                                 <div className="flex flex-col">
-                                    <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold md-max:text-[24px]">{t('help.label', 'Помощь')}</div>
-                                    <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold md-max:text-[24px]">{t('help.mosque', 'мечети')}</div>
+                                    <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold md-max:text-[24px] break-words overflow-wrap-anywhere">{t('help.label', 'Помощь')}</div>
+                                    <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold md-max:text-[24px] break-words overflow-wrap-anywhere">{t('help.mosque', 'мечети')}</div>
                                 </div>
                                 <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[50px] -mt-8 md-max:mt-0" />
                             </div>
@@ -1361,7 +1433,7 @@ export function Test() {
                 )}
             </div>
 
-            <div className="w-full text-center text-[16px] text-gray-500 pc:mt-[10px] md-max:mt-4">
+            <div className="w-full text-center text-[16px] text-gray-500 pc:mt-[10px] md-max:mt-4 break-words overflow-wrap-anywhere">
                 {t('footnote.collective', '* — время, принятое мечетью для проведения коллективного намаза')}
             </div>
         </div>
