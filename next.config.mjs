@@ -3,7 +3,8 @@ const nextConfig = {
         return [
             {
                 source: '/api/:path*',
-                destination: 'https://kwr1337-time-for-namaz-b-7ab2.twc1.net/api/:path*',
+                // destination: 'http://localhost:8080/api/:path*',
+                destination: 'http://localhost:8080/api/:path*',
             },
         ]
     },

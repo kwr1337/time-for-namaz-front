@@ -1,3 +1,3 @@
-export const API_BASE_URL = 'https://kwr1337-time-for-namaz-b-f797.twc1.net';
-// export const API_BASE_URL = '';  
+export const API_BASE_URL = '/api';
+// export const API_BASE_URL = 'https://45.10.41.224:8080/api';
 // export const API_BASE_URL = 'http://localhost:8080';

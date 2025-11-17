@@ -25,6 +25,12 @@ import { API } from '@/constants/api.constants';
 import { toast } from 'react-hot-toast';
 import LogoLoader from '../components/ui/LogoLoader';
 import { dictionaryService } from '@/services/dictionary.service'
+import { Noto_Sans } from 'next/font/google'
+
+const notoSans = Noto_Sans({
+    subsets: ['latin', 'cyrillic'],
+    display: 'swap',
+})
 
 // Импорт иконок погоды
 import sunnyIcon from '../pic/weather/sunny.png'; // Солнечно
@@ -47,6 +53,7 @@ type PrayerTimeProps = {
     isFixedTimeActive?: boolean;
     t: (key: string, fallback: string) => string;
     currentLang: 'ru' | 'tt';
+    isGrace?: boolean; // 5-минутное окно после начала намаза
 };
 
 interface PrayerTimes {
@@ -116,7 +123,7 @@ interface FixedPrayerTime {
     cityName: string;
 }
 
-const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pic2, remainingTime, progress, className = '', fixedTime, isFixedTimeActive = false, t, currentLang }) => {
+const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pic2, remainingTime, progress, className = '', fixedTime, isFixedTimeActive = false, t, currentLang, isGrace = false }) => {
     return (
         <div
             className={`relative 
@@ -129,7 +136,7 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
                 rounded-[20px] p-[20px] flex flex-col justify-start items-start transition-all duration-300 ease-in-out sm-max:mx-auto
                 md-max:p-[15px] sm-max:p-[12px]
                     ${highlight
-                    ? 'bg-[#5ec262] transform text-white !h-[429px] !w-[353px]  pc:!w-[353px] pc:!h-[429px] pc1:!w-[283px]  pc1:!h-[352px] tv:!h-[342px] tv:!w-[243px]  tv1:!h-[302px] tv1:!w-[203px] md-max:!h-[320px] md-max:!w-[240px] sm-max:!h-[270px] sm-max:!w-[200px] pc: pt-[20px] pr-[20px] pl-[20px] pb-[20px] flex justify-between'
+                    ? `${(isFixedTimeActive ? '' : '')} ${/* цвет по умолчанию для highlight */''} ${className} ${(isFixedTimeActive ? '' : '')} ${(isGrace ? 'bg-[#F7C948]' : 'bg-[#5ec262]')} transform text-white !h-[429px] !w-[353px]  pc:!w-[353px] pc:!h-[429px] pc1:!w-[283px]  pc1:!h-[352px] tv:!h-[342px] tv:!w-[243px]  tv1:!h-[302px] tv1:!w-[203px] md-max:!h-[320px] md-max:!w-[240px] sm-max:!h-[270px] sm-max:!w-[200px] pc: pt-[20px] pr-[20px] pl-[20px] pb-[20px] flex justify-between`
                     : `bg-white justify-between ${className}`}
             `}
         >
@@ -158,10 +165,12 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
                 {highlight && (
                     <div className="absolute pc:max-w-[175px] pc1:max-w-[155px] tv:max-w-[125px] tv1:max-w-[105px] md-max:max-w-[110px] sm-max:max-w-[90px] h-[112px] right-[4px] top-[4px] flex flex-col items-end">
                         <div className="w-[100%] text-right bg-white rounded-bl-[40px] rounded-[8px] rounded-tr-[19px] py-[4px] px-[8px] flex flex-col">
-                            <div className={`text-[#17181d] font-normal break-words overflow-wrap-anywhere ${currentLang === 'tt' ? 'pc:text-[18px] tv:text-[14px] tv1:text-[10px] md-max:text-[12px] sm-max:text-[10px]' : 'pc:text-[22px] tv:text-[16px] tv1:text-[12px] md-max:text-[14px] sm-max:text-[12px]'}`}>{t('time.until', 'Через')}</div>
-                            <div className={`text-[#17181d] font-bold break-all overflow-wrap-anywhere ${currentLang === 'tt' ? 'text-[24px] pc:text-[24px] pc1:text-[20px] tv:text-[16px] tv1:text-[14px] md-max:text-[18px] sm-max:text-[14px]' : 'text-[30px] pc:text-[30px] pc1:text-[25px] tv:text-[20px] tv1:text-[18px] md-max:text-[22px] sm-max:text-[18px]'}`}>
-                                {formatTime(remainingTime, t)}
-                            </div>
+                            <div className={`text-[#17181d] font-normal break-words overflow-wrap-anywhere ${currentLang === 'tt' ? 'pc:text-[18px] tv:text-[14px] tv1:text-[10px] md-max:text-[12px] sm-max:text-[10px]' : 'pc:text-[22px] tv:text-[16px] tv1:text-[12px] md-max:text-[14px] sm-max:text-[12px]'}`}>{isGrace ? t('time.now', 'Сейчас') : t('time.until', 'Через')}</div>
+                            {!isGrace && (
+                                <div className={`text-[#17181d] font-bold break-all overflow-wrap-anywhere ${currentLang === 'tt' ? 'text-[24px] pc:text-[24px] pc1:text-[20px] tv:text-[16px] tv1:text-[14px] md-max:text-[18px] sm-max:text-[14px]' : 'text-[30px] pc:text-[30px] pc1:text-[25px] tv:text-[20px] tv1:text-[18px] md-max:text-[22px] sm-max:text-[18px]'}`}>
+                                    {formatTime(remainingTime, t)}
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -188,7 +197,7 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
                             <div
                                 className="h-full bg-white rounded-full transition-all duration-1000"
                                 style={{
-                                    width: `${progress}%`,
+                                    width: isGrace ? '100%' : `${progress}%`,
                                     animation: 'pulseAndGrow 1s ease-in-out infinite alternate',
                                 }}
                             ></div>
@@ -368,6 +377,8 @@ export function Test() {
     const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
     const [fixedPrayerTimes, setFixedPrayerTimes] = useState<FixedPrayerTime | null>(null);
     const [nearestPrayer, setNearestPrayer] = useState<string>('');
+    const [activePrayer, setActivePrayer] = useState<string>(''); // с учетом грейс-периода
+    const [isGracePeriod, setIsGracePeriod] = useState<boolean>(false);
     const [remainingTime, setRemainingTime] = useState<number>(0);
     const [totalDuration, setTotalDuration] = useState<number>(0);
     const [cities, setCities] = useState<City[]>([]);
@@ -481,7 +492,7 @@ export function Test() {
         {
             time: prayerTimes?.fajr || '00:00',
             label: prayerLabels.fajr,
-            highlight: nearestPrayer === 'fajr',
+            highlight: activePrayer === 'fajr',
             pic: fadjr,
             pic2: fadjr2,
             fixedTime: fixedPrayerTimes?.fajrActive ? fixedPrayerTimes?.fajr : null,
@@ -490,7 +501,7 @@ export function Test() {
         {
             time: prayerTimes?.mechet || '00:00',
             label: prayerLabels.mechet,
-            highlight: nearestPrayer === 'mechet',
+            highlight: activePrayer === 'mechet',
             pic: mosque,
             pic2: mosque,
             fixedTime: fixedPrayerTimes?.mechetActive ? fixedPrayerTimes?.mechet : null,
@@ -499,7 +510,7 @@ export function Test() {
         {
             time: prayerTimes?.shuruk || '00:00',
             label: prayerLabels.shuruk,
-            highlight: nearestPrayer === 'shuruk',
+            highlight: activePrayer === 'shuruk',
             pic: shuruk,
             pic2: shuruk2,
             fixedTime: fixedPrayerTimes?.shurukActive ? fixedPrayerTimes?.shuruk : null,
@@ -508,7 +519,7 @@ export function Test() {
         {
             time: prayerTimes?.zuhr || '00:00',
             label: prayerLabels.zuhr,
-            highlight: nearestPrayer === 'zuhr',
+            highlight: activePrayer === 'zuhr',
             pic: zuhr,
             pic2: zuhr2,
             fixedTime: fixedPrayerTimes?.zuhrActive ? fixedPrayerTimes?.zuhr : null,
@@ -517,7 +528,7 @@ export function Test() {
         {
             time: prayerTimes?.asr || '00:00',
             label: prayerLabels.asr,
-            highlight: nearestPrayer === 'asr',
+            highlight: activePrayer === 'asr',
             pic: asr,
             pic2: asr2,
             fixedTime: fixedPrayerTimes?.asrActive ? fixedPrayerTimes?.asr : null,
@@ -526,7 +537,7 @@ export function Test() {
         {
             time: prayerTimes?.maghrib || '00:00',
             label: prayerLabels.maghrib,
-            highlight: nearestPrayer === 'maghrib',
+            highlight: activePrayer === 'maghrib',
             pic: magrib,
             pic2: magrib2,
             fixedTime: fixedPrayerTimes?.maghribActive ? fixedPrayerTimes?.maghrib : null,
@@ -535,7 +546,7 @@ export function Test() {
         {
             time: prayerTimes?.isha || '00:00',
             label: prayerLabels.isha,
-            highlight: nearestPrayer === 'isha',
+            highlight: activePrayer === 'isha',
             pic: isha,
             pic2: isha2,
             fixedTime: fixedPrayerTimes?.ishaActive ? fixedPrayerTimes?.isha : null,
@@ -806,18 +817,71 @@ export function Test() {
     useEffect(() => {
         if (!prayerTimes) return;
 
-        // Используем функцию для расчета времени до следующего намаза с учетом фиксированного времени
-        const { nextPrayer, remainingTime: nextRemainingTime, totalDuration: nextTotalDuration } =
-            calculateTimeToNextPrayer(prayerTimes, fixedPrayerTimes);
+        const {
+            nextPrayer,
+            remainingTime: nextRemainingTime,
+            totalDuration: nextTotalDuration,
+        } = calculateTimeToNextPrayer(prayerTimes, fixedPrayerTimes);
 
         setNearestPrayer(nextPrayer);
         setRemainingTime(nextRemainingTime);
         setTotalDuration(nextTotalDuration);
 
-        // Если нет ближайшего намаза (все времена за день прошли), то не запускаем таймер
-        if (!nextPrayer) {
-            return;
-        }
+        // вычисляем активный намаз с учетом грейс-периода 5 минут
+        const computeActiveWithGrace = () => {
+            if (!nextPrayer) {
+                setActivePrayer('');
+                setIsGracePeriod(false);
+                return;
+            }
+
+            // Найдем предыдущий намаз и его время
+            const getTime = (name: string | undefined): string | null => {
+                if (!name) return null;
+                const dict: Record<string, string | undefined> = {
+                    fajr: prayerTimes.fajr,
+                    shuruk: prayerTimes.shuruk,
+                    zuhr: prayerTimes.zuhr,
+                    asr: prayerTimes.asr,
+                    maghrib: prayerTimes.maghrib,
+                    isha: prayerTimes.isha,
+                    mechet: prayerTimes.mechet,
+                };
+                return dict[name] || null;
+            };
+
+            const sorted = [
+                { name: 'fajr', time: getTime('fajr') },
+                { name: 'shuruk', time: getTime('shuruk') },
+                { name: 'zuhr', time: getTime('zuhr') },
+                { name: 'asr', time: getTime('asr') },
+                { name: 'maghrib', time: getTime('maghrib') },
+                { name: 'isha', time: getTime('isha') },
+                ...(prayerTimes.mechet ? [{ name: 'mechet', time: getTime('mechet') }] : []),
+            ]
+                .filter(p => !!p.time)
+                .sort((a, b) => getTimeInMinutes(a.time as string) - getTimeInMinutes(b.time as string));
+
+            const now = new Date();
+            const nowMin = now.getHours() * 60 + now.getMinutes();
+
+            // активен тот, у кого время <= сейчас < время + 5 минут
+            const graceMinutes = 5;
+            const active = sorted.find(p => {
+                const t = getTimeInMinutes(p.time as string);
+                return t <= nowMin && nowMin < t + graceMinutes;
+            });
+
+            if (active) {
+                setActivePrayer(active.name);
+                setIsGracePeriod(true);
+            } else {
+                setActivePrayer(nextPrayer);
+                setIsGracePeriod(false);
+            }
+        };
+
+        computeActiveWithGrace();
 
         let animationFrameId: number;
         let lastUpdateTime = Date.now();
@@ -829,15 +893,22 @@ export function Test() {
 
             setRemainingTime((prevTime) => {
                 if (prevTime <= 1000) {
-                    // Когда время до намаза закончилось, пересчитываем следующий намаз
-                    const { nextPrayer: newNextPrayer, remainingTime: newRemainingTime, totalDuration: newTotalDuration } =
-                        calculateTimeToNextPrayer(prayerTimes, fixedPrayerTimes);
+                    const {
+                        nextPrayer: newNextPrayer,
+                        remainingTime: newRemainingTime,
+                        totalDuration: newTotalDuration,
+                    } = calculateTimeToNextPrayer(prayerTimes, fixedPrayerTimes);
 
                     setNearestPrayer(newNextPrayer);
                     setTotalDuration(newTotalDuration);
 
+                    // переоценить активный намаз с учётом грейса
+                    computeActiveWithGrace();
+
                     return newRemainingTime;
                 }
+                // обновляем активный блок каждые тики, чтобы отловить окно 5 минут
+                computeActiveWithGrace();
                 return Math.max(0, prevTime - deltaTime);
             });
 
@@ -1351,6 +1422,7 @@ export function Test() {
                                 isFixedTimeActive={prayer.isFixedTimeActive}
                                 t={t}
                                 currentLang={prayerLang}
+                                isGrace={isGracePeriod && prayer.highlight}
                             />
                         </div>
                     );
@@ -1393,8 +1465,8 @@ export function Test() {
                                 md-max:text-[40px]">
                                 {currentName.arabic}
                             </div>
-                            <div className="text-[34px] pc:text-[40px] pc1:text-[34px] pc2:text-[28px] font-medium text-center text-[#17181d] break-words overflow-wrap-anywhere
-                                md-max:text-[28px]">
+                            <div className={`text-[34px] pc:text-[40px] pc1:text-[34px] pc2:text-[28px] font-medium text-center text-[#17181d] break-words overflow-wrap-anywhere
+                                md-max:text-[28px] ${notoSans.className} tt-text`}>
                                 {allahLang === 'tt' ? (currentName as any).transcriptionTatar || currentName.transcription : currentName.transcription}
                             </div>
                             <div className="text-[28px] pc:text-[32px] pc1:text-[28px] pc2:text-[24px] text-gray-600 text-center mt-2 break-words overflow-wrap-anywhere
@@ -1436,6 +1508,18 @@ export function Test() {
             <div className="w-full text-center text-[16px] text-gray-500 pc:mt-[10px] md-max:mt-4 break-words overflow-wrap-anywhere">
                 {t('footnote.collective', '* — время, принятое мечетью для проведения коллективного намаза')}
             </div>
+
+            <style jsx global>{`
+                .tt-text {
+                    font-variant-ligatures: none;
+                    font-synthesis: none;
+                    font-feature-settings: "liga" 0, "kern" 1;
+                    letter-spacing: 0.01em;
+                    line-height: 1.32;
+                    -webkit-font-smoothing: antialiased;
+                    text-rendering: geometricPrecision;
+                }
+            `}</style>
         </div>
     );
 }

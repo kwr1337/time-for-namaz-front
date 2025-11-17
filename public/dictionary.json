@@ -1,4 +1,4 @@
-{
+        {
   "entries": [
     { "key": "hijri.label", "ru": "Дата по хиджре", "tt": "Һиҗри буенча дата" },
     { "key": "city.label", "ru": "Город", "tt": "Шәһәр" },
@@ -7,6 +7,7 @@
     { "key": "help.mosque", "ru": "мечети", "tt": "мәчеткә" },
     { "key": "help.project", "ru": "Проект", "tt": "Проект" },
     { "key": "time.until", "ru": "Через", "tt": "Калган" },
+    { "key": "time.now", "ru": "Сейчас", "tt": "Хәзер" },
     { "key": "time.willBe", "ru": "", "tt": "" },
     { "key": "time.hour", "ru": "ч", "tt": "сәгать" },
     { "key": "time.min", "ru": "мин", "tt": "минут" },
