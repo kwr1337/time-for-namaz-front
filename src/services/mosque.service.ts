@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { Mosque } from '../types/mosque.types';
+import { API_BASE_URL } from '../config/config';
 
 const api = axios.create({
-    baseURL: 'http://localhost:4400/api',
+    baseURL: `${API_BASE_URL}/api`,
     headers: {
         'Content-Type': 'application/json',
     },

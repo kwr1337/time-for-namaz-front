@@ -85,3 +85,66 @@ input:checked.defaultCheckbox::before {
 	}
 }
 
+/* Принудительное использование 24-часового формата для input type="time" */
+input[type="time"] {
+	/* Убираем AM/PM селектор для WebKit браузеров (Chrome, Safari, Edge) */
+	&::-webkit-datetime-edit-ampm-field {
+		display: none !important;
+		visibility: hidden !important;
+		width: 0 !important;
+		height: 0 !important;
+		margin: 0 !important;
+		padding: 0 !important;
+		opacity: 0 !important;
+		position: absolute !important;
+		left: -9999px !important;
+	}
+	
+	/* Убираем AM/PM селектор для Firefox */
+	&::-moz-datetime-edit-ampm-field {
+		display: none !important;
+		visibility: hidden !important;
+		width: 0 !important;
+		height: 0 !important;
+		margin: 0 !important;
+		padding: 0 !important;
+	}
+	
+	/* Скрываем AM/PM в календаре */
+	&::-webkit-calendar-picker-indicator {
+		opacity: 1;
+	}
+	
+	/* Принудительно используем 24-часовой формат через стили */
+	&::-webkit-datetime-edit-hour-field {
+		-webkit-appearance: textfield;
+	}
+	
+	&::-webkit-datetime-edit-minute-field {
+		-webkit-appearance: textfield;
+	}
+}
+
+/* Дополнительные стили для скрытия AM/PM в выпадающем списке */
+input[type="time"]::-webkit-calendar-picker-indicator {
+	opacity: 1;
+}
+
+/* Скрываем AM/PM в списке выбора времени - более агрессивные стили */
+input[type="time"]::-webkit-datetime-edit-ampm-field {
+	display: none !important;
+	visibility: hidden !important;
+	width: 0 !important;
+	height: 0 !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	opacity: 0 !important;
+	position: absolute !important;
+	left: -9999px !important;
+}
+
+/* Скрываем AM/PM в выпадающем списке времени через shadow DOM */
+input[type="time"]::part(ampm-field) {
+	display: none !important;
+}
+

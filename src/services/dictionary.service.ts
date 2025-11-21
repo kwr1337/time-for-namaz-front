@@ -1,37 +1,8 @@
 import type { DictionaryEntry, UpsertDictionaryEntryDto } from '@/types/dictionary.types'
+import { API_BASE_URL } from '@/config/config'
+import type { Translation } from '@/types/translation.types'
 
 type CombinedEntry = { key: string; ru: string; tt: string }
-
-const STORAGE_KEY = 'dictionary_entries_v1'
-
-async function loadFromPublic(): Promise<CombinedEntry[]> {
-    if (typeof window === 'undefined') return []
-    try {
-        const res = await fetch('/dictionary.json', { cache: 'no-cache' })
-        if (!res.ok) return []
-        const json = await res.json()
-        return Array.isArray(json?.entries) ? json.entries as CombinedEntry[] : []
-    } catch {
-        return []
-    }
-}
-
-function readLocal(): CombinedEntry[] {
-    if (typeof window === 'undefined') return []
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    try {
-        const parsed = JSON.parse(raw)
-        return Array.isArray(parsed) ? parsed as CombinedEntry[] : []
-    } catch {
-        return []
-    }
-}
-
-function writeLocal(entries: CombinedEntry[]) {
-    if (typeof window === 'undefined') return
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries))
-}
 
 function toFlat(entries: CombinedEntry[]): DictionaryEntry[] {
     const result: DictionaryEntry[] = []
@@ -43,31 +14,61 @@ function toFlat(entries: CombinedEntry[]): DictionaryEntry[] {
     return result
 }
 
+function fromFlat(entries: DictionaryEntry[]): CombinedEntry[] {
+    const map = new Map<string, CombinedEntry>()
+    for (const e of entries) {
+        if (!map.has(e.key)) {
+            map.set(e.key, { key: e.key, ru: '', tt: '' })
+        }
+        const entry = map.get(e.key)!
+        if (e.locale === 'ru') entry.ru = e.value
+        if (e.locale === 'tt') entry.tt = e.value
+    }
+    return Array.from(map.values())
+}
+
+function fromApiTranslations(translations: Translation[]): CombinedEntry[] {
+    return translations.map(t => ({ key: t.key, ru: t.ru, tt: t.tt }))
+}
+
+interface TranslationFull {
+    id: number;
+    key: string;
+    ru: string;
+    tt: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export const dictionaryService = {
+    // Получить все переводы (для публичного использования)
     async getAll(): Promise<DictionaryEntry[]> {
-        // Загружаем оба источника и МЕРДЖИМ: public -> base, local -> overrides
-        const [publicEntries, localEntries] = await Promise.all([
-            loadFromPublic(),
-            Promise.resolve(readLocal()),
-        ])
-
-        // Если локального нет — используем public и сразу кэшируем
-        if (localEntries.length === 0) {
-            if (publicEntries.length > 0) writeLocal(publicEntries)
-            return toFlat(publicEntries)
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/translations/entries`)
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`)
+            }
+            const data = await response.json()
+            const entries = Array.isArray(data?.entries) ? data.entries as Translation[] : []
+            return toFlat(fromApiTranslations(entries))
+        } catch (error) {
+            console.error('Ошибка при загрузке переводов:', error)
+            return []
         }
+    },
 
-        // Мёрдж по ключу: берём все ключи из public, затем дополняем/переопределяем локальными
-        const map = new Map<string, CombinedEntry>()
-        for (const e of publicEntries) map.set(e.key, { key: e.key, ru: e.ru || '', tt: e.tt || '' })
-        for (const e of localEntries) {
-            const prev = map.get(e.key) || { key: e.key, ru: '', tt: '' }
-            map.set(e.key, { key: e.key, ru: e.ru ?? prev.ru, tt: e.tt ?? prev.tt })
+    // Получить все переводы с полной информацией (для админки)
+    async getAllFull(): Promise<TranslationFull[]> {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/translations`)
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`)
+            }
+            return await response.json()
+        } catch (error) {
+            console.error('Ошибка при загрузке переводов:', error)
+            throw error
         }
-
-        const merged = Array.from(map.values()).sort((a, b) => a.key.localeCompare(b.key))
-        writeLocal(merged)
-        return toFlat(merged)
     },
 
     async getByKey(key: string): Promise<DictionaryEntry[]> {
@@ -75,28 +76,145 @@ export const dictionaryService = {
         return all.filter(e => e.key === key)
     },
 
-    async upsert(payload: UpsertDictionaryEntryDto): Promise<DictionaryEntry> {
-        const current = readLocal()
-        const idx = current.findIndex(e => e.key === payload.key)
-        if (idx === -1) {
-            const created: CombinedEntry = { key: payload.key, ru: '', tt: '' }
-            if (payload.locale === 'ru') created.ru = payload.value
-            if (payload.locale === 'tt') created.tt = payload.value
-            current.push(created)
-        } else {
-            if (payload.locale === 'ru') current[idx].ru = payload.value
-            if (payload.locale === 'tt') current[idx].tt = payload.value
+    // Создать новый перевод
+    async create(key: string, ru: string, tt: string): Promise<TranslationFull> {
+        try {
+            const token = localStorage.getItem('token')
+            if (!token) {
+                throw new Error('Токен авторизации не найден')
+            }
+
+            const response = await fetch(`${API_BASE_URL}/api/translations`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ key, ru, tt })
+            })
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }))
+                throw new Error(error.message || `HTTP error! status: ${response.status}`)
+            }
+
+            return await response.json()
+        } catch (error) {
+            console.error('Ошибка при создании перевода:', error)
+            throw error
         }
-        writeLocal(current)
-        // Return the just-updated entry in flat form
-        const updated = (await this.getByKey(payload.key)).find(e => e.locale === payload.locale)!
-        return updated
     },
 
-    async delete(key: string): Promise<void> {
-        const current = readLocal()
-        const next = current.filter(e => e.key !== key)
-        writeLocal(next)
+    // Обновить перевод
+    async update(key: string, ru?: string, tt?: string): Promise<TranslationFull> {
+        try {
+            const token = localStorage.getItem('token')
+            if (!token) {
+                throw new Error('Токен авторизации не найден')
+            }
+
+            const updates: { ru?: string; tt?: string } = {}
+            if (ru !== undefined) updates.ru = ru
+            if (tt !== undefined) updates.tt = tt
+
+            const response = await fetch(`${API_BASE_URL}/api/translations/${encodeURIComponent(key)}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(updates)
+            })
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }))
+                throw new Error(error.message || `HTTP error! status: ${response.status}`)
+            }
+
+            return await response.json()
+        } catch (error) {
+            console.error('Ошибка при обновлении перевода:', error)
+            throw error
+        }
+    },
+
+    // Удалить перевод
+    async delete(key: string): Promise<TranslationFull> {
+        try {
+            const token = localStorage.getItem('token')
+            if (!token) {
+                throw new Error('Токен авторизации не найден')
+            }
+
+            const response = await fetch(`${API_BASE_URL}/api/translations/${encodeURIComponent(key)}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }))
+                throw new Error(error.message || `HTTP error! status: ${response.status}`)
+            }
+
+            return await response.json()
+        } catch (error) {
+            console.error('Ошибка при удалении перевода:', error)
+            throw error
+        }
+    },
+
+    // Старый метод для совместимости (обновляет оба языка сразу)
+    async upsert(payload: UpsertDictionaryEntryDto): Promise<DictionaryEntry> {
+        try {
+            const token = localStorage.getItem('token')
+            if (!token) {
+                throw new Error('Токен авторизации не найден')
+            }
+
+            // Проверяем, существует ли перевод
+            const existing = await this.getByKey(payload.key)
+            
+            if (existing.length > 0) {
+                // Обновляем существующий перевод
+                const combined = fromFlat(existing)
+                const entry = combined[0]
+                
+                if (payload.locale === 'ru') {
+                    await this.update(payload.key, payload.value, undefined)
+                } else {
+                    await this.update(payload.key, undefined, payload.value)
+                }
+            } else {
+                // Создаем новый перевод (нужно оба языка)
+                const all = await this.getAll()
+                const combined = fromFlat(all)
+                const existingEntry = combined.find(e => e.key === payload.key)
+                
+                if (existingEntry) {
+                    // Обновляем существующий
+                    if (payload.locale === 'ru') {
+                        await this.update(payload.key, payload.value, existingEntry.tt)
+                    } else {
+                        await this.update(payload.key, existingEntry.ru, payload.value)
+                    }
+                } else {
+                    // Создаем новый (требуются оба языка, используем пустую строку для отсутствующего)
+                    if (payload.locale === 'ru') {
+                        await this.create(payload.key, payload.value, '')
+                    } else {
+                        await this.create(payload.key, '', payload.value)
+                    }
+                }
+            }
+
+            const updated = (await this.getByKey(payload.key)).find(e => e.locale === payload.locale)!
+            return updated
+        } catch (error) {
+            console.error('Ошибка при сохранении перевода:', error)
+            throw error
+        }
     },
 }
 

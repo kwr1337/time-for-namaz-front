@@ -5,32 +5,13 @@ import axios from 'axios';
 import { DASHBOARD_PAGES } from '@/config/pages-url.config';
 import { API_BASE_URL } from '@/config/config'
 import { toast } from 'react-hot-toast';
-
-interface FixedPrayerTime {
-	id: number;
-	cityId: number;
-	fajr: string;
-	shuruk: string;
-	zuhr: string;
-	asr: string;
-	maghrib: string;
-	isha: string;
-	mechet: string | null;
-	fajrActive: boolean;    // Флаг активности времени Фаджр
-	shurukActive: boolean;  // Флаг активности времени Шурук
-	zuhrActive: boolean;    // Флаг активности времени Зухр
-	asrActive: boolean;     // Флаг активности времени Аср
-	maghribActive: boolean; // Флаг активности времени Магриб
-	ishaActive: boolean;    // Флаг активности времени Иша
-	mechetActive: boolean;  // Флаг активности времени в мечети
-	createdAt: string;
-	updatedAt: string;
-	cityName: string;
-}
+import { FixedMosquePrayerTime } from '@/types/prayer.types';
+import { TimePicker24h } from '@/components/ui/TimePicker24h';
 
 interface PrayerResponse {
 	id: number;
 	cityId: number;
+	mosqueId?: number;
 	date: string;
 	city?: string;
 	fajr: string;
@@ -42,9 +23,10 @@ interface PrayerResponse {
 	isha: string;
 }
 
-interface City {
-	id: string;
+interface Mosque {
+	id: number;
 	name: string;
+	cityId: number;
 }
 
 interface PrayerChange {
@@ -62,7 +44,10 @@ interface PrayerChange {
 	prayer: {
 		id: number;
 		date: string;
-		city: {
+		mosque?: {
+			name: string;
+		};
+		city?: {
 			name: string;
 		};
 	};
@@ -70,18 +55,20 @@ interface PrayerChange {
 
 const PrayerPage = () => {
 	const [prayers, setPrayers] = useState<PrayerResponse[]>([]);
-	const [cities, setCities] = useState<City[]>([]);
-	const [selectedCityId, setSelectedCityId] = useState('');
+	const [mosques, setMosques] = useState<Mosque[]>([]);
+	const [selectedMosqueId, setSelectedMosqueId] = useState('');
 	const [role, setRole] = useState('');
 	const [userCityId, setUserCityId] = useState<number | null>(null);
+	const [userMosqueId, setUserMosqueId] = useState<number | null>(null);
 	const [selectedPrayer, setSelectedPrayer] = useState('');
 	const [shiftMinutes, setShiftMinutes] = useState(0);
 	const [customShiftMinutes, setCustomShiftMinutes] = useState('');
 	const [isCustomShift, setIsCustomShift] = useState(false);
 	const [file, setFile] = useState<File | null>(null);
 	const [loading, setLoading] = useState(false);
-	const [fixedPrayerTime, setFixedPrayerTime] = useState<FixedPrayerTime | null>(null);
+	const [fixedPrayerTime, setFixedPrayerTime] = useState<FixedMosquePrayerTime | null>(null);
 	const [showFixedTimeForm, setShowFixedTimeForm] = useState(false);
+	const [showIqamaForm, setShowIqamaForm] = useState(false);
 	const [fixedTimePrayers, setFixedTimePrayers] = useState({
 		fajr: '',
 		mechet: '',
@@ -90,22 +77,30 @@ const PrayerPage = () => {
 		asr: '',
 		maghrib: '',
 		isha: '',
-		fajrActive: true,
-		mechetActive: true,
-		shurukActive: true,
-		zuhrActive: true,
-		asrActive: true,
-		maghribActive: true,
-		ishaActive: true,
+		fajrActive: false,
+		mechetActive: false,
+		shurukActive: false,
+		zuhrActive: false,
+		asrActive: false,
+		maghribActive: false,
+		ishaActive: false,
+		fajrIqamaEnabled: false,
+		fajrIqamaMinutes: 0,
+		shurukIqamaEnabled: false,
+		shurukIqamaMinutes: 0,
+		zuhrIqamaEnabled: false,
+		zuhrIqamaMinutes: 0,
+		asrIqamaEnabled: false,
+		asrIqamaMinutes: 0,
+		maghribIqamaEnabled: false,
+		maghribIqamaMinutes: 0,
+		ishaIqamaEnabled: false,
+		ishaIqamaMinutes: 0,
+		mechetIqamaEnabled: false,
+		mechetIqamaMinutes: 0,
 	});
 	const [showScrollToTop, setShowScrollToTop] = useState(false);
 	const [prayerChanges, setPrayerChanges] = useState<PrayerChange[]>([]);
-
-	// Стиль для принудительного использования 24-часового формата
-	const timeInputStyle = {
-		WebkitAppearance: 'none',
-		MozAppearance: 'textfield'
-	} as React.CSSProperties;
 
 	// Функция для проверки, является ли дата сегодняшней
 	const isToday = (dateString: string) => {
@@ -147,7 +142,9 @@ const PrayerPage = () => {
 					Authorization: `Bearer ${localStorage.getItem('token')}`,
 				},
 			});
-			fetchPrayers(selectedCityId);
+			if (selectedMosqueId) {
+				fetchPrayers(selectedMosqueId);
+			}
 		} catch (error) {
 			console.error('Ошибка загрузки файла:', error);
 		} finally {
@@ -164,26 +161,53 @@ const PrayerPage = () => {
 		if (response.data.role === 'CITY_ADMIN') {
 			setUserCityId(response.data.cityId);
 		}
+		if (response.data.role === 'MOSQUE_ADMIN') {
+			setUserMosqueId(response.data.mosqueId);
+		}
 	};
 
-	const fetchCities = async () => {
-		const response = await axios.get(`${API_BASE_URL}/api/cities`);
-		setCities(response.data);
-	};
-
-	const fetchPrayers = async (cityId: string) => {
-		const response = await axios.get(`${API_BASE_URL}/api/prayers/all?cityId=${cityId}`);
-		const sortedPrayers = response.data.sort((a: PrayerResponse, b: PrayerResponse) => new Date(a.date).getTime() - new Date(b.date).getTime());
-		const filteredPrayers = filterPastDates(sortedPrayers);
-		setPrayers(filteredPrayers);
-	};
-
-	const fetchFixedPrayerTime = async (cityId: string) => {
+	const fetchMosques = async () => {
 		try {
-			const response = await axios.get(`${API_BASE_URL}/api/prayers/fixed-time/city/${cityId}`, {
+			const token = localStorage.getItem('token');
+			const response = await axios.get<Mosque[]>(`${API_BASE_URL}/api/mosques`, {
 				headers: {
-					Authorization: `Bearer ${localStorage.getItem('token')}`,
+					Authorization: `Bearer ${token}`,
 				},
+			});
+			
+			// Фильтрация по роли
+			if (role === 'CITY_ADMIN' && userCityId) {
+				setMosques(response.data.filter(m => m.cityId === userCityId));
+			} else if (role === 'MOSQUE_ADMIN' && userMosqueId) {
+				setMosques(response.data.filter(m => m.id === userMosqueId));
+			} else {
+				setMosques(response.data);
+			}
+		} catch (error) {
+			console.error('Ошибка при получении мечетей:', error);
+		}
+	};
+
+	const fetchPrayers = async (mosqueId: string) => {
+		try {
+			const response = await axios.get(`${API_BASE_URL}/api/prayers/all?mosqueId=${mosqueId}`);
+			const sortedPrayers = response.data.sort((a: PrayerResponse, b: PrayerResponse) => new Date(a.date).getTime() - new Date(b.date).getTime());
+			const filteredPrayers = filterPastDates(sortedPrayers);
+			setPrayers(filteredPrayers);
+		} catch (error) {
+			console.error('Ошибка при получении молитв:', error);
+			setPrayers([]);
+		}
+	};
+
+	const fetchFixedPrayerTime = async (mosqueId: string) => {
+		try {
+			// Для админ-панели используем авторизацию
+			const token = localStorage.getItem('token');
+			const response = await axios.get(`${API_BASE_URL}/api/prayers/fixed-time/mosque/${mosqueId}`, {
+				headers: token ? {
+					Authorization: `Bearer ${token}`
+				} : {}
 			});
 			if (response.data) {
 				setFixedPrayerTime(response.data);
@@ -195,13 +219,27 @@ const PrayerPage = () => {
 					maghrib: response.data.maghrib || '00:00',
 					isha: response.data.isha || '00:00',
 					mechet: response.data.mechet || '00:00',
-					fajrActive: response.data.fajrActive !== undefined ? response.data.fajrActive : true,
-					shurukActive: response.data.shurukActive !== undefined ? response.data.shurukActive : true,
-					zuhrActive: response.data.zuhrActive !== undefined ? response.data.zuhrActive : true,
-					asrActive: response.data.asrActive !== undefined ? response.data.asrActive : true,
-					maghribActive: response.data.maghribActive !== undefined ? response.data.maghribActive : true,
-					ishaActive: response.data.ishaActive !== undefined ? response.data.ishaActive : true,
-					mechetActive: response.data.mechetActive !== undefined ? response.data.mechetActive : true
+					fajrActive: response.data.fajrActive !== undefined ? response.data.fajrActive : false,
+					shurukActive: response.data.shurukActive !== undefined ? response.data.shurukActive : false,
+					zuhrActive: response.data.zuhrActive !== undefined ? response.data.zuhrActive : false,
+					asrActive: response.data.asrActive !== undefined ? response.data.asrActive : false,
+					maghribActive: response.data.maghribActive !== undefined ? response.data.maghribActive : false,
+					ishaActive: response.data.ishaActive !== undefined ? response.data.ishaActive : false,
+					mechetActive: response.data.mechetActive !== undefined ? response.data.mechetActive : false,
+					fajrIqamaEnabled: response.data.fajrIqamaEnabled !== undefined ? response.data.fajrIqamaEnabled : false,
+					fajrIqamaMinutes: response.data.fajrIqamaMinutes !== undefined ? response.data.fajrIqamaMinutes : 0,
+					shurukIqamaEnabled: response.data.shurukIqamaEnabled !== undefined ? response.data.shurukIqamaEnabled : false,
+					shurukIqamaMinutes: response.data.shurukIqamaMinutes !== undefined ? response.data.shurukIqamaMinutes : 0,
+					zuhrIqamaEnabled: response.data.zuhrIqamaEnabled !== undefined ? response.data.zuhrIqamaEnabled : false,
+					zuhrIqamaMinutes: response.data.zuhrIqamaMinutes !== undefined ? response.data.zuhrIqamaMinutes : 0,
+					asrIqamaEnabled: response.data.asrIqamaEnabled !== undefined ? response.data.asrIqamaEnabled : false,
+					asrIqamaMinutes: response.data.asrIqamaMinutes !== undefined ? response.data.asrIqamaMinutes : 0,
+					maghribIqamaEnabled: response.data.maghribIqamaEnabled !== undefined ? response.data.maghribIqamaEnabled : false,
+					maghribIqamaMinutes: response.data.maghribIqamaMinutes !== undefined ? response.data.maghribIqamaMinutes : 0,
+					ishaIqamaEnabled: response.data.ishaIqamaEnabled !== undefined ? response.data.ishaIqamaEnabled : false,
+					ishaIqamaMinutes: response.data.ishaIqamaMinutes !== undefined ? response.data.ishaIqamaMinutes : 0,
+					mechetIqamaEnabled: response.data.mechetIqamaEnabled !== undefined ? response.data.mechetIqamaEnabled : false,
+					mechetIqamaMinutes: response.data.mechetIqamaMinutes !== undefined ? response.data.mechetIqamaMinutes : 0,
 				});
 			} else {
 				setFixedPrayerTime(null);
@@ -213,126 +251,212 @@ const PrayerPage = () => {
 					maghrib: '00:00',
 					isha: '00:00',
 					mechet: '00:00',
-					fajrActive: true,
-					shurukActive: true,
-					zuhrActive: true,
-					asrActive: true,
-					maghribActive: true,
-					ishaActive: true,
-					mechetActive: true
+					fajrActive: false,
+					shurukActive: false,
+					zuhrActive: false,
+					asrActive: false,
+					maghribActive: false,
+					ishaActive: false,
+					mechetActive: false,
+					fajrIqamaEnabled: false,
+					fajrIqamaMinutes: 0,
+					shurukIqamaEnabled: false,
+					shurukIqamaMinutes: 0,
+					zuhrIqamaEnabled: false,
+					zuhrIqamaMinutes: 0,
+					asrIqamaEnabled: false,
+					asrIqamaMinutes: 0,
+					maghribIqamaEnabled: false,
+					maghribIqamaMinutes: 0,
+					ishaIqamaEnabled: false,
+					ishaIqamaMinutes: 0,
+					mechetIqamaEnabled: false,
+					mechetIqamaMinutes: 0,
 				});
 			}
-		} catch (error) {
+		} catch (error: any) {
 			console.error('Ошибка при получении фиксированного времени:', error);
-			setFixedPrayerTime(null);
+			console.error('Статус ошибки:', error.response?.status);
+			console.error('Данные ошибки:', error.response?.data);
+			if (error.response?.status === 404) {
+				// Мечеть не найдена или фиксированное время не создано - это нормально
+				setFixedPrayerTime(null);
+				setFixedTimePrayers({
+					fajr: '00:00',
+					shuruk: '00:00',
+					zuhr: '00:00',
+					asr: '00:00',
+					maghrib: '00:00',
+					isha: '00:00',
+					mechet: '00:00',
+					fajrActive: false,
+					shurukActive: false,
+					zuhrActive: false,
+					asrActive: false,
+					maghribActive: false,
+					ishaActive: false,
+					mechetActive: false,
+					fajrIqamaEnabled: false,
+					fajrIqamaMinutes: 0,
+					shurukIqamaEnabled: false,
+					shurukIqamaMinutes: 0,
+					zuhrIqamaEnabled: false,
+					zuhrIqamaMinutes: 0,
+					asrIqamaEnabled: false,
+					asrIqamaMinutes: 0,
+					maghribIqamaEnabled: false,
+					maghribIqamaMinutes: 0,
+					ishaIqamaEnabled: false,
+					ishaIqamaMinutes: 0,
+					mechetIqamaEnabled: false,
+					mechetIqamaMinutes: 0,
+				});
+			} else if (error.response?.status === 500) {
+				// Ошибка сервера - возможно, бэкенд еще не поддерживает новые поля икамата
+				console.error('Ошибка 500: Возможно, бэкенд еще не поддерживает поля икамата');
+				console.error('Детали ошибки:', error.response?.data);
+				setFixedPrayerTime(null);
+				setFixedTimePrayers({
+					fajr: '00:00',
+					shuruk: '00:00',
+					zuhr: '00:00',
+					asr: '00:00',
+					maghrib: '00:00',
+					isha: '00:00',
+					mechet: '00:00',
+					fajrActive: false,
+					shurukActive: false,
+					zuhrActive: false,
+					asrActive: false,
+					maghribActive: false,
+					ishaActive: false,
+					mechetActive: false,
+					fajrIqamaEnabled: false,
+					fajrIqamaMinutes: 0,
+					shurukIqamaEnabled: false,
+					shurukIqamaMinutes: 0,
+					zuhrIqamaEnabled: false,
+					zuhrIqamaMinutes: 0,
+					asrIqamaEnabled: false,
+					asrIqamaMinutes: 0,
+					maghribIqamaEnabled: false,
+					maghribIqamaMinutes: 0,
+					ishaIqamaEnabled: false,
+					ishaIqamaMinutes: 0,
+					mechetIqamaEnabled: false,
+					mechetIqamaMinutes: 0,
+				});
+				toast.error('Ошибка сервера при загрузке фиксированного времени. Возможно, бэкенд еще не поддерживает поля икамата.');
+			} else {
+				setFixedPrayerTime(null);
+			}
 		}
 	};
 
-	const handleSaveFixedTime = async (event: React.FormEvent) => {
-		event.preventDefault();
+	const handleSaveFixedTime = async () => {
 		try {
 			setLoading(true);
-			const payload = {
-				fajr: fixedTimePrayers.fajr,
-				shuruk: fixedTimePrayers.shuruk,
-				zuhr: fixedTimePrayers.zuhr,
-				asr: fixedTimePrayers.asr,
-				maghrib: fixedTimePrayers.maghrib,
-				isha: fixedTimePrayers.isha,
-				mechet: fixedTimePrayers.mechet,
-			};
+			const payload: any = {};
+			
+			// Добавляем только те поля, которые имеют значение
+			if (fixedTimePrayers.fajr) payload.fajr = fixedTimePrayers.fajr;
+			if (fixedTimePrayers.shuruk) payload.shuruk = fixedTimePrayers.shuruk;
+			if (fixedTimePrayers.zuhr) payload.zuhr = fixedTimePrayers.zuhr;
+			if (fixedTimePrayers.asr) payload.asr = fixedTimePrayers.asr;
+			if (fixedTimePrayers.maghrib) payload.maghrib = fixedTimePrayers.maghrib;
+			if (fixedTimePrayers.isha) payload.isha = fixedTimePrayers.isha;
+			if (fixedTimePrayers.mechet) payload.mechet = fixedTimePrayers.mechet;
 
-			await axios.put(`${API_BASE_URL}/api/prayers/fixed-time/city/${selectedCityId}`, payload, {
+			// Добавляем настройки активности фиксированного времени
+			payload.fajrActive = fixedTimePrayers.fajrActive;
+			payload.shurukActive = fixedTimePrayers.shurukActive;
+			payload.zuhrActive = fixedTimePrayers.zuhrActive;
+			payload.asrActive = fixedTimePrayers.asrActive;
+			payload.maghribActive = fixedTimePrayers.maghribActive;
+			payload.ishaActive = fixedTimePrayers.ishaActive;
+			payload.mechetActive = fixedTimePrayers.mechetActive;
+
+			await axios.put(`${API_BASE_URL}/api/prayers/fixed-time/mosque/${selectedMosqueId}`, payload, {
 				headers: {
 					Authorization: `Bearer ${localStorage.getItem('token')}`,
 					'Content-Type': 'application/json'
 				},
 			});
 
-			fetchFixedPrayerTime(selectedCityId);
+			fetchFixedPrayerTime(selectedMosqueId);
 			setShowFixedTimeForm(false);
 			toast.success('Фиксированное время намаза успешно сохранено');
-		} catch (error) {
+		} catch (error: any) {
 			console.error('Ошибка при сохранении фиксированного времени:', error);
-			toast.error('Ошибка при сохранении фиксированного времени');
+			if (error.response?.status === 400) {
+				const errorMessage = error.response?.data?.message || 'Некорректные данные';
+				toast.error(errorMessage);
+			} else if (error.response?.status === 401) {
+				toast.error('Пользователь не авторизован');
+			} else if (error.response?.status === 403) {
+				const errorMessage = error.response?.data?.message || 'У вас нет прав для управления фиксированным временем этой мечети';
+				toast.error(errorMessage);
+			} else if (error.response?.status === 404) {
+				const errorMessage = error.response?.data?.message || 'Мечеть не найдена';
+				toast.error(errorMessage);
+			} else {
+				toast.error('Ошибка при сохранении фиксированного времени');
+			}
 		} finally {
 			setLoading(false);
 		}
 	};
 
-	const handleDeleteFixedTime = async () => {
-		if (!fixedPrayerTime) return;
-		
-		if (window.confirm('Вы уверены, что хотите удалить фиксированное время для этого города?')) {
-			try {
-				setLoading(true);
-				await axios.delete(`${API_BASE_URL}/api/prayers/fixed-time/${selectedCityId}`, {
-					headers: {
-						Authorization: `Bearer ${localStorage.getItem('token')}`,
-					},
-				});
-				
-				setFixedPrayerTime(null);
-				setFixedTimePrayers({
-					fajr: '',
-					shuruk: '',
-					zuhr: '',
-					asr: '',
-					maghrib: '',
-					isha: '',
-					mechet: '',
-					fajrActive: true,
-					shurukActive: true,
-					zuhrActive: true,
-					asrActive: true,
-					maghribActive: true,
-					ishaActive: true,
-					mechetActive: true
-				});
-				
-				toast.success('Фиксированное время намаза успешно удалено');
-			} catch (error) {
-				console.error('Ошибка при удалении фиксированного времени:', error);
-				toast.error('Ошибка при удалении фиксированного времени');
-			} finally {
-				setLoading(false);
-			}
-		}
-	};
-
-	const toggleFixedPrayerTime = async () => {
-		if (!fixedPrayerTime) return;
-		
+	const handleSaveIqama = async () => {
 		try {
 			setLoading(true);
+			const payload: any = {};
 			
-			// Определяем текущее состояние (все активно или нет)
-			const allActive = Object.keys(fixedPrayerTime)
-				.filter(key => key.endsWith('Active'))
-				.every(key => fixedPrayerTime[key as keyof typeof fixedPrayerTime]);
-			
-			// Инвертируем состояние
-			const newValue = !allActive;
-			
-			await axios.put(`${API_BASE_URL}/api/prayers/fixed-time/${selectedCityId}/toggle`, 
-				{ isActive: newValue }, 
-				{
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: `Bearer ${localStorage.getItem('token')}`,
-					},
-				}
-			);
-			
-			// Обновляем данные после переключения
-			fetchFixedPrayerTime(selectedCityId);
-			
-			toast.success(allActive 
-				? 'Все фиксированные времена намаза отключены' 
-				: 'Все фиксированные времена намаза включены');
-		} catch (error) {
-			console.error('Ошибка при переключении активности фиксированного времени:', error);
-			toast.error('Не удалось изменить активность фиксированного времени');
+			// Используем текущие значения enabled из fixedPrayerTime (устанавливаются через переключатели)
+			// и обновленные значения minutes из формы
+			if (fixedPrayerTime) {
+				payload.fajrIqamaEnabled = fixedPrayerTime.fajrIqamaEnabled;
+				payload.fajrIqamaMinutes = fixedTimePrayers.fajrIqamaMinutes;
+				payload.shurukIqamaEnabled = fixedPrayerTime.shurukIqamaEnabled;
+				payload.shurukIqamaMinutes = fixedTimePrayers.shurukIqamaMinutes;
+				payload.zuhrIqamaEnabled = fixedPrayerTime.zuhrIqamaEnabled;
+				payload.zuhrIqamaMinutes = fixedTimePrayers.zuhrIqamaMinutes;
+				payload.asrIqamaEnabled = fixedPrayerTime.asrIqamaEnabled;
+				payload.asrIqamaMinutes = fixedTimePrayers.asrIqamaMinutes;
+				payload.maghribIqamaEnabled = fixedPrayerTime.maghribIqamaEnabled;
+				payload.maghribIqamaMinutes = fixedTimePrayers.maghribIqamaMinutes;
+				payload.ishaIqamaEnabled = fixedPrayerTime.ishaIqamaEnabled;
+				payload.ishaIqamaMinutes = fixedTimePrayers.ishaIqamaMinutes;
+				payload.mechetIqamaEnabled = fixedPrayerTime.mechetIqamaEnabled;
+				payload.mechetIqamaMinutes = fixedTimePrayers.mechetIqamaMinutes;
+			}
+
+			await axios.put(`${API_BASE_URL}/api/prayers/fixed-time/mosque/${selectedMosqueId}`, payload, {
+				headers: {
+					Authorization: `Bearer ${localStorage.getItem('token')}`,
+					'Content-Type': 'application/json'
+				},
+			});
+
+			fetchFixedPrayerTime(selectedMosqueId);
+			setShowIqamaForm(false);
+			toast.success('Настройки икамата успешно сохранены');
+		} catch (error: any) {
+			console.error('Ошибка при сохранении настроек икамата:', error);
+			if (error.response?.status === 400) {
+				const errorMessage = error.response?.data?.message || 'Некорректные данные';
+				toast.error(errorMessage);
+			} else if (error.response?.status === 401) {
+				toast.error('Пользователь не авторизован');
+			} else if (error.response?.status === 403) {
+				const errorMessage = error.response?.data?.message || 'У вас нет прав для управления настройками икамата этой мечети';
+				toast.error(errorMessage);
+			} else if (error.response?.status === 404) {
+				const errorMessage = error.response?.data?.message || 'Мечеть не найдена';
+				toast.error(errorMessage);
+			} else {
+				toast.error('Ошибка при сохранении настроек икамата');
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -342,7 +466,7 @@ const PrayerPage = () => {
 		try {
 			setLoading(true);
 			await axios.put(
-				`${API_BASE_URL}/api/prayers/fixed-time/${selectedCityId}/toggle-prayer`,
+				`${API_BASE_URL}/api/prayers/fixed-time/mosque/${selectedMosqueId}/toggle-prayer`,
 				{
 					prayerType: prayerName,
 					isActive: active
@@ -354,27 +478,85 @@ const PrayerPage = () => {
 					},
 				}
 			);
-			fetchFixedPrayerTime(selectedCityId);
+			fetchFixedPrayerTime(selectedMosqueId);
 			toast.success('Настройки успешно обновлены');
-		} catch (error) {
+		} catch (error: any) {
 			console.error('Ошибка при обновлении намаза:', error);
-			toast.error('Ошибка при обновлении настроек');
+			if (error.response?.status === 400) {
+				const errorMessage = error.response?.data?.message || 'Некорректные данные';
+				toast.error(errorMessage);
+			} else if (error.response?.status === 401) {
+				toast.error('Пользователь не авторизован');
+			} else if (error.response?.status === 403) {
+				const errorMessage = error.response?.data?.message || 'У вас нет прав для управления фиксированным временем этой мечети';
+				toast.error(errorMessage);
+			} else if (error.response?.status === 404) {
+				const errorMessage = error.response?.data?.message || 'Мечеть не найдена';
+				toast.error(errorMessage);
+			} else {
+				toast.error('Ошибка при обновлении настроек');
+			}
 		} finally {
 			setLoading(false);
 		}
 	};
 
-	const handleCityChange = (cityId: string) => {
-		setSelectedCityId(cityId);
-		fetchPrayers(cityId);
-		fetchFixedPrayerTime(cityId);
-		fetchPrayerChanges(cityId);
+	const toggleIqama = async (prayerName: string, enabled: boolean) => {
+		try {
+			setLoading(true);
+			const payload: any = {};
+			payload[`${prayerName}IqamaEnabled`] = enabled;
+			if (!enabled) {
+				payload[`${prayerName}IqamaMinutes`] = 0;
+			}
+
+			await axios.put(`${API_BASE_URL}/api/prayers/fixed-time/mosque/${selectedMosqueId}`, payload, {
+				headers: {
+					Authorization: `Bearer ${localStorage.getItem('token')}`,
+					'Content-Type': 'application/json'
+				},
+			});
+
+			fetchFixedPrayerTime(selectedMosqueId);
+			toast.success('Настройки икамата успешно обновлены');
+		} catch (error: any) {
+			console.error('Ошибка при обновлении икамата:', error);
+			if (error.response?.status === 400) {
+				const errorMessage = error.response?.data?.message || 'Некорректные данные';
+				toast.error(errorMessage);
+			} else if (error.response?.status === 401) {
+				toast.error('Пользователь не авторизован');
+			} else if (error.response?.status === 403) {
+				const errorMessage = error.response?.data?.message || 'У вас нет прав для управления настройками икамата этой мечети';
+				toast.error(errorMessage);
+			} else if (error.response?.status === 404) {
+				const errorMessage = error.response?.data?.message || 'Мечеть не найдена';
+				toast.error(errorMessage);
+			} else {
+				toast.error('Ошибка при обновлении настроек икамата');
+			}
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleMosqueChange = (mosqueId: string) => {
+		setSelectedMosqueId(mosqueId);
+		if (mosqueId) {
+			fetchPrayers(mosqueId);
+			fetchFixedPrayerTime(mosqueId);
+			fetchPrayerChanges(mosqueId);
+		} else {
+			setPrayers([]);
+			setFixedPrayerTime(null);
+			setPrayerChanges([]);
+		}
 	};
 
 	const handlePrayerShift = async () => {
-		// Валидация выбора города
-		if (!selectedCityId) {
-			toast.error('Пожалуйста, выберите город');
+		// Валидация выбора мечети
+		if (!selectedMosqueId) {
+			toast.error('Пожалуйста, выберите мечеть');
 			return;
 		}
 
@@ -399,22 +581,31 @@ const PrayerPage = () => {
 
 		try {
 			setLoading(true);
-			await axios.post(
+			
+			const payload = {
+				mosqueId: parseInt(selectedMosqueId, 10),
+				prayerName: selectedPrayer === 'mosque' ? 'mechet' : selectedPrayer,
+				shiftMinutes: finalShiftMinutes,
+			};
+			
+			// Логирование для отладки
+			console.log('Отправка запроса на сдвиг времени:', payload);
+			
+			const response = await axios.post(
 				`${API_BASE_URL}/api/prayers/shift`,
-				{
-					cityId: parseInt(selectedCityId, 10),
-					prayerName: selectedPrayer === 'mosque' ? 'mechet' : selectedPrayer,
-					shiftMinutes: finalShiftMinutes,
-				},
+				payload,
 				{
 					headers: {
 						Authorization: `Bearer ${localStorage.getItem('token')}`,
+						'Content-Type': 'application/json',
 					},
 				}
 			);
+			
+			console.log('Ответ сервера:', response.data);
 
-			await fetchPrayers(selectedCityId);
-			await fetchPrayerChanges(selectedCityId);
+			await fetchPrayers(selectedMosqueId);
+			await fetchPrayerChanges(selectedMosqueId);
 			toast.success('Время намаза успешно изменено');
 			
 			// Сброс значений после успешного изменения
@@ -425,12 +616,26 @@ const PrayerPage = () => {
 			
 		} catch (error: any) {
 			console.error('Ошибка при изменении времени:', error);
+			console.error('Статус ошибки:', error.response?.status);
+			console.error('Данные ошибки:', error.response?.data);
+			console.error('Заголовки запроса:', error.config?.headers);
+			console.error('Тело запроса:', error.config?.data);
+			
 			if (error.response?.status === 404) {
-				toast.error('Город или намаз не найдены');
+				const errorMessage = error.response?.data?.message || 'Мечеть или намаз не найдены';
+				toast.error(errorMessage);
 			} else if (error.response?.status === 400) {
-				toast.error('Некорректные данные для изменения времени');
+				const errorMessage = error.response?.data?.message || 'Некорректные данные для изменения времени';
+				toast.error(errorMessage);
 			} else if (error.response?.status === 403) {
-				toast.error('У вас нет прав для изменения времени намаза');
+				const errorMessage = error.response?.data?.message || 'У вас нет прав для изменения времени намаза';
+				toast.error(errorMessage);
+			} else if (error.response?.status === 500) {
+				const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Ошибка сервера';
+				toast.error(`Ошибка сервера: ${errorMessage}`);
+			} else if (error.response?.status === 401) {
+				const errorMessage = error.response?.data?.message || 'Пользователь не авторизован';
+				toast.error(errorMessage);
 			} else {
 				toast.error('Произошла ошибка при изменении времени намаза');
 			}
@@ -439,17 +644,49 @@ const PrayerPage = () => {
 		}
 	};
 
-	const handleTimeChange = (prayer: string, value: string) => {
-		setFixedTimePrayers(prev => ({
-			...prev,
-			[prayer]: value
-		}));
+	// Вспомогательная функция для форматирования времени в 24-часовой формат
+	const formatTimeTo24Hour = (value: string): string => {
+		if (!value) return value;
+		
+		// Если время пришло в формате 12 часов с AM/PM, конвертируем в 24 часа
+		const timeMatch12 = value.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+		if (timeMatch12) {
+			let hours = parseInt(timeMatch12[1], 10);
+			const minutes = timeMatch12[2];
+			const ampm = timeMatch12[3].toUpperCase();
+			
+			if (ampm === 'PM' && hours !== 12) {
+				hours += 12;
+			} else if (ampm === 'AM' && hours === 12) {
+				hours = 0;
+			}
+			
+			return `${hours.toString().padStart(2, '0')}:${minutes}`;
+		}
+		
+		// Если время уже в формате HH:mm, проверяем корректность
+		const timeMatch24 = value.match(/(\d{1,2}):(\d{2})/);
+		if (timeMatch24) {
+			let hours = parseInt(timeMatch24[1], 10);
+			const minutes = timeMatch24[2];
+			
+			// Ограничиваем часы до 23
+			if (hours >= 24) {
+				hours = 23;
+			}
+			
+			return `${hours.toString().padStart(2, '0')}:${minutes}`;
+		}
+		
+		return value;
 	};
 
-	const handleIsActiveChange = (prayerType: string, checked: boolean) => {
+	const handleTimeChange = (prayer: string, value: string) => {
+		const formattedValue = formatTimeTo24Hour(value);
+		
 		setFixedTimePrayers(prev => ({
 			...prev,
-			[`${prayerType}Active`]: checked
+			[prayer]: formattedValue
 		}));
 	};
 
@@ -469,9 +706,14 @@ const PrayerPage = () => {
 
 	// Отслеживание прокрутки страницы
 	useEffect(() => {
-		fetchCities();
 		fetchRole();
 	}, []);
+
+	useEffect(() => {
+		if (role) {
+			fetchMosques();
+		}
+	}, [role, userCityId, userMosqueId]);
 
 	useEffect(() => {
 		const handleScroll = () => {
@@ -490,29 +732,59 @@ const PrayerPage = () => {
 		window.location.href = DASHBOARD_PAGES.DASHBOARD;
 	};
 
+	// Автоматическая установка мечети для MOSQUE_ADMIN
 	useEffect(() => {
-		if (role === 'CITY_ADMIN' && userCityId) {
-			handleCityChange(userCityId.toString());
-			setSelectedCityId(userCityId.toString());
+		if (role === 'MOSQUE_ADMIN' && userMosqueId) {
+			setSelectedMosqueId(userMosqueId.toString());
+			handleMosqueChange(userMosqueId.toString());
 		}
-	}, [role, userCityId]);
+	}, [role, userMosqueId]);
+
+	// Принудительное форматирование времени в 24-часовой формат
+	useEffect(() => {
+		// Находим все input type="time" и принудительно устанавливаем формат 24 часов
+		const timeInputs = document.querySelectorAll('input[type="time"]');
+		timeInputs.forEach((input: any) => {
+			// Устанавливаем атрибут lang для принудительного использования 24-часового формата
+			if (!input.hasAttribute('lang')) {
+				input.setAttribute('lang', 'en');
+			}
+			
+			// Если значение есть, убеждаемся, что оно в формате 24 часов
+			if (input.value) {
+				const timeValue = input.value;
+				// Проверяем формат и конвертируем при необходимости
+				const timeMatch = timeValue.match(/(\d{1,2}):(\d{2})/);
+				if (timeMatch) {
+					let hours = parseInt(timeMatch[1], 10);
+					const minutes = timeMatch[2];
+					
+					// Если часы больше 12, значит уже 24-часовой формат
+					// Если нет, оставляем как есть (input type="time" должен автоматически использовать 24-часовой формат)
+					if (hours < 24) {
+						input.value = `${hours.toString().padStart(2, '0')}:${minutes}`;
+					}
+				}
+			}
+		});
+	}, [fixedTimePrayers, showFixedTimeForm]);
 
 	// Получение истории изменений времени намазов
-	const fetchPrayerChanges = async (cityId: string) => {
+	const fetchPrayerChanges = async (mosqueId: string) => {
 		try {
 			const token = localStorage.getItem('token');
-			const response = await axios.get(`${API_BASE_URL}/api/prayers/city/${cityId}/changes`, {
+			const response = await axios.get(`${API_BASE_URL}/api/prayers/mosque/${mosqueId}/changes`, {
 				headers: {
 					Authorization: `Bearer ${token}`
 				}
 			});
 			setPrayerChanges(response.data);
 		} catch (error) {
+			console.error('Ошибка при получении истории изменений:', error);
 			setPrayerChanges([]);
 		}
 	};
 
-	
 	// Функция для поиска сдвига по дате и типу намаза
 	const getShiftForPrayer = (date: string, prayerType: string) => {
 		const change = prayerChanges.find(
@@ -521,8 +793,10 @@ const PrayerPage = () => {
 		return change ? change.shiftMinutes : 0;
 	};
 
+	const currentMosque = mosques.find(m => m.id.toString() === selectedMosqueId);
+
 	return (
-		<div className="h-screen w-full overflow-y-auto bg-gray-100 p-4 max-h-screen" style={{ scrollbarWidth: 'auto' }}>
+		<div className="h-screen w-full overflow-y-auto bg-gray-100 p-4 max-h-screen" style={{ scrollbarWidth: 'auto' }} lang="en">
 			{loading && (
 				<div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
 					<div className="loader">Загрузка...</div>
@@ -535,12 +809,21 @@ const PrayerPage = () => {
 					<h2 className="text-2xl font-bold text-gray-700">Управление намазами</h2>
 					<button onClick={handleBack} className="text-blue-600">Назад</button>
 				</div>
-				{role !== 'CITY_ADMIN' && (
-					<select value={selectedCityId} onChange={(e) => handleCityChange(e.target.value)}
-										className="mb-4 border p-2 w-full text-black">
-						<option value="">Выберите город</option>
-						{cities.map(city => (
-							<option key={city.id} value={city.id}>{city.name}</option>
+
+				{/* Выбор мечети */}
+				{role === 'MOSQUE_ADMIN' && currentMosque ? (
+					<div className="mb-4 p-3 bg-blue-50 rounded border border-blue-200">
+						<p className="text-gray-700 font-semibold">Мечеть: {currentMosque.name}</p>
+					</div>
+				) : role !== 'MOSQUE_ADMIN' && (
+					<select 
+						value={selectedMosqueId} 
+						onChange={(e) => handleMosqueChange(e.target.value)}
+						className="mb-4 border p-2 w-full text-black"
+					>
+						<option value="">Выберите мечеть</option>
+						{mosques.map(mosque => (
+							<option key={mosque.id} value={mosque.id}>{mosque.name}</option>
 						))}
 					</select>
 				)}
@@ -555,48 +838,33 @@ const PrayerPage = () => {
 					</div>
 				)}
 
-					{selectedCityId && (
+					{selectedMosqueId && (
 						<div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
 							<div className="flex justify-between items-center mb-2">
-								<h3 className="text-lg font-semibold text-gray-700">Фиксированное время намаза для города</h3>
-								<div>
-									{!showFixedTimeForm ? (
+								<h3 className="text-lg font-semibold text-gray-700">Фиксированное время намаза</h3>
+								{showFixedTimeForm ? (
+									<div className="flex space-x-2">
 										<button 
-											onClick={() => setShowFixedTimeForm(true)} 
-											className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
+											onClick={handleSaveFixedTime} 
+											className="bg-green-500 text-white px-3 py-1 rounded text-sm"
 										>
-											{fixedPrayerTime ? 'Изменить' : 'Добавить'}
+											Сохранить
 										</button>
-									) : (
-										<div className="flex space-x-2">
-											<button 
-												onClick={handleSaveFixedTime} 
-												className="bg-green-500 text-white px-3 py-1 rounded text-sm"
-											>
-												Сохранить
-											</button>
-											<button 
-												onClick={() => setShowFixedTimeForm(false)} 
-												className="bg-gray-500 text-white px-3 py-1 rounded text-sm"
-											>
-												Отмена
-											</button>
-										</div>
-									)}
-									{fixedPrayerTime && !showFixedTimeForm && (
-										<>
-											<button 
-												onClick={toggleFixedPrayerTime} 
-												className="bg-blue-500 text-white px-3 py-1 rounded text-sm ml-2"
-											>
-												{Object.keys(fixedPrayerTime)
-													.filter(key => key.endsWith('Active'))
-													.every(key => fixedPrayerTime[key as keyof typeof fixedPrayerTime]) 
-													? "Отключить все" : "Включить все"}
-											</button>
-										</>
-									)}
-								</div>
+										<button 
+											onClick={() => setShowFixedTimeForm(false)} 
+											className="bg-gray-500 text-white px-3 py-1 rounded text-sm"
+										>
+											Отмена
+										</button>
+									</div>
+								) : (
+									<button 
+										onClick={() => setShowFixedTimeForm(true)} 
+										className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
+									>
+										{fixedPrayerTime ? 'Изменить' : 'Добавить'}
+									</button>
+								)}
 							</div>
 							
 							{fixedPrayerTime && !showFixedTimeForm && (
@@ -738,89 +1006,394 @@ const PrayerPage = () => {
 							)}
 							
 							{fixedPrayerTime && showFixedTimeForm && (
-								<form onSubmit={handleSaveFixedTime} className="bg-white p-6 rounded shadow mb-4">
-									<div className="grid grid-cols-4 gap-4 mb-4">
-										<div className="p-2 bg-white rounded shadow">
-											<div className="text-gray-500 text-sm">Фаджр</div>
-											<input
-												type="time"
-												name="fajr"
-												value={fixedTimePrayers.fajr}
-												onChange={(e) => handleTimeChange('fajr', e.target.value)}
-												className="font-semibold text-gray-800 border rounded px-2 py-1 w-full"
-											/>
-									
-										</div>
-										<div className="p-2 bg-white rounded shadow">
-											<div className="text-gray-500 text-sm">Мечеть</div>
-											<input
-												type="time"
-												name="mechet"
-												value={fixedTimePrayers.mechet}
-												onChange={(e) => handleTimeChange('mechet', e.target.value)}
-												className="font-semibold text-gray-800 border rounded px-2 py-1 w-full"
-											/>
-											
-										</div>
-										<div className="p-2 bg-white rounded shadow">
-											<div className="text-gray-500 text-sm">Шурук</div>
-											<input
-												type="time"
-												name="shuruk"
-												value={fixedTimePrayers.shuruk}
-												onChange={(e) => handleTimeChange('shuruk', e.target.value)}
-												className="font-semibold text-gray-800 border rounded px-2 py-1 w-full"
-											/>
-											
-										</div>
-										<div className="p-2 bg-white rounded shadow">
-											<div className="text-gray-500 text-sm">Зухр</div>
-											<input
-												type="time"
-												name="zuhr"
-												value={fixedTimePrayers.zuhr}
-												onChange={(e) => handleTimeChange('zuhr', e.target.value)}
-												className="font-semibold text-gray-800 border rounded px-2 py-1 w-full"
-											/>
-											
-										</div>
-										<div className="p-2 bg-white rounded shadow">
-											<div className="text-gray-500 text-sm">Аср</div>
-											<input
-												type="time"
-												name="asr"
-												value={fixedTimePrayers.asr}
-												onChange={(e) => handleTimeChange('asr', e.target.value)}
-												className="font-semibold text-gray-800 border rounded px-2 py-1 w-full"
-											/>
-											
-										</div>
-										<div className="p-2 bg-white rounded shadow">
-											<div className="text-gray-500 text-sm">Магриб</div>
-											<input
-												type="time"
-												name="maghrib"
-												value={fixedTimePrayers.maghrib}
-												onChange={(e) => handleTimeChange('maghrib', e.target.value)}
-												className="font-semibold text-gray-800 border rounded px-2 py-1 w-full"
-											/>
-											
-										</div>
-										<div className="p-2 bg-white rounded shadow">
-											<div className="text-gray-500 text-sm">Иша</div>
-											<input
-												type="time"
-												name="isha"
-												value={fixedTimePrayers.isha}
-												onChange={(e) => handleTimeChange('isha', e.target.value)}
-												className="font-semibold text-gray-800 border rounded px-2 py-1 w-full"
-											/>
-											
-										</div>
-										
+								<div className="grid grid-cols-4 gap-4 mb-4">
+									<div className="p-2 bg-white rounded shadow">
+										<div className="text-gray-500 text-sm mb-2">Фаджр</div>
+										<TimePicker24h
+											value={fixedTimePrayers.fajr || '00:00'}
+											onChange={(value) => handleTimeChange('fajr', value)}
+											name="fajr"
+											className="w-full"
+										/>
 									</div>
-									
-								</form>
+									<div className="p-2 bg-white rounded shadow">
+										<div className="text-gray-500 text-sm mb-2">Мечеть</div>
+										<TimePicker24h
+											value={fixedTimePrayers.mechet || '00:00'}
+											onChange={(value) => handleTimeChange('mechet', value)}
+											name="mechet"
+											className="w-full"
+										/>
+									</div>
+									<div className="p-2 bg-white rounded shadow">
+										<div className="text-gray-500 text-sm mb-2">Шурук</div>
+										<TimePicker24h
+											value={fixedTimePrayers.shuruk || '00:00'}
+											onChange={(value) => handleTimeChange('shuruk', value)}
+											name="shuruk"
+											className="w-full"
+										/>
+									</div>
+									<div className="p-2 bg-white rounded shadow">
+										<div className="text-gray-500 text-sm mb-2">Зухр</div>
+										<TimePicker24h
+											value={fixedTimePrayers.zuhr || '00:00'}
+											onChange={(value) => handleTimeChange('zuhr', value)}
+											name="zuhr"
+											className="w-full"
+										/>
+									</div>
+									<div className="p-2 bg-white rounded shadow">
+										<div className="text-gray-500 text-sm mb-2">Аср</div>
+										<TimePicker24h
+											value={fixedTimePrayers.asr || '00:00'}
+											onChange={(value) => handleTimeChange('asr', value)}
+											name="asr"
+											className="w-full"
+										/>
+									</div>
+									<div className="p-2 bg-white rounded shadow">
+										<div className="text-gray-500 text-sm mb-2">Магриб</div>
+										<TimePicker24h
+											value={fixedTimePrayers.maghrib || '00:00'}
+											onChange={(value) => handleTimeChange('maghrib', value)}
+											name="maghrib"
+											className="w-full"
+										/>
+									</div>
+									<div className="p-2 bg-white rounded shadow">
+										<div className="text-gray-500 text-sm mb-2">Иша</div>
+										<TimePicker24h
+											value={fixedTimePrayers.isha || '00:00'}
+											onChange={(value) => handleTimeChange('isha', value)}
+											name="isha"
+											className="w-full"
+										/>
+									</div>
+								</div>
+							)}
+						</div>
+					)}
+
+					{/* Отдельная секция для настройки икамата */}
+					{selectedMosqueId && (
+						<div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+							<div className="flex justify-between items-center mb-2">
+								<h3 className="text-lg font-semibold text-gray-700">Настройки икамата</h3>
+								{showIqamaForm ? (
+									<div className="flex space-x-2">
+										<button 
+											onClick={handleSaveIqama} 
+											className="bg-green-500 text-white px-3 py-1 rounded text-sm"
+										>
+											Сохранить
+										</button>
+										<button 
+											onClick={() => setShowIqamaForm(false)} 
+											className="bg-gray-500 text-white px-3 py-1 rounded text-sm"
+										>
+											Отмена
+										</button>
+									</div>
+								) : (
+									<button 
+										onClick={() => setShowIqamaForm(true)} 
+										className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
+									>
+										{fixedPrayerTime ? 'Изменить' : 'Настроить'}
+									</button>
+								)}
+							</div>
+							
+							{fixedPrayerTime && !showIqamaForm && (
+								<div className="grid grid-cols-4 gap-4 mb-4">
+									<div className="p-2 bg-white rounded shadow">
+										<div className="text-gray-500 text-sm">Фаджр</div>
+										{fixedPrayerTime.fajrIqamaEnabled ? (
+											<div className="font-semibold text-gray-800">{fixedPrayerTime.fajrIqamaMinutes} мин</div>
+										) : (
+											<div className="font-semibold text-gray-400">Выключено</div>
+										)}
+										<div className="flex items-center mt-1">
+											<label className="flex items-center cursor-pointer">
+												<input
+													type="checkbox"
+													checked={fixedPrayerTime.fajrIqamaEnabled}
+													onChange={() => toggleIqama('fajr', !fixedPrayerTime.fajrIqamaEnabled)}
+													className="sr-only peer"
+												/>
+												<div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-green-400 transition-colors relative">
+													<div className={`absolute left-1 top-1 w-3 h-3 bg-white rounded-full shadow transition-transform ${fixedPrayerTime.fajrIqamaEnabled ? 'translate-x-5' : ''}`}></div>
+												</div>
+												<span className={`ml-2 text-xs ${fixedPrayerTime.fajrIqamaEnabled ? 'text-green-600' : 'text-red-600'}`}>{fixedPrayerTime.fajrIqamaEnabled ? 'Включено' : 'Выключено'}</span>
+											</label>
+										</div>
+									</div>
+									<div className="p-2 bg-white rounded shadow">
+										<div className="text-gray-500 text-sm">Мечеть</div>
+										{fixedPrayerTime.mechetIqamaEnabled ? (
+											<div className="font-semibold text-gray-800">{fixedPrayerTime.mechetIqamaMinutes} мин</div>
+										) : (
+											<div className="font-semibold text-gray-400">Выключено</div>
+										)}
+										<div className="flex items-center mt-1">
+											<label className="flex items-center cursor-pointer">
+												<input
+													type="checkbox"
+													checked={fixedPrayerTime.mechetIqamaEnabled}
+													onChange={() => toggleIqama('mechet', !fixedPrayerTime.mechetIqamaEnabled)}
+													className="sr-only peer"
+												/>
+												<div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-green-400 transition-colors relative">
+													<div className={`absolute left-1 top-1 w-3 h-3 bg-white rounded-full shadow transition-transform ${fixedPrayerTime.mechetIqamaEnabled ? 'translate-x-5' : ''}`}></div>
+												</div>
+												<span className={`ml-2 text-xs ${fixedPrayerTime.mechetIqamaEnabled ? 'text-green-600' : 'text-red-600'}`}>{fixedPrayerTime.mechetIqamaEnabled ? 'Включено' : 'Выключено'}</span>
+											</label>
+										</div>
+									</div>
+									<div className="p-2 bg-white rounded shadow">
+										<div className="text-gray-500 text-sm">Шурук</div>
+										{fixedPrayerTime.shurukIqamaEnabled ? (
+											<div className="font-semibold text-gray-800">{fixedPrayerTime.shurukIqamaMinutes} мин</div>
+										) : (
+											<div className="font-semibold text-gray-400">Выключено</div>
+										)}
+										<div className="flex items-center mt-1">
+											<label className="flex items-center cursor-pointer">
+												<input
+													type="checkbox"
+													checked={fixedPrayerTime.shurukIqamaEnabled}
+													onChange={() => toggleIqama('shuruk', !fixedPrayerTime.shurukIqamaEnabled)}
+													className="sr-only peer"
+												/>
+												<div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-green-400 transition-colors relative">
+													<div className={`absolute left-1 top-1 w-3 h-3 bg-white rounded-full shadow transition-transform ${fixedPrayerTime.shurukIqamaEnabled ? 'translate-x-5' : ''}`}></div>
+												</div>
+												<span className={`ml-2 text-xs ${fixedPrayerTime.shurukIqamaEnabled ? 'text-green-600' : 'text-red-600'}`}>{fixedPrayerTime.shurukIqamaEnabled ? 'Включено' : 'Выключено'}</span>
+											</label>
+										</div>
+									</div>
+									<div className="p-2 bg-white rounded shadow">
+										<div className="text-gray-500 text-sm">Зухр</div>
+										{fixedPrayerTime.zuhrIqamaEnabled ? (
+											<div className="font-semibold text-gray-800">{fixedPrayerTime.zuhrIqamaMinutes} мин</div>
+										) : (
+											<div className="font-semibold text-gray-400">Выключено</div>
+										)}
+										<div className="flex items-center mt-1">
+											<label className="flex items-center cursor-pointer">
+												<input
+													type="checkbox"
+													checked={fixedPrayerTime.zuhrIqamaEnabled}
+													onChange={() => toggleIqama('zuhr', !fixedPrayerTime.zuhrIqamaEnabled)}
+													className="sr-only peer"
+												/>
+												<div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-green-400 transition-colors relative">
+													<div className={`absolute left-1 top-1 w-3 h-3 bg-white rounded-full shadow transition-transform ${fixedPrayerTime.zuhrIqamaEnabled ? 'translate-x-5' : ''}`}></div>
+												</div>
+												<span className={`ml-2 text-xs ${fixedPrayerTime.zuhrIqamaEnabled ? 'text-green-600' : 'text-red-600'}`}>{fixedPrayerTime.zuhrIqamaEnabled ? 'Включено' : 'Выключено'}</span>
+											</label>
+										</div>
+									</div>
+									<div className="p-2 bg-white rounded shadow">
+										<div className="text-gray-500 text-sm">Аср</div>
+										{fixedPrayerTime.asrIqamaEnabled ? (
+											<div className="font-semibold text-gray-800">{fixedPrayerTime.asrIqamaMinutes} мин</div>
+										) : (
+											<div className="font-semibold text-gray-400">Выключено</div>
+										)}
+										<div className="flex items-center mt-1">
+											<label className="flex items-center cursor-pointer">
+												<input
+													type="checkbox"
+													checked={fixedPrayerTime.asrIqamaEnabled}
+													onChange={() => toggleIqama('asr', !fixedPrayerTime.asrIqamaEnabled)}
+													className="sr-only peer"
+												/>
+												<div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-green-400 transition-colors relative">
+													<div className={`absolute left-1 top-1 w-3 h-3 bg-white rounded-full shadow transition-transform ${fixedPrayerTime.asrIqamaEnabled ? 'translate-x-5' : ''}`}></div>
+												</div>
+												<span className={`ml-2 text-xs ${fixedPrayerTime.asrIqamaEnabled ? 'text-green-600' : 'text-red-600'}`}>{fixedPrayerTime.asrIqamaEnabled ? 'Включено' : 'Выключено'}</span>
+											</label>
+										</div>
+									</div>
+									<div className="p-2 bg-white rounded shadow">
+										<div className="text-gray-500 text-sm">Магриб</div>
+										{fixedPrayerTime.maghribIqamaEnabled ? (
+											<div className="font-semibold text-gray-800">{fixedPrayerTime.maghribIqamaMinutes} мин</div>
+										) : (
+											<div className="font-semibold text-gray-400">Выключено</div>
+										)}
+										<div className="flex items-center mt-1">
+											<label className="flex items-center cursor-pointer">
+												<input
+													type="checkbox"
+													checked={fixedPrayerTime.maghribIqamaEnabled}
+													onChange={() => toggleIqama('maghrib', !fixedPrayerTime.maghribIqamaEnabled)}
+													className="sr-only peer"
+												/>
+												<div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-green-400 transition-colors relative">
+													<div className={`absolute left-1 top-1 w-3 h-3 bg-white rounded-full shadow transition-transform ${fixedPrayerTime.maghribIqamaEnabled ? 'translate-x-5' : ''}`}></div>
+												</div>
+												<span className={`ml-2 text-xs ${fixedPrayerTime.maghribIqamaEnabled ? 'text-green-600' : 'text-red-600'}`}>{fixedPrayerTime.maghribIqamaEnabled ? 'Включено' : 'Выключено'}</span>
+											</label>
+										</div>
+									</div>
+									<div className="p-2 bg-white rounded shadow">
+										<div className="text-gray-500 text-sm">Иша</div>
+										{fixedPrayerTime.ishaIqamaEnabled ? (
+											<div className="font-semibold text-gray-800">{fixedPrayerTime.ishaIqamaMinutes} мин</div>
+										) : (
+											<div className="font-semibold text-gray-400">Выключено</div>
+										)}
+										<div className="flex items-center mt-1">
+											<label className="flex items-center cursor-pointer">
+												<input
+													type="checkbox"
+													checked={fixedPrayerTime.ishaIqamaEnabled}
+													onChange={() => toggleIqama('isha', !fixedPrayerTime.ishaIqamaEnabled)}
+													className="sr-only peer"
+												/>
+												<div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-green-400 transition-colors relative">
+													<div className={`absolute left-1 top-1 w-3 h-3 bg-white rounded-full shadow transition-transform ${fixedPrayerTime.ishaIqamaEnabled ? 'translate-x-5' : ''}`}></div>
+												</div>
+												<span className={`ml-2 text-xs ${fixedPrayerTime.ishaIqamaEnabled ? 'text-green-600' : 'text-red-600'}`}>{fixedPrayerTime.ishaIqamaEnabled ? 'Включено' : 'Выключено'}</span>
+											</label>
+										</div>
+									</div>
+								</div>
+							)}
+							
+							{showIqamaForm && (
+								<>
+									{!fixedPrayerTime || (!fixedPrayerTime.fajrIqamaEnabled && !fixedPrayerTime.mechetIqamaEnabled && !fixedPrayerTime.shurukIqamaEnabled && !fixedPrayerTime.zuhrIqamaEnabled && !fixedPrayerTime.asrIqamaEnabled && !fixedPrayerTime.maghribIqamaEnabled && !fixedPrayerTime.ishaIqamaEnabled) ? (
+										<div className="p-4 bg-yellow-50 border border-yellow-200 rounded mb-4">
+											<p className="text-yellow-800 text-sm">Для редактирования минут икамата сначала включите икамат для нужного намаза через переключатель выше.</p>
+										</div>
+									) : (
+										<div className="grid grid-cols-4 gap-4 mb-4">
+											{fixedPrayerTime?.fajrIqamaEnabled && (
+												<div className="p-2 bg-white rounded shadow">
+													<div className="text-gray-500 text-sm mb-2">Фаджр</div>
+													<div className="flex items-center">
+														<input
+															type="number"
+															min="0"
+															max="60"
+															value={fixedTimePrayers.fajrIqamaMinutes}
+															onChange={(e) => setFixedTimePrayers(prev => ({ ...prev, fajrIqamaMinutes: parseInt(e.target.value) || 0 }))}
+															className="w-20 p-1 border rounded text-sm text-black"
+															placeholder="мин"
+														/>
+														<span className="ml-1 text-xs text-gray-600">мин</span>
+													</div>
+												</div>
+											)}
+											{fixedPrayerTime?.mechetIqamaEnabled && (
+												<div className="p-2 bg-white rounded shadow">
+													<div className="text-gray-500 text-sm mb-2">Мечеть</div>
+													<div className="flex items-center">
+														<input
+															type="number"
+															min="0"
+															max="60"
+															value={fixedTimePrayers.mechetIqamaMinutes}
+															onChange={(e) => setFixedTimePrayers(prev => ({ ...prev, mechetIqamaMinutes: parseInt(e.target.value) || 0 }))}
+															className="w-20 p-1 border rounded text-sm text-black"
+															placeholder="мин"
+														/>
+														<span className="ml-1 text-xs text-gray-600">мин</span>
+													</div>
+												</div>
+											)}
+											{fixedPrayerTime?.shurukIqamaEnabled && (
+												<div className="p-2 bg-white rounded shadow">
+													<div className="text-gray-500 text-sm mb-2">Шурук</div>
+													<div className="flex items-center">
+														<input
+															type="number"
+															min="0"
+															max="60"
+															value={fixedTimePrayers.shurukIqamaMinutes}
+															onChange={(e) => setFixedTimePrayers(prev => ({ ...prev, shurukIqamaMinutes: parseInt(e.target.value) || 0 }))}
+															className="w-20 p-1 border rounded text-sm text-black"
+															placeholder="мин"
+														/>
+														<span className="ml-1 text-xs text-gray-600">мин</span>
+													</div>
+												</div>
+											)}
+											{fixedPrayerTime?.zuhrIqamaEnabled && (
+												<div className="p-2 bg-white rounded shadow">
+													<div className="text-gray-500 text-sm mb-2">Зухр</div>
+													<div className="flex items-center">
+														<input
+															type="number"
+															min="0"
+															max="60"
+															value={fixedTimePrayers.zuhrIqamaMinutes}
+															onChange={(e) => setFixedTimePrayers(prev => ({ ...prev, zuhrIqamaMinutes: parseInt(e.target.value) || 0 }))}
+															className="w-20 p-1 border rounded text-sm text-black"
+															placeholder="мин"
+														/>
+														<span className="ml-1 text-xs text-gray-600">мин</span>
+													</div>
+												</div>
+											)}
+											{fixedPrayerTime?.asrIqamaEnabled && (
+												<div className="p-2 bg-white rounded shadow">
+													<div className="text-gray-500 text-sm mb-2">Аср</div>
+													<div className="flex items-center">
+														<input
+															type="number"
+															min="0"
+															max="60"
+															value={fixedTimePrayers.asrIqamaMinutes}
+															onChange={(e) => setFixedTimePrayers(prev => ({ ...prev, asrIqamaMinutes: parseInt(e.target.value) || 0 }))}
+															className="w-20 p-1 border rounded text-sm text-black"
+															placeholder="мин"
+														/>
+														<span className="ml-1 text-xs text-gray-600">мин</span>
+													</div>
+												</div>
+											)}
+											{fixedPrayerTime?.maghribIqamaEnabled && (
+												<div className="p-2 bg-white rounded shadow">
+													<div className="text-gray-500 text-sm mb-2">Магриб</div>
+													<div className="flex items-center">
+														<input
+															type="number"
+															min="0"
+															max="60"
+															value={fixedTimePrayers.maghribIqamaMinutes}
+															onChange={(e) => setFixedTimePrayers(prev => ({ ...prev, maghribIqamaMinutes: parseInt(e.target.value) || 0 }))}
+															className="w-20 p-1 border rounded text-sm text-black"
+															placeholder="мин"
+														/>
+														<span className="ml-1 text-xs text-gray-600">мин</span>
+													</div>
+												</div>
+											)}
+											{fixedPrayerTime?.ishaIqamaEnabled && (
+												<div className="p-2 bg-white rounded shadow">
+													<div className="text-gray-500 text-sm mb-2">Иша</div>
+													<div className="flex items-center">
+														<input
+															type="number"
+															min="0"
+															max="60"
+															value={fixedTimePrayers.ishaIqamaMinutes}
+															onChange={(e) => setFixedTimePrayers(prev => ({ ...prev, ishaIqamaMinutes: parseInt(e.target.value) || 0 }))}
+															className="w-20 p-1 border rounded text-sm text-black"
+															placeholder="мин"
+														/>
+														<span className="ml-1 text-xs text-gray-600">мин</span>
+													</div>
+												</div>
+											)}
+										</div>
+									)}
+								</>
 							)}
 						</div>
 					)}
@@ -830,7 +1403,6 @@ const PrayerPage = () => {
 							<table className="w-full border-collapse">
 								<thead className="sticky top-0 bg-gray-200">
 								<tr>
-									{/* <th className="p-2 text-bg text-center">Город</th> */}
 									<th className="p-2 text-black text-center">Дата</th>
 									<th className="p-2 text-black text-center">Фаджр</th>
 									<th className="p-2 text-black text-center">Мечеть</th>
@@ -848,7 +1420,6 @@ const PrayerPage = () => {
 								className={`border-b ${isToday(prayer.date) ? 'bg-blue-50' : ''}`}
 								data-today={isToday(prayer.date)}
 							>
-								{/* <td className="p-2 text-bg text-center">{prayer.city || '-'}</td> */}
 								<td className="p-2 text-black text-center">{prayer.date}</td>
 								<td className={`p-2 text-black text-center ${getShiftForPrayer(prayer.date, 'fajr') !== 0 ? 'bg-green-100' : ''}`}>{prayer.fajr}</td>
 								<td className={`p-2 text-black text-center ${getShiftForPrayer(prayer.date, 'mechet') !== 0 ? 'bg-green-100' : ''}`}>{prayer.mechet || '-'}</td>

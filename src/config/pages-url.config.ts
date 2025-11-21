@@ -11,6 +11,8 @@ class ADMIN {
 	MEDIA = `${this.root}/dashboard/media`
 	AUDIT_LOGS = `${this.root}/dashboard/audit-logs`
 	DICTIONARY = `${this.root}/dashboard/dictionary`
+	LANGUAGE_SETTINGS = `${this.root}/dashboard/language-settings`
+	NAMES_OF_ALLAH = `${this.root}/dashboard/names-of-allah`
 
 }
 

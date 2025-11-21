@@ -133,6 +133,8 @@ const CityPage = () => {
 	};
 
 	const handleEditCity = (city: City) => {
+		// MOSQUE_ADMIN не может редактировать города
+		if (userRole === 'MOSQUE_ADMIN') return;
 		if (userRole === 'CITY_ADMIN' && city.id !== userCityId) return;
 		setIsEditing(true);
 		setEditingCityId(city.id);
@@ -320,6 +322,7 @@ const CityPage = () => {
 														Редактировать
 													</button>
 												)}
+												{/* MOSQUE_ADMIN не может редактировать города */}
 											</div>
 										</div>
 									</div>

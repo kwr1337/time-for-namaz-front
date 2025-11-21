@@ -38,6 +38,16 @@ const MosquePage = () => {
 		});
 		setUserRole(response.data.role);
 		setUserCityId(response.data.cityId);
+		if (response.data.role === 'MOSQUE_ADMIN') {
+			// Для MOSQUE_ADMIN автоматически устанавливаем его мечеть
+			const allMosques = await axios.get<Mosque[]>(`${API_BASE_URL}/api/mosques`, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			const userMosque = allMosques.data.find(m => m.id === response.data.mosqueId);
+			if (userMosque) {
+				setMosques([userMosque]);
+			}
+		}
 	};
 
 	const fetchMosques = async () => {
@@ -50,6 +60,15 @@ const MosquePage = () => {
 
 		if (userRole === 'CITY_ADMIN' && userCityId !== null) {
 			setMosques(allMosques.filter((mosque) => mosque.cityId === userCityId));
+		} else if (userRole === 'MOSQUE_ADMIN') {
+			// Для MOSQUE_ADMIN показываем только его мечеть
+			const token = localStorage.getItem('token');
+			const userResponse = await axios.get(`${API_BASE_URL}/api/admin/me`, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (userResponse.data.mosqueId) {
+				setMosques(allMosques.filter((mosque) => mosque.id === userResponse.data.mosqueId));
+			}
 		} else {
 			setMosques(allMosques);
 		}
@@ -229,7 +248,7 @@ const MosquePage = () => {
 					onChange={(e) => setLogo(e.target.files ? e.target.files[0] : null)}
 					className="border p-2 mb-2 text-black w-full"
 				/>
-				{userRole !== 'CITY_ADMIN' && (
+				{userRole !== 'CITY_ADMIN' && userRole !== 'MOSQUE_ADMIN' && (
 					<select
 						value={cityId}
 						onChange={(e) => setCityId(e.target.value)}
@@ -240,6 +259,11 @@ const MosquePage = () => {
 							<option key={city.id} value={city.id}>{city.name}</option>
 						))}
 					</select>
+				)}
+				{userRole === 'MOSQUE_ADMIN' && mosques.length > 0 && (
+					<div className="mb-2 p-2 bg-blue-50 rounded border border-blue-200">
+						<p className="text-gray-700">Мечеть: {mosques[0].name}</p>
+					</div>
 				)}
 				<button onClick={isEditing ? handleUpdateMosque : handleCreateMosque} className="w-full px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out mt-2">
 					{isEditing ? 'Сохранить изменения' : 'Добавить'}

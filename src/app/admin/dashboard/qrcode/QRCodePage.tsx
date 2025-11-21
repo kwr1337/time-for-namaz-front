@@ -32,6 +32,7 @@ const QRCodePage = () => {
 	const [editingQRCodeId, setEditingQRCodeId] = useState<number | null>(null);
 	const [userRole, setUserRole] = useState('');
 	const [userCityId, setUserCityId] = useState<number | null>(null);
+	const [userMosqueId, setUserMosqueId] = useState<number | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
@@ -57,6 +58,13 @@ const QRCodePage = () => {
 			console.log('Данные пользователя:', response.data);
 			setUserRole(response.data.role);
 			setUserCityId(response.data.cityId);
+			if (response.data.role === 'MOSQUE_ADMIN') {
+				setUserMosqueId(response.data.mosqueId);
+				// Автоматически устанавливаем мечеть для MOSQUE_ADMIN
+				if (response.data.mosqueId) {
+					setMosqueId(response.data.mosqueId.toString());
+				}
+			}
 		} catch (err: any) {
 			console.error('Ошибка при получении роли пользователя:', err);
 			setError('Не удалось загрузить данные пользователя. Проверьте соединение и авторизацию.');
@@ -86,7 +94,15 @@ const QRCodePage = () => {
 			});
 			
 			console.log('Загружено мечетей:', response.data.length);
-			setMosques(response.data);
+			
+			// Фильтрация по роли
+			if (userRole === 'CITY_ADMIN' && userCityId) {
+				setMosques(response.data.filter(m => m.cityId === userCityId));
+			} else if (userRole === 'MOSQUE_ADMIN' && userMosqueId) {
+				setMosques(response.data.filter(m => m.id === userMosqueId));
+			} else {
+				setMosques(response.data);
+			}
 		} catch (err: any) {
 			console.error('Ошибка при получении списка мечетей:', err);
 			setError('Не удалось загрузить список мечетей. Попробуйте обновить страницу.');
@@ -375,18 +391,35 @@ const QRCodePage = () => {
 	useEffect(() => {
 		if (userRole) {
 			fetchQRCodes();
+			fetchMosques(); // Обновляем список мечетей после получения роли
 		}
-	}, [userRole]);
+	}, [userRole, userCityId, userMosqueId]);
 
-	// Фильтруем QR-коды для CITY_ADMIN
-	const filteredQRCodes = userRole === 'CITY_ADMIN' && userCityId
-		? qrcodes.filter(qrcode => mosques.some(mosque => mosque.id === qrcode.mosqueId && mosque.cityId === userCityId))
-		: qrcodes;
+	// Фильтруем QR-коды в зависимости от роли
+	const filteredQRCodes = (() => {
+		if (userRole === 'MOSQUE_ADMIN' && userMosqueId) {
+			// MOSQUE_ADMIN видит только QR-коды своей мечети
+			return qrcodes.filter(qrcode => qrcode.mosqueId === userMosqueId);
+		} else if (userRole === 'CITY_ADMIN' && userCityId) {
+			// CITY_ADMIN видит только QR-коды мечетей своего города
+			return qrcodes.filter(qrcode => mosques.some(mosque => mosque.id === qrcode.mosqueId && mosque.cityId === userCityId));
+		}
+		// SUPER_ADMIN видит все QR-коды
+		return qrcodes;
+	})();
 
-	// Фильтруем мечети для выбора
-	const filteredMosques = userRole === 'CITY_ADMIN' && userCityId
-		? mosques.filter(mosque => mosque.cityId === userCityId)
-		: mosques;
+	// Фильтруем мечети для выбора в зависимости от роли
+	const filteredMosques = (() => {
+		if (userRole === 'MOSQUE_ADMIN' && userMosqueId) {
+			// MOSQUE_ADMIN видит только свою мечеть
+			return mosques.filter(m => m.id === userMosqueId);
+		} else if (userRole === 'CITY_ADMIN' && userCityId) {
+			// CITY_ADMIN видит только мечети своего города
+			return mosques.filter(m => m.cityId === userCityId);
+		}
+		// SUPER_ADMIN видит все мечети
+		return mosques;
+	})();
 
 	// Группируем QR-коды по мечетям
 	const groupedQRCodes = filteredQRCodes.reduce((acc, qrcode) => {
@@ -467,35 +500,43 @@ const QRCodePage = () => {
 																	: 'Отображается слева на экране'}
 															</div>
 														</div>
-														{(userRole === 'SUPER_ADMIN' || (userRole === 'CITY_ADMIN' && mosque && mosque.cityId === userCityId)) && (
-															<div className="flex flex-col items-center mt-3 space-y-2">
-																<button 
-																	onClick={() => handleToggleQRCodeType(qrcode)}
-																	className={`w-full px-4 py-1 text-white text-sm rounded-md transition-colors ${qrcode.isPrimary ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'}`}
-																	disabled={isLoading}
-																>
-																	{isLoading ? 'Обработка...' : qrcode.isPrimary 
-																		? 'Сделать дополнительным QR' 
-																		: 'Сделать основным QR'}
-																</button>
-																<div className="flex w-full space-x-2">
+														{(() => {
+															// Определяем, может ли пользователь редактировать этот QR-код
+															const canEdit = 
+																userRole === 'SUPER_ADMIN' ||
+																(userRole === 'CITY_ADMIN' && mosque && mosque.cityId === userCityId) ||
+																(userRole === 'MOSQUE_ADMIN' && qrcode.mosqueId === userMosqueId);
+															
+															return canEdit && (
+																<div className="flex flex-col items-center mt-3 space-y-2">
 																	<button 
-																		onClick={() => handleEditQRCode(qrcode)}
-																		className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-1 rounded-md text-sm"
+																		onClick={() => handleToggleQRCodeType(qrcode)}
+																		className={`w-full px-4 py-1 text-white text-sm rounded-md transition-colors ${qrcode.isPrimary ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'}`}
 																		disabled={isLoading}
 																	>
-																		Редактировать
+																		{isLoading ? 'Обработка...' : qrcode.isPrimary 
+																			? 'Сделать дополнительным QR' 
+																			: 'Сделать основным QR'}
 																	</button>
-																	<button 
-																		onClick={() => handleDeleteQRCode(qrcode.id)} 
-																		className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-md text-sm"
-																		disabled={isLoading}
-																	>
-																		Удалить
-																	</button>
+																	<div className="flex w-full space-x-2">
+																		<button 
+																			onClick={() => handleEditQRCode(qrcode)}
+																			className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-1 rounded-md text-sm"
+																			disabled={isLoading}
+																		>
+																			Редактировать
+																		</button>
+																		<button 
+																			onClick={() => handleDeleteQRCode(qrcode.id)} 
+																			className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-md text-sm"
+																			disabled={isLoading}
+																		>
+																			Удалить
+																		</button>
+																	</div>
 																</div>
-															</div>
-														)}
+															);
+														})()}
 													</div>
 												);
 											})}
@@ -517,20 +558,27 @@ const QRCodePage = () => {
 						{isEditing ? 'Редактировать QR-код' : 'Добавить QR-код'}
 					</h2>
 					
-					<div className="mb-4">
-						<label className="block text-gray-700 font-medium mb-2">Выберите мечеть:</label>
-						<select
-							value={mosqueId}
-							onChange={(e) => setMosqueId(e.target.value)}
-							className="border p-2 mb-2 w-full text-black"
-							required
-						>
-							<option value="">Выберите мечеть</option>
-							{filteredMosques.map((mosque) => (
-								<option key={mosque.id} value={mosque.id}>{mosque.name}</option>
-							))}
-						</select>
-					</div>
+					{userRole === 'MOSQUE_ADMIN' && mosques.length > 0 ? (
+						<div className="mb-4 p-3 bg-blue-50 rounded border border-blue-200">
+							<label className="block text-gray-700 font-medium mb-2">Мечеть:</label>
+							<p className="text-gray-700">{mosques[0].name}</p>
+						</div>
+					) : (
+						<div className="mb-4">
+							<label className="block text-gray-700 font-medium mb-2">Выберите мечеть:</label>
+							<select
+								value={mosqueId}
+								onChange={(e) => setMosqueId(e.target.value)}
+								className="border p-2 mb-2 w-full text-black"
+								required
+							>
+								<option value="">Выберите мечеть</option>
+								{filteredMosques.map((mosque) => (
+									<option key={mosque.id} value={mosque.id}>{mosque.name}</option>
+								))}
+							</select>
+						</div>
+					)}
 					
 					<div className="mb-4">
 						<label className="block text-gray-700 font-medium mb-2">Загрузите изображение QR-кода:</label>

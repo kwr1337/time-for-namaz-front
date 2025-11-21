@@ -26,6 +26,8 @@ import { toast } from 'react-hot-toast';
 import LogoLoader from '../components/ui/LogoLoader';
 import { dictionaryService } from '@/services/dictionary.service'
 import { Noto_Sans } from 'next/font/google'
+import type { MosqueLanguageSettings } from '@/types/translation.types'
+import type { NameOfAllah } from '@/types/names-of-allah.types'
 
 const notoSans = Noto_Sans({
     subsets: ['latin', 'cyrillic'],
@@ -54,6 +56,8 @@ type PrayerTimeProps = {
     t: (key: string, fallback: string) => string;
     currentLang: 'ru' | 'tt';
     isGrace?: boolean; // 5-минутное окно после начала намаза
+    iqama?: IqamaInfo | null; // Информация об икамате
+    isIqamaActive?: boolean; // Активен ли икамат сейчас
 };
 
 interface PrayerTimes {
@@ -64,6 +68,11 @@ interface PrayerTimes {
     maghrib: string;
     isha: string;
     mechet?: string; // Добавлено поле mechet для времени мечети
+}
+
+interface IqamaInfo {
+    enabled: boolean;
+    minutes: number;
 }
 
 interface PrayerResponse {
@@ -77,6 +86,15 @@ interface PrayerResponse {
     maghrib: string;
     isha: string;
     mechet?: string; // Добавлено поле mechet для времени мечети
+    mosqueName?: string;
+    cityName?: string;
+    fajrIqama: IqamaInfo | null;
+    shurukIqama: IqamaInfo | null;
+    zuhrIqama: IqamaInfo | null;
+    asrIqama: IqamaInfo | null;
+    maghribIqama: IqamaInfo | null;
+    ishaIqama: IqamaInfo | null;
+    mechetIqama: IqamaInfo | null;
 }
 
 interface Mosque {
@@ -100,10 +118,10 @@ interface WeatherData {
     updatedAt?: string; // Время последнего обновления
 }
 
-// Добавляем интерфейс для фиксированного времени намаза
+// Добавляем интерфейс для фиксированного времени намаза мечети
 interface FixedPrayerTime {
     id: number;
-    cityId: number;
+    mosqueId: number;
     fajr: string;
     shuruk: string;
     zuhr: string;
@@ -120,10 +138,18 @@ interface FixedPrayerTime {
     mechetActive: boolean;
     createdAt: string;
     updatedAt: string;
-    cityName: string;
+    mosqueName?: string;
+    cityName?: string;
 }
 
-const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pic2, remainingTime, progress, className = '', fixedTime, isFixedTimeActive = false, t, currentLang, isGrace = false }) => {
+const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pic2, remainingTime, progress, className = '', fixedTime, isFixedTimeActive = false, t, currentLang, isGrace = false, iqama = null, isIqamaActive = false }) => {
+    // Определяем цвет карточки: желтый для икамата, желтый для грейс-периода, зеленый для обычного активного
+    const getCardColor = () => {
+        if (isIqamaActive) return 'bg-[#F7C948]'; // Желтый для икамата
+        if (isGrace) return 'bg-[#F7C948]'; // Желтый для грейс-периода
+        return 'bg-[#5ec262]'; // Зеленый для обычного активного
+    };
+
     return (
         <div
             className={`relative 
@@ -136,7 +162,7 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
                 rounded-[20px] p-[20px] flex flex-col justify-start items-start transition-all duration-300 ease-in-out sm-max:mx-auto
                 md-max:p-[15px] sm-max:p-[12px]
                     ${highlight
-                    ? `${(isFixedTimeActive ? '' : '')} ${/* цвет по умолчанию для highlight */''} ${className} ${(isFixedTimeActive ? '' : '')} ${(isGrace ? 'bg-[#F7C948]' : 'bg-[#5ec262]')} transform text-white !h-[429px] !w-[353px]  pc:!w-[353px] pc:!h-[429px] pc1:!w-[283px]  pc1:!h-[352px] tv:!h-[342px] tv:!w-[243px]  tv1:!h-[302px] tv1:!w-[203px] md-max:!h-[320px] md-max:!w-[240px] sm-max:!h-[270px] sm-max:!w-[200px] pc: pt-[20px] pr-[20px] pl-[20px] pb-[20px] flex justify-between`
+                    ? `${(isFixedTimeActive ? '' : '')} ${/* цвет по умолчанию для highlight */''} ${className} ${(isFixedTimeActive ? '' : '')} ${getCardColor()} transform text-white !h-[429px] !w-[353px]  pc:!w-[353px] pc:!h-[429px] pc1:!w-[283px]  pc1:!h-[352px] tv:!h-[342px] tv:!w-[243px]  tv1:!h-[302px] tv1:!w-[203px] md-max:!h-[320px] md-max:!w-[240px] sm-max:!h-[270px] sm-max:!w-[200px] pc: pt-[20px] pr-[20px] pl-[20px] pb-[20px] flex justify-between`
                     : `bg-white justify-between ${className}`}
             `}
         >
@@ -165,10 +191,17 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
                 {highlight && (
                     <div className="absolute pc:max-w-[175px] pc1:max-w-[155px] tv:max-w-[125px] tv1:max-w-[105px] md-max:max-w-[110px] sm-max:max-w-[90px] h-[112px] right-[4px] top-[4px] flex flex-col items-end">
                         <div className="w-[100%] text-right bg-white rounded-bl-[40px] rounded-[8px] rounded-tr-[19px] py-[4px] px-[8px] flex flex-col">
-                            <div className={`text-[#17181d] font-normal break-words overflow-wrap-anywhere ${currentLang === 'tt' ? 'pc:text-[18px] tv:text-[14px] tv1:text-[10px] md-max:text-[12px] sm-max:text-[10px]' : 'pc:text-[22px] tv:text-[16px] tv1:text-[12px] md-max:text-[14px] sm-max:text-[12px]'}`}>{isGrace ? t('time.now', 'Сейчас') : t('time.until', 'Через')}</div>
-                            {!isGrace && (
+                            <div className={`text-[#17181d] font-normal break-words overflow-wrap-anywhere ${currentLang === 'tt' ? 'pc:text-[18px] tv:text-[14px] tv1:text-[10px] md-max:text-[12px] sm-max:text-[10px]' : 'pc:text-[22px] tv:text-[16px] tv1:text-[12px] md-max:text-[14px] sm-max:text-[12px]'}`}>
+                                {(isIqamaActive || isGrace) ? t('time.now', 'Сейчас') : t('time.until', 'Через')}
+                            </div>
+                            {!(isIqamaActive || isGrace) && (
                                 <div className={`text-[#17181d] font-bold break-all overflow-wrap-anywhere ${currentLang === 'tt' ? 'text-[24px] pc:text-[24px] pc1:text-[20px] tv:text-[16px] tv1:text-[14px] md-max:text-[18px] sm-max:text-[14px]' : 'text-[30px] pc:text-[30px] pc1:text-[25px] tv:text-[20px] tv1:text-[18px] md-max:text-[22px] sm-max:text-[18px]'}`}>
                                     {formatTime(remainingTime, t)}
+                                </div>
+                            )}
+                            {isIqamaActive && iqama && (
+                                <div className={`text-[#17181d] font-normal break-words overflow-wrap-anywhere ${currentLang === 'tt' ? 'pc:text-[14px] tv:text-[12px] tv1:text-[9px] md-max:text-[10px] sm-max:text-[8px]' : 'pc:text-[16px] tv:text-[14px] tv1:text-[10px] md-max:text-[12px] sm-max:text-[10px]'}`}>
+                                    {t('time.iqama', 'Икамат')}
                                 </div>
                             )}
                         </div>
@@ -375,10 +408,13 @@ const DigitalClock: React.FC = () => {
 
 export function Test() {
     const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
+    const [regularPrayerTimes, setRegularPrayerTimes] = useState<PrayerTimes | null>(null); // Обычное время без учета фиксированного
     const [fixedPrayerTimes, setFixedPrayerTimes] = useState<FixedPrayerTime | null>(null);
+    const [iqamaData, setIqamaData] = useState<Record<string, IqamaInfo | null>>({}); // Данные об икамате для каждого намаза
     const [nearestPrayer, setNearestPrayer] = useState<string>('');
-    const [activePrayer, setActivePrayer] = useState<string>(''); // с учетом грейс-периода
+    const [activePrayer, setActivePrayer] = useState<string>(''); // с учетом грейс-периода и икамата
     const [isGracePeriod, setIsGracePeriod] = useState<boolean>(false);
+    const [isIqamaPeriod, setIsIqamaPeriod] = useState<boolean>(false); // Период икамата (желтый цвет)
     const [remainingTime, setRemainingTime] = useState<number>(0);
     const [totalDuration, setTotalDuration] = useState<number>(0);
     const [cities, setCities] = useState<City[]>([]);
@@ -417,62 +453,226 @@ export function Test() {
     const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
     const [isLoadingWeather, setIsLoadingWeather] = useState<boolean>(false);
     const [currentNameIndex, setCurrentNameIndex] = useState<number>(0);
-    const [currentName, setCurrentName] = useState(namesOfAllah[0]);
+    const [namesOfAllahFromApi, setNamesOfAllahFromApi] = useState<NameOfAllah[]>([]);
+    const [currentName, setCurrentName] = useState<NameOfAllah | null>(null);
     const [allahLang, setAllahLang] = useState<'ru' | 'tt'>('ru')
+    
+    // Функция для преобразования локального формата в формат API
+    const convertLocalToApiFormat = (localName: any, mosqueId: number = 0, index: number = 0): NameOfAllah => {
+        return {
+            id: index,
+            mosqueId: mosqueId,
+            arabic: localName.arabic,
+            transcription: localName.transcription,
+            meaning: localName.meaning,
+            transcriptionTatar: localName.transcriptionTatar,
+            meaningTatar: localName.meaningTatar,
+            createdAt: '',
+            updatedAt: ''
+        };
+    };
     const cityDropdownRef = useRef<HTMLDivElement>(null);
     const mosqueDropdownRef = useRef<HTMLDivElement>(null);
     const [loading, setLoading] = useState(true);
     const [prayerLang, setPrayerLang] = useState<'ru' | 'tt'>('ru');
     const [dictionaryMap, setDictionaryMap] = useState<Record<string, { ru: string; tt: string }>>({})
+    const [languageSettings, setLanguageSettings] = useState<{
+        translationsEnabled: boolean;
+        languageToggleEnabled: boolean;
+        languageToggleIntervalSeconds: number;
+    } | null>(null);
+
+    // Загрузка имен Аллаха из API для текущей мечети
+    useEffect(() => {
+        let isMounted = true;
+        (async () => {
+            if (!currentMosqueId) {
+                // Если мечеть не выбрана, используем локальные данные как fallback
+                if (isMounted && namesOfAllah.length > 0) {
+                    setNamesOfAllahFromApi([]);
+                    setCurrentName(convertLocalToApiFormat(namesOfAllah[0], 0, 0));
+                }
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/names-of-allah/mosque/${currentMosqueId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                if (isMounted) {
+                    if (Array.isArray(data) && data.length > 0) {
+                        // Используем данные из API
+                        setNamesOfAllahFromApi(data);
+                        setCurrentName(data[0]);
+                        setCurrentNameIndex(0);
+                    } else {
+                        // Если API вернул пустой массив, используем локальные данные как fallback
+                        setNamesOfAllahFromApi([]);
+                        if (namesOfAllah.length > 0) {
+                            setCurrentName(convertLocalToApiFormat(namesOfAllah[0], currentMosqueId, 0));
+                            setCurrentNameIndex(0);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка при загрузке имен Аллаха:', error);
+                // При ошибке используем локальные данные как fallback
+                if (isMounted && namesOfAllah.length > 0) {
+                    setNamesOfAllahFromApi([]);
+                    setCurrentName(convertLocalToApiFormat(namesOfAllah[0], currentMosqueId || 0, 0));
+                    setCurrentNameIndex(0);
+                }
+            }
+        })();
+        return () => { isMounted = false; };
+    }, [currentMosqueId]);
 
     // Интервал для обновления имени Аллаха каждые 30 секунд
     useEffect(() => {
+        // Используем данные из API, если они есть, иначе локальные данные
+        const namesToUse = namesOfAllahFromApi.length > 0 
+            ? namesOfAllahFromApi 
+            : namesOfAllah.map((localName, index) => convertLocalToApiFormat(localName, currentMosqueId || 0, index));
+        
+        if (namesToUse.length === 0 || !currentName) return;
+
         const nameInterval = setInterval(() => {
-            const nextIndex = (currentNameIndex + 1) % namesOfAllah.length;
+            const nextIndex = (currentNameIndex + 1) % namesToUse.length;
             setCurrentNameIndex(nextIndex);
-            setCurrentName(namesOfAllah[nextIndex]);
+            setCurrentName(namesToUse[nextIndex]);
         }, 30000); // 30 секунд
 
         return () => clearInterval(nameInterval);
-    }, [currentNameIndex]);
+    }, [currentNameIndex, namesOfAllahFromApi, currentMosqueId, currentName]);
 
-    // Переключение языка блока Имен Аллаха каждые 30 секунд
+    // Переключение языка блока Имен Аллаха с учетом настроек мечети
     useEffect(() => {
+        // Переключение работает только если переводы включены И переключение языков включено
+        if (!languageSettings?.translationsEnabled || !languageSettings?.languageToggleEnabled) {
+            // Если переводы или переключение выключены, не создаем интервал
+            return
+        }
+        
+        const intervalSeconds = languageSettings.languageToggleIntervalSeconds || 30
         const interval = setInterval(() => {
             setAllahLang(prev => (prev === 'ru' ? 'tt' : 'ru'))
-        }, 30000)
+        }, intervalSeconds * 1000)
+        
         return () => clearInterval(interval)
-    }, [])
+    }, [languageSettings?.translationsEnabled, languageSettings?.languageToggleEnabled, languageSettings?.languageToggleIntervalSeconds])
 
-    // Переключение языка подписей намазов каждые 30 секунд
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setPrayerLang(prev => (prev === 'ru' ? 'tt' : 'ru'))
-        }, 30000)
-        return () => clearInterval(interval)
-    }, [])
-
-    // Загрузка словаря и сборка карты ключ -> {ru, tt}
+    // Загрузка настроек языков мечети
     useEffect(() => {
         let isMounted = true
         ;(async () => {
-            try {
-                const entries = await dictionaryService.getAll()
-                const map: Record<string, { ru: string; tt: string }> = {}
-                for (const e of entries) {
-                    if (!map[e.key]) map[e.key] = { ru: '', tt: '' }
-                    if (e.locale === 'ru') map[e.key].ru = e.value
-                    if (e.locale === 'tt') map[e.key].tt = e.value
+            if (!currentMosqueId) {
+                if (isMounted) {
+                    setLanguageSettings(null)
+                    // Сбрасываем язык на русский, если мечеть не выбрана
+                    setPrayerLang('ru')
+                    setAllahLang('ru')
                 }
+                return
+            }
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/mosque-language-settings/mosque/${currentMosqueId}`)
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`)
+                }
+                const data = await response.json()
+                if (isMounted) {
+                    const newSettings = {
+                        translationsEnabled: data.translationsEnabled ?? true,
+                        languageToggleEnabled: data.languageToggleEnabled ?? false,
+                        languageToggleIntervalSeconds: data.languageToggleIntervalSeconds ?? 30
+                    }
+                    setLanguageSettings(newSettings)
+                    
+                    // Если переводы выключены, сбрасываем язык на русский
+                    if (!newSettings.translationsEnabled) {
+                        setPrayerLang('ru')
+                        setAllahLang('ru')
+                    }
+                }
+            } catch (e) {
+                console.error('Ошибка при загрузке настроек языков:', e)
+                // Устанавливаем значения по умолчанию
+                if (isMounted) {
+                    setLanguageSettings({
+                        translationsEnabled: true,
+                        languageToggleEnabled: false,
+                        languageToggleIntervalSeconds: 30
+                    })
+                }
+            }
+        })()
+        return () => { isMounted = false }
+    }, [currentMosqueId])
+
+    // Переключение языка подписей намазов с учетом настроек мечети
+    useEffect(() => {
+        // Переключение работает только если переводы включены И переключение языков включено
+        if (!languageSettings?.translationsEnabled || !languageSettings?.languageToggleEnabled) {
+            // Если переводы или переключение выключены, не создаем интервал
+            return
+        }
+        
+        const intervalSeconds = languageSettings.languageToggleIntervalSeconds || 30
+        const interval = setInterval(() => {
+            setPrayerLang(prev => (prev === 'ru' ? 'tt' : 'ru'))
+        }, intervalSeconds * 1000)
+        
+        return () => clearInterval(interval)
+    }, [languageSettings?.translationsEnabled, languageSettings?.languageToggleEnabled, languageSettings?.languageToggleIntervalSeconds])
+
+    // Загрузка словаря и сборка карты ключ -> {ru, tt} для конкретной мечети
+    useEffect(() => {
+        let isMounted = true
+        ;(async () => {
+            if (!currentMosqueId) {
+                if (isMounted) setDictionaryMap({})
+                return
+            }
+            try {
+                // Загружаем переводы для конкретной мечети
+                const response = await fetch(`${API_BASE_URL}/api/translations/entries/mosque/${currentMosqueId}`)
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`)
+                }
+                const data = await response.json()
+                
+                // Проверяем, включены ли переводы для этой мечети
+                if (!data.translationsEnabled) {
+                    if (isMounted) setDictionaryMap({})
+                    return
+                }
+                
+                // Преобразуем формат API в формат словаря
+                const map: Record<string, { ru: string; tt: string }> = {}
+                if (Array.isArray(data.entries)) {
+                    for (const entry of data.entries) {
+                        map[entry.key] = { ru: entry.ru || '', tt: entry.tt || '' }
+                    }
+                }
+                
                 if (isMounted) setDictionaryMap(map)
             } catch (e) {
+                console.error('Ошибка при загрузке переводов:', e)
                 if (isMounted) setDictionaryMap({})
             }
         })()
         return () => { isMounted = false }
-    }, [])
+    }, [currentMosqueId])
 
     const t = (key: string, fallback: string) => {
+        // Если переводы выключены для мечети, возвращаем fallback
+        if (languageSettings && !languageSettings.translationsEnabled) {
+            return fallback
+        }
+        
         const item = dictionaryMap[key]
         if (!item) return fallback
         return (prayerLang === 'ru' ? item.ru : item.tt) || fallback
@@ -488,54 +688,110 @@ export function Test() {
         mechet: t('prayer.mechet', 'Мечеть'),
     }
 
+    // Функция для проверки, идет ли сейчас икамат
+    const isIqamaCurrentlyActive = (prayerTime: string, iqamaMinutes: number): boolean => {
+        if (!prayerTime || prayerTime === '00:00' || !prayerTime.includes(':')) return false;
+        
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        
+        const [prayerHours, prayerMins] = prayerTime.split(':').map(Number);
+        if (isNaN(prayerHours) || isNaN(prayerMins)) return false;
+        
+        const prayerTotalMinutes = prayerHours * 60 + prayerMins;
+        const iqamaEndMinutes = prayerTotalMinutes + iqamaMinutes;
+        
+        // Проверяем, находится ли текущее время между началом намаза и концом икамата
+        return currentMinutes >= prayerTotalMinutes && currentMinutes <= iqamaEndMinutes;
+    };
+
+    // Функция для получения времени намаза (с учетом фиксированного времени)
+    const getPrayerTime = (prayerName: string): string => {
+        const regularTime = regularPrayerTimes?.[prayerName as keyof PrayerTimes];
+        const currentTime = prayerTimes?.[prayerName as keyof PrayerTimes];
+        return regularTime || currentTime || '00:00';
+    };
+
+    // Функция для получения времени намаза для расчета икамата (приоритет фиксированного времени)
+    const getPrayerTimeForIqama = (prayerName: string): string => {
+        // Если фиксированное время активно, используем его
+        const fixedTimeActive = fixedPrayerTimes?.[`${prayerName}Active` as keyof typeof fixedPrayerTimes] as boolean;
+        if (fixedTimeActive && fixedPrayerTimes?.[prayerName as keyof typeof fixedPrayerTimes]) {
+            return fixedPrayerTimes[prayerName as keyof typeof fixedPrayerTimes] as string;
+        }
+        // Иначе используем обычное время
+        return getPrayerTime(prayerName);
+    };
+
+    // Функция для проверки активности икамата для конкретного намаза
+    const getIqamaActiveForPrayer = (prayerName: string): boolean => {
+        if (!prayerTimes || activePrayer !== prayerName) return false;
+        const iqama = iqamaData[prayerName];
+        if (!iqama || !iqama.enabled || iqama.minutes <= 0) return false;
+        // Используем время с учетом фиксированного времени для расчета икамата
+        const prayerTime = getPrayerTimeForIqama(prayerName);
+        if (!prayerTime || prayerTime === '00:00' || !prayerTime.includes(':')) return false;
+        return isIqamaCurrentlyActive(prayerTime, iqama.minutes);
+    };
+
     const prayers = [
         {
-            time: prayerTimes?.fajr || '00:00',
+            time: getPrayerTime('fajr'),
             label: prayerLabels.fajr,
             highlight: activePrayer === 'fajr',
             pic: fadjr,
             pic2: fadjr2,
             fixedTime: fixedPrayerTimes?.fajrActive ? fixedPrayerTimes?.fajr : null,
-            isFixedTimeActive: fixedPrayerTimes?.fajrActive || false
+            isFixedTimeActive: fixedPrayerTimes?.fajrActive || false,
+            iqama: iqamaData.fajr || null,
+            isIqamaActive: getIqamaActiveForPrayer('fajr')
         },
         {
-            time: prayerTimes?.mechet || '00:00',
+            time: getPrayerTime('mechet'),
             label: prayerLabels.mechet,
             highlight: activePrayer === 'mechet',
             pic: mosque,
             pic2: mosque,
             fixedTime: fixedPrayerTimes?.mechetActive ? fixedPrayerTimes?.mechet : null,
-            isFixedTimeActive: fixedPrayerTimes?.mechetActive || false
+            isFixedTimeActive: fixedPrayerTimes?.mechetActive || false,
+            iqama: iqamaData.mechet || null,
+            isIqamaActive: getIqamaActiveForPrayer('mechet')
         },
         {
-            time: prayerTimes?.shuruk || '00:00',
+            time: getPrayerTime('shuruk'),
             label: prayerLabels.shuruk,
             highlight: activePrayer === 'shuruk',
             pic: shuruk,
             pic2: shuruk2,
             fixedTime: fixedPrayerTimes?.shurukActive ? fixedPrayerTimes?.shuruk : null,
-            isFixedTimeActive: fixedPrayerTimes?.shurukActive || false
+            isFixedTimeActive: fixedPrayerTimes?.shurukActive || false,
+            iqama: iqamaData.shuruk || null,
+            isIqamaActive: getIqamaActiveForPrayer('shuruk')
         },
         {
-            time: prayerTimes?.zuhr || '00:00',
+            time: getPrayerTime('zuhr'),
             label: prayerLabels.zuhr,
             highlight: activePrayer === 'zuhr',
             pic: zuhr,
             pic2: zuhr2,
             fixedTime: fixedPrayerTimes?.zuhrActive ? fixedPrayerTimes?.zuhr : null,
-            isFixedTimeActive: fixedPrayerTimes?.zuhrActive || false
+            isFixedTimeActive: fixedPrayerTimes?.zuhrActive || false,
+            iqama: iqamaData.zuhr || null,
+            isIqamaActive: getIqamaActiveForPrayer('zuhr')
         },
         {
-            time: prayerTimes?.asr || '00:00',
+            time: getPrayerTime('asr'),
             label: prayerLabels.asr,
             highlight: activePrayer === 'asr',
             pic: asr,
             pic2: asr2,
             fixedTime: fixedPrayerTimes?.asrActive ? fixedPrayerTimes?.asr : null,
-            isFixedTimeActive: fixedPrayerTimes?.asrActive || false
+            isFixedTimeActive: fixedPrayerTimes?.asrActive || false,
+            iqama: iqamaData.asr || null,
+            isIqamaActive: getIqamaActiveForPrayer('asr')
         },
         {
-            time: prayerTimes?.maghrib || '00:00',
+            time: getPrayerTime('maghrib'),
             label: prayerLabels.maghrib,
             highlight: activePrayer === 'maghrib',
             pic: magrib,
@@ -544,7 +800,7 @@ export function Test() {
             isFixedTimeActive: fixedPrayerTimes?.maghribActive || false
         },
         {
-            time: prayerTimes?.isha || '00:00',
+            time: regularPrayerTimes?.isha || prayerTimes?.isha || '00:00',
             label: prayerLabels.isha,
             highlight: activePrayer === 'isha',
             pic: isha,
@@ -667,7 +923,12 @@ export function Test() {
                         localStorage.setItem('currentCityId', selectedCityData.id.toString());
 
                         // Получаем фиксированное время намаза при изменении города
-                        fetchFixedPrayerTime(selectedCityData.id);
+                        // Обновляем фиксированное время при изменении мечети
+                        if (currentMosqueId) {
+                            fetchFixedPrayerTime(currentMosqueId);
+                        } else {
+                            setFixedPrayerTimes(null);
+                        }
                     }
                 }
             } catch (error) {
@@ -730,13 +991,22 @@ export function Test() {
         fetchMosques();
     }, [currentCityId]);
 
-    // Функция для загрузки времени намазов
+    // Функция для загрузки времени намазов (с учетом приоритета)
     const fetchPrayerTimes = useCallback(async () => {
         try {
-            const response = await axios.get<PrayerResponse>(
-                `${API_BASE_URL}/api/prayers/today?cityName=${selectedCity}`
-            );
-            const { fajr, shuruk, zuhr, asr, maghrib, isha, mechet } = response.data;
+            // Используем mosqueId если он есть, иначе используем cityName как fallback
+            let url = '';
+            if (currentMosqueId) {
+                url = `${API_BASE_URL}/api/prayers/today?mosqueId=${currentMosqueId}`;
+            } else if (selectedCity) {
+                url = `${API_BASE_URL}/api/prayers/today?cityName=${selectedCity}`;
+            } else {
+                console.warn('Нет выбранного города или мечети');
+                return;
+            }
+
+            const response = await axios.get<PrayerResponse>(url);
+            const { fajr, shuruk, zuhr, asr, maghrib, isha, mechet, fajrIqama, shurukIqama, zuhrIqama, asrIqama, maghribIqama, ishaIqama, mechetIqama } = response.data;
 
             setPrayerTimes({
                 fajr,
@@ -747,17 +1017,86 @@ export function Test() {
                 isha,
                 mechet,
             });
+
+            // Сохраняем данные об икамате
+            setIqamaData({
+                fajr: fajrIqama || null,
+                shuruk: shurukIqama || null,
+                zuhr: zuhrIqama || null,
+                asr: asrIqama || null,
+                maghrib: maghribIqama || null,
+                isha: ishaIqama || null,
+                mechet: mechetIqama || null,
+            });
+
             console.log('Время намазов обновлено:', new Date().toLocaleString());
+            console.log('Данные об икамате:', { fajrIqama, shurukIqama, zuhrIqama, asrIqama, maghribIqama, ishaIqama, mechetIqama });
         } catch (error) {
             console.error('Ошибка при загрузке данных:', error);
             // toast.error('Ошибка при загрузке времени намазов');
         }
-    }, [selectedCity]);
+    }, [currentMosqueId, selectedCity]);
+
+    // Функция для загрузки обычного времени намазов (без учета фиксированного)
+    const fetchRegularPrayerTimes = useCallback(async () => {
+        try {
+            if (!currentMosqueId) {
+                setRegularPrayerTimes(null);
+                return;
+            }
+
+            // Получаем сегодняшнюю дату в локальном часовом поясе (формат YYYY-MM-DD)
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const today = `${year}-${month}-${day}`;
+            
+            console.log('Ищем обычное время на дату:', today);
+            
+            const response = await axios.get<PrayerResponse[]>(`${API_BASE_URL}/api/prayers/all?mosqueId=${currentMosqueId}`);
+            
+            // Находим запись на сегодня
+            const todayPrayer = response.data.find(p => {
+                // Сравниваем даты, учитывая возможные форматы
+                const prayerDate = p.date ? p.date.split('T')[0] : p.date;
+                return prayerDate === today;
+            });
+            
+            console.log('Найдена запись на сегодня:', todayPrayer);
+            console.log('Все даты из ответа:', response.data.map(p => p.date));
+            
+            if (todayPrayer) {
+                setRegularPrayerTimes({
+                    fajr: todayPrayer.fajr || '00:00',
+                    shuruk: todayPrayer.shuruk || '00:00',
+                    zuhr: todayPrayer.zuhr || '00:00',
+                    asr: todayPrayer.asr || '00:00',
+                    maghrib: todayPrayer.maghrib || '00:00',
+                    isha: todayPrayer.isha || '00:00',
+                    mechet: todayPrayer.mechet || '00:00',
+                });
+            } else {
+                console.warn('Запись на сегодня не найдена');
+                setRegularPrayerTimes(null);
+            }
+        } catch (error) {
+            console.error('Ошибка при загрузке обычного времени:', error);
+            setRegularPrayerTimes(null);
+        }
+    }, [currentMosqueId]);
 
     // Загрузка времени намазов при изменении города или мечети
     useEffect(() => {
         fetchPrayerTimes();
-    }, [fetchPrayerTimes, selectedMosque]);
+        fetchRegularPrayerTimes(); // Загружаем обычное время
+        // Обновляем фиксированное время при изменении мечети
+        if (currentMosqueId) {
+            fetchFixedPrayerTime(currentMosqueId);
+        } else {
+            setFixedPrayerTimes(null);
+        }
+    }, [fetchPrayerTimes, fetchRegularPrayerTimes, selectedMosque, currentMosqueId]);
 
     // Автоматическое обновление времени намазов в полночь
     useEffect(() => {
@@ -827,17 +1166,24 @@ export function Test() {
         setRemainingTime(nextRemainingTime);
         setTotalDuration(nextTotalDuration);
 
-        // вычисляем активный намаз с учетом грейс-периода 5 минут
+        // вычисляем активный намаз с учетом грейс-периода 5 минут и икамата
         const computeActiveWithGrace = () => {
             if (!nextPrayer) {
                 setActivePrayer('');
                 setIsGracePeriod(false);
+                setIsIqamaPeriod(false);
                 return;
             }
 
-            // Найдем предыдущий намаз и его время
+            // Найдем предыдущий намаз и его время (с учетом фиксированного времени для икамата)
             const getTime = (name: string | undefined): string | null => {
                 if (!name) return null;
+                // Если фиксированное время активно, используем его для расчета икамата
+                const fixedTimeActive = fixedPrayerTimes?.[`${name}Active` as keyof typeof fixedPrayerTimes] as boolean;
+                if (fixedTimeActive && fixedPrayerTimes?.[name as keyof typeof fixedPrayerTimes]) {
+                    return fixedPrayerTimes[name as keyof typeof fixedPrayerTimes] as string;
+                }
+                // Иначе используем обычное время
                 const dict: Record<string, string | undefined> = {
                     fajr: prayerTimes.fajr,
                     shuruk: prayerTimes.shuruk,
@@ -865,7 +1211,27 @@ export function Test() {
             const now = new Date();
             const nowMin = now.getHours() * 60 + now.getMinutes();
 
-            // активен тот, у кого время <= сейчас < время + 5 минут
+            // Сначала проверяем икамат (приоритет выше грейс-периода)
+            let activeIqama = null;
+            for (const p of sorted) {
+                const prayerTime = p.time as string;
+                const iqama = iqamaData[p.name];
+                if (iqama && iqama.enabled && iqama.minutes > 0) {
+                    if (isIqamaCurrentlyActive(prayerTime, iqama.minutes)) {
+                        activeIqama = p;
+                        break;
+                    }
+                }
+            }
+
+            if (activeIqama) {
+                setActivePrayer(activeIqama.name);
+                setIsGracePeriod(false);
+                setIsIqamaPeriod(true);
+                return;
+            }
+
+            // Затем проверяем грейс-период 5 минут
             const graceMinutes = 5;
             const active = sorted.find(p => {
                 const t = getTimeInMinutes(p.time as string);
@@ -875,24 +1241,34 @@ export function Test() {
             if (active) {
                 setActivePrayer(active.name);
                 setIsGracePeriod(true);
+                setIsIqamaPeriod(false);
             } else {
                 setActivePrayer(nextPrayer);
                 setIsGracePeriod(false);
+                setIsIqamaPeriod(false);
             }
         };
 
         computeActiveWithGrace();
 
-        let animationFrameId: number;
+        // Используем setInterval для более надежной работы на Android TV
+        // requestAnimationFrame может не вызываться стабильно на TV устройствах
+        let intervalId: NodeJS.Timeout;
         let lastUpdateTime = Date.now();
+        let lastCheckTime = Date.now();
 
         const updateTimer = () => {
             const currentTime = Date.now();
             const deltaTime = currentTime - lastUpdateTime;
             lastUpdateTime = currentTime;
 
+            // Принудительно пересчитываем каждую секунду для надежности
+            const timeSinceLastCheck = currentTime - lastCheckTime;
+            const shouldForceRecalculate = timeSinceLastCheck >= 1000;
+
             setRemainingTime((prevTime) => {
-                if (prevTime <= 1000) {
+                // Пересчитываем если время истекло или прошла секунда
+                if (prevTime <= 1000 || shouldForceRecalculate) {
                     const {
                         nextPrayer: newNextPrayer,
                         remainingTime: newRemainingTime,
@@ -902,32 +1278,64 @@ export function Test() {
                     setNearestPrayer(newNextPrayer);
                     setTotalDuration(newTotalDuration);
 
-                    // переоценить активный намаз с учётом грейса
+                    // переоценить активный намаз с учётом грейса и икамата
                     computeActiveWithGrace();
 
+                    lastCheckTime = currentTime;
                     return newRemainingTime;
                 }
                 // обновляем активный блок каждые тики, чтобы отловить окно 5 минут
                 computeActiveWithGrace();
                 return Math.max(0, prevTime - deltaTime);
             });
-
-            animationFrameId = requestAnimationFrame(updateTimer);
         };
 
-        animationFrameId = requestAnimationFrame(updateTimer);
+        // Используем setInterval с частотой 100ms для плавного обновления
+        // Это более надежно чем requestAnimationFrame на Android TV
+        intervalId = setInterval(updateTimer, 100);
 
-        return () => {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
+        // Также добавляем проверку при возврате фокуса на страницу
+        const handleVisibilityChange = () => {
+            if (!document.hidden) {
+                // Принудительно пересчитываем при возврате фокуса
+                const {
+                    nextPrayer: newNextPrayer,
+                    remainingTime: newRemainingTime,
+                    totalDuration: newTotalDuration,
+                } = calculateTimeToNextPrayer(prayerTimes, fixedPrayerTimes);
+
+                setNearestPrayer(newNextPrayer);
+                setRemainingTime(newRemainingTime);
+                setTotalDuration(newTotalDuration);
+                computeActiveWithGrace();
+                lastUpdateTime = Date.now();
+                lastCheckTime = Date.now();
             }
         };
-    }, [prayerTimes, fixedPrayerTimes]);
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [prayerTimes, fixedPrayerTimes, iqamaData]);
 
     // Функция для конвертации времени в минуты от начала дня
     const getTimeInMinutes = (timeString: string): number => {
         const [hours, minutes] = timeString.split(':').map(Number);
         return hours * 60 + minutes;
+    };
+
+    // Функция для вычисления времени окончания икамата
+    const calculateIqamaEndTime = (prayerTime: string, minutes: number): string => {
+        const [hours, mins] = prayerTime.split(':').map(Number);
+        const totalMinutes = hours * 60 + mins + minutes; // Добавляем минуты
+        const iqamaHours = Math.floor(totalMinutes / 60) % 24; // Обработка перехода через полночь
+        const iqamaMins = totalMinutes % 60;
+        return `${String(iqamaHours).padStart(2, '0')}:${String(iqamaMins).padStart(2, '0')}`;
     };
 
     const handleCitySelect = (city: City) => {
@@ -938,7 +1346,12 @@ export function Test() {
             localStorage.setItem('selectedCity', city.name);
             localStorage.setItem('currentCityId', city.id.toString());
             fetchWeatherData(city.name);
-            fetchFixedPrayerTime(city.id);
+            // Обновляем фиксированное время при изменении мечети
+            if (currentMosqueId) {
+                fetchFixedPrayerTime(currentMosqueId);
+            } else {
+                setFixedPrayerTimes(null);
+            }
             // toast.success('Город успешно изменен');
         } catch (error) {
             console.error('Ошибка при смене города:', error);
@@ -1102,9 +1515,14 @@ export function Test() {
     }, [cityDropdownOpen, mosqueDropdownOpen]);
 
     // Функция для получения фиксированного времени намаза
-    const fetchFixedPrayerTime = async (cityId: number) => {
+    const fetchFixedPrayerTime = async (mosqueId: number | null) => {
+        if (!mosqueId) {
+            setFixedPrayerTimes(null);
+            return;
+        }
         try {
-            const response = await axios.get<FixedPrayerTime>(`${API_BASE_URL}/api/prayers/fixed-time/city/${cityId}`);
+            // Публичный эндпоинт для получения фиксированного времени мечети
+            const response = await axios.get<FixedPrayerTime>(`${API_BASE_URL}/api/prayers/fixed-time/mosque/${mosqueId}`);
             if (response.data) {
                 setFixedPrayerTimes(response.data);
                 // toast.success('Фиксированное время намазов загружено');
@@ -1422,7 +1840,9 @@ export function Test() {
                                 isFixedTimeActive={prayer.isFixedTimeActive}
                                 t={t}
                                 currentLang={prayerLang}
-                                isGrace={isGracePeriod && prayer.highlight}
+                                isGrace={isGracePeriod && prayer.highlight && !prayer.isIqamaActive}
+                                iqama={prayer.iqama}
+                                isIqamaActive={prayer.isIqamaActive}
                             />
                         </div>
                     );
@@ -1461,18 +1881,22 @@ export function Test() {
                     <div className="w-full h-full flex flex-col items-center justify-center md-max:py-6">
                         <div className="bg-white rounded-[16px] p-6 shadow-md border-[2px] border-[#5ec262] mx-auto w-full h-full flex flex-col items-center justify-center
                             md-max:p-4">
-                            <div className="text-[50px] pc:text-[60px] pc1:text-[50px] pc2:text-[40px] font-bold text-[#5ec262] mb-4 text-center break-words overflow-wrap-anywhere
-                                md-max:text-[40px]">
-                                {currentName.arabic}
-                            </div>
-                            <div className={`text-[34px] pc:text-[40px] pc1:text-[34px] pc2:text-[28px] font-medium text-center text-[#17181d] break-words overflow-wrap-anywhere
-                                md-max:text-[28px] ${notoSans.className} tt-text`}>
-                                {allahLang === 'tt' ? (currentName as any).transcriptionTatar || currentName.transcription : currentName.transcription}
-                            </div>
-                            <div className="text-[28px] pc:text-[32px] pc1:text-[28px] pc2:text-[24px] text-gray-600 text-center mt-2 break-words overflow-wrap-anywhere
-                                md-max:text-[22px]">
-                                {allahLang === 'tt' ? (currentName as any).meaningTatar || currentName.meaning : currentName.meaning}
-                            </div>
+                            {currentName && (
+                                <>
+                                    <div className="text-[50px] pc:text-[60px] pc1:text-[50px] pc2:text-[40px] font-bold text-[#5ec262] mb-4 text-center break-words overflow-wrap-anywhere
+                                        md-max:text-[40px]">
+                                        {currentName.arabic}
+                                    </div>
+                                    <div className={`text-[34px] pc:text-[40px] pc1:text-[34px] pc2:text-[28px] font-medium text-center text-[#17181d] break-words overflow-wrap-anywhere
+                                        md-max:text-[28px] ${notoSans.className} tt-text`}>
+                                        {allahLang === 'tt' ? (currentName.transcriptionTatar || currentName.transcription) : currentName.transcription}
+                                    </div>
+                                    <div className="text-[28px] pc:text-[32px] pc1:text-[28px] pc2:text-[24px] text-gray-600 text-center mt-2 break-words overflow-wrap-anywhere
+                                        md-max:text-[22px]">
+                                        {allahLang === 'tt' ? (currentName.meaningTatar || currentName.meaning) : currentName.meaning}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
