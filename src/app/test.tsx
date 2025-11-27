@@ -55,7 +55,6 @@ type PrayerTimeProps = {
     isFixedTimeActive?: boolean;
     t: (key: string, fallback: string) => string;
     currentLang: 'ru' | 'tt';
-    isGrace?: boolean; // 5-минутное окно после начала намаза
     iqama?: IqamaInfo | null; // Информация об икамате
     isIqamaActive?: boolean; // Активен ли икамат сейчас
 };
@@ -142,11 +141,10 @@ interface FixedPrayerTime {
     cityName?: string;
 }
 
-const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pic2, remainingTime, progress, className = '', fixedTime, isFixedTimeActive = false, t, currentLang, isGrace = false, iqama = null, isIqamaActive = false }) => {
-    // Определяем цвет карточки: желтый для икамата, желтый для грейс-периода, зеленый для обычного активного
+const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pic2, remainingTime, progress, className = '', fixedTime, isFixedTimeActive = false, t, currentLang, iqama = null, isIqamaActive = false }) => {
+    // Определяем цвет карточки: желтый для икамата, зеленый для обычного активного
     const getCardColor = () => {
         if (isIqamaActive) return 'bg-[#F7C948]'; // Желтый для икамата
-        if (isGrace) return 'bg-[#F7C948]'; // Желтый для грейс-периода
         return 'bg-[#5ec262]'; // Зеленый для обычного активного
     };
 
@@ -192,9 +190,9 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
                     <div className="absolute pc:max-w-[175px] pc1:max-w-[155px] tv:max-w-[125px] tv1:max-w-[105px] md-max:max-w-[110px] sm-max:max-w-[90px] h-[112px] right-[4px] top-[4px] flex flex-col items-end">
                         <div className="w-[100%] text-right bg-white rounded-bl-[40px] rounded-[8px] rounded-tr-[19px] py-[4px] px-[8px] flex flex-col">
                             <div className={`text-[#17181d] font-normal break-words overflow-wrap-anywhere ${currentLang === 'tt' ? 'pc:text-[18px] tv:text-[14px] tv1:text-[10px] md-max:text-[12px] sm-max:text-[10px]' : 'pc:text-[22px] tv:text-[16px] tv1:text-[12px] md-max:text-[14px] sm-max:text-[12px]'}`}>
-                                {(isIqamaActive || isGrace) ? t('time.now', 'Сейчас') : t('time.until', 'Через')}
+                                {isIqamaActive ? t('time.now', 'Сейчас') : t('time.until', 'Через')}
                             </div>
-                            {!(isIqamaActive || isGrace) && (
+                            {!isIqamaActive && (
                                 <div className={`text-[#17181d] font-bold break-all overflow-wrap-anywhere ${currentLang === 'tt' ? 'text-[24px] pc:text-[24px] pc1:text-[20px] tv:text-[16px] tv1:text-[14px] md-max:text-[18px] sm-max:text-[14px]' : 'text-[30px] pc:text-[30px] pc1:text-[25px] tv:text-[20px] tv1:text-[18px] md-max:text-[22px] sm-max:text-[18px]'}`}>
                                     {formatTime(remainingTime, t)}
                                 </div>
@@ -230,7 +228,7 @@ const PrayerTime: React.FC<PrayerTimeProps> = ({ time, label, highlight, pic, pi
                             <div
                                 className="h-full bg-white rounded-full transition-all duration-1000"
                                 style={{
-                                    width: isGrace ? '100%' : `${progress}%`,
+                                    width: `${progress}%`,
                                     animation: 'pulseAndGrow 1s ease-in-out infinite alternate',
                                 }}
                             ></div>
@@ -412,8 +410,7 @@ export function Test() {
     const [fixedPrayerTimes, setFixedPrayerTimes] = useState<FixedPrayerTime | null>(null);
     const [iqamaData, setIqamaData] = useState<Record<string, IqamaInfo | null>>({}); // Данные об икамате для каждого намаза
     const [nearestPrayer, setNearestPrayer] = useState<string>('');
-    const [activePrayer, setActivePrayer] = useState<string>(''); // с учетом грейс-периода и икамата
-    const [isGracePeriod, setIsGracePeriod] = useState<boolean>(false);
+    const [activePrayer, setActivePrayer] = useState<string>(''); // с учетом икамата
     const [isIqamaPeriod, setIsIqamaPeriod] = useState<boolean>(false); // Период икамата (желтый цвет)
     const [remainingTime, setRemainingTime] = useState<number>(0);
     const [totalDuration, setTotalDuration] = useState<number>(0);
@@ -1056,6 +1053,13 @@ export function Test() {
             
             const response = await axios.get<PrayerResponse[]>(`${API_BASE_URL}/api/prayers/all?mosqueId=${currentMosqueId}`);
             
+            // Проверяем, что response.data является массивом
+            if (!Array.isArray(response.data)) {
+                console.error('Ошибка: response.data не является массивом', response.data);
+                setRegularPrayerTimes(null);
+                return;
+            }
+            
             // Находим запись на сегодня
             const todayPrayer = response.data.find(p => {
                 // Сравниваем даты, учитывая возможные форматы
@@ -1080,8 +1084,12 @@ export function Test() {
                 console.warn('Запись на сегодня не найдена');
                 setRegularPrayerTimes(null);
             }
-        } catch (error) {
-            console.error('Ошибка при загрузке обычного времени:', error);
+        } catch (error: any) {
+            console.error('Ошибка при получении молитв:', error);
+            if (error.response) {
+                console.error('Ответ сервера:', error.response.data);
+                console.error('Статус:', error.response.status);
+            }
             setRegularPrayerTimes(null);
         }
     }, [currentMosqueId]);
@@ -1166,11 +1174,10 @@ export function Test() {
         setRemainingTime(nextRemainingTime);
         setTotalDuration(nextTotalDuration);
 
-        // вычисляем активный намаз с учетом грейс-периода 5 минут и икамата
-        const computeActiveWithGrace = () => {
+        // вычисляем активный намаз с учетом икамата
+        const computeActive = () => {
             if (!nextPrayer) {
                 setActivePrayer('');
-                setIsGracePeriod(false);
                 setIsIqamaPeriod(false);
                 return;
             }
@@ -1211,7 +1218,7 @@ export function Test() {
             const now = new Date();
             const nowMin = now.getHours() * 60 + now.getMinutes();
 
-            // Сначала проверяем икамат (приоритет выше грейс-периода)
+            // Проверяем икамат
             let activeIqama = null;
             for (const p of sorted) {
                 const prayerTime = p.time as string;
@@ -1226,36 +1233,48 @@ export function Test() {
 
             if (activeIqama) {
                 setActivePrayer(activeIqama.name);
-                setIsGracePeriod(false);
                 setIsIqamaPeriod(true);
-                return;
-            }
-
-            // Затем проверяем грейс-период 5 минут
-            const graceMinutes = 5;
-            const active = sorted.find(p => {
-                const t = getTimeInMinutes(p.time as string);
-                return t <= nowMin && nowMin < t + graceMinutes;
-            });
-
-            if (active) {
-                setActivePrayer(active.name);
-                setIsGracePeriod(true);
-                setIsIqamaPeriod(false);
             } else {
                 setActivePrayer(nextPrayer);
-                setIsGracePeriod(false);
                 setIsIqamaPeriod(false);
             }
         };
 
-        computeActiveWithGrace();
+        computeActive();
+
+        // Инициализируем статус икамата при первом запуске
+        let initialIqamaActive = false;
+        const sortedForInit = [
+            { name: 'fajr', time: fixedPrayerTimes?.fajrActive ? fixedPrayerTimes.fajr : prayerTimes.fajr },
+            { name: 'shuruk', time: fixedPrayerTimes?.shurukActive ? fixedPrayerTimes.shuruk : prayerTimes.shuruk },
+            { name: 'zuhr', time: fixedPrayerTimes?.zuhrActive ? fixedPrayerTimes.zuhr : prayerTimes.zuhr },
+            { name: 'asr', time: fixedPrayerTimes?.asrActive ? fixedPrayerTimes.asr : prayerTimes.asr },
+            { name: 'maghrib', time: fixedPrayerTimes?.maghribActive ? fixedPrayerTimes.maghrib : prayerTimes.maghrib },
+            { name: 'isha', time: fixedPrayerTimes?.ishaActive ? fixedPrayerTimes.isha : prayerTimes.isha },
+            ...(prayerTimes.mechet ? [{ name: 'mechet', time: fixedPrayerTimes?.mechetActive ? (fixedPrayerTimes.mechet || '') : prayerTimes.mechet }] : []),
+        ]
+            .filter(p => !!p.time)
+            .sort((a, b) => getTimeInMinutes(a.time as string) - getTimeInMinutes(b.time as string));
+
+        const nowInit = new Date();
+        for (const p of sortedForInit) {
+            const prayerTime = p.time as string;
+            const iqama = iqamaData[p.name];
+            if (iqama && iqama.enabled && iqama.minutes > 0) {
+                if (isIqamaCurrentlyActive(prayerTime, iqama.minutes)) {
+                    initialIqamaActive = true;
+                    break;
+                }
+            }
+        }
 
         // Используем setInterval для более надежной работы на Android TV
         // requestAnimationFrame может не вызываться стабильно на TV устройствах
         let intervalId: NodeJS.Timeout;
         let lastUpdateTime = Date.now();
         let lastCheckTime = Date.now();
+        let previousNextPrayer = nextPrayer;
+        let previousIqamaActive = initialIqamaActive;
 
         const updateTimer = () => {
             const currentTime = Date.now();
@@ -1275,17 +1294,65 @@ export function Test() {
                         totalDuration: newTotalDuration,
                     } = calculateTimeToNextPrayer(prayerTimes, fixedPrayerTimes);
 
+                    // Проверяем, изменился ли следующий намаз (карточка должна переключиться)
+                    const nextPrayerChanged = previousNextPrayer !== newNextPrayer;
+                    
+                    // Проверяем текущий статус икамата
+                    let currentIqamaActive = false;
+                    const sorted = [
+                        { name: 'fajr', time: fixedPrayerTimes?.fajrActive ? fixedPrayerTimes.fajr : prayerTimes.fajr },
+                        { name: 'shuruk', time: fixedPrayerTimes?.shurukActive ? fixedPrayerTimes.shuruk : prayerTimes.shuruk },
+                        { name: 'zuhr', time: fixedPrayerTimes?.zuhrActive ? fixedPrayerTimes.zuhr : prayerTimes.zuhr },
+                        { name: 'asr', time: fixedPrayerTimes?.asrActive ? fixedPrayerTimes.asr : prayerTimes.asr },
+                        { name: 'maghrib', time: fixedPrayerTimes?.maghribActive ? fixedPrayerTimes.maghrib : prayerTimes.maghrib },
+                        { name: 'isha', time: fixedPrayerTimes?.ishaActive ? fixedPrayerTimes.isha : prayerTimes.isha },
+                        ...(prayerTimes.mechet ? [{ name: 'mechet', time: fixedPrayerTimes?.mechetActive ? (fixedPrayerTimes.mechet || '') : prayerTimes.mechet }] : []),
+                    ]
+                        .filter(p => !!p.time)
+                        .sort((a, b) => getTimeInMinutes(a.time as string) - getTimeInMinutes(b.time as string));
+
+                    const now = new Date();
+                    const nowMin = now.getHours() * 60 + now.getMinutes();
+
+                    for (const p of sorted) {
+                        const prayerTime = p.time as string;
+                        const iqama = iqamaData[p.name];
+                        if (iqama && iqama.enabled && iqama.minutes > 0) {
+                            if (isIqamaCurrentlyActive(prayerTime, iqama.minutes)) {
+                                currentIqamaActive = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Перезагружаем страницу если:
+                    // 1. Изменился следующий намаз (карточка должна переключиться)
+                    // 2. Икамат закончился (был активен, а теперь нет)
+                    const iqamaEnded = previousIqamaActive && !currentIqamaActive;
+                    
+                    if (nextPrayerChanged || iqamaEnded) {
+                        // Небольшая задержка перед перезагрузкой, чтобы состояние успело обновиться
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
+                        return prevTime; // Возвращаем текущее значение, так как страница перезагрузится
+                    }
+
+                    // Обновляем предыдущие значения
+                    previousNextPrayer = newNextPrayer;
+                    previousIqamaActive = currentIqamaActive;
+
                     setNearestPrayer(newNextPrayer);
                     setTotalDuration(newTotalDuration);
 
-                    // переоценить активный намаз с учётом грейса и икамата
-                    computeActiveWithGrace();
+                    // переоценить активный намаз с учётом икамата
+                    computeActive();
 
                     lastCheckTime = currentTime;
                     return newRemainingTime;
                 }
-                // обновляем активный блок каждые тики, чтобы отловить окно 5 минут
-                computeActiveWithGrace();
+                // обновляем активный блок каждые тики
+                computeActive();
                 return Math.max(0, prevTime - deltaTime);
             });
         };
@@ -1307,7 +1374,7 @@ export function Test() {
                 setNearestPrayer(newNextPrayer);
                 setRemainingTime(newRemainingTime);
                 setTotalDuration(newTotalDuration);
-                computeActiveWithGrace();
+                computeActive();
                 lastUpdateTime = Date.now();
                 lastCheckTime = Date.now();
             }
@@ -1840,7 +1907,6 @@ export function Test() {
                                 isFixedTimeActive={prayer.isFixedTimeActive}
                                 t={t}
                                 currentLang={prayerLang}
-                                isGrace={isGracePeriod && prayer.highlight && !prayer.isIqamaActive}
                                 iqama={prayer.iqama}
                                 isIqamaActive={prayer.isIqamaActive}
                             />

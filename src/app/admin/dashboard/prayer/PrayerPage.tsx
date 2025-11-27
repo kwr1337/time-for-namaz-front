@@ -191,11 +191,23 @@ const PrayerPage = () => {
 	const fetchPrayers = async (mosqueId: string) => {
 		try {
 			const response = await axios.get(`${API_BASE_URL}/api/prayers/all?mosqueId=${mosqueId}`);
+			
+			// Проверяем, что response.data является массивом
+			if (!Array.isArray(response.data)) {
+				console.error('Ошибка: response.data не является массивом', response.data);
+				setPrayers([]);
+				return;
+			}
+			
 			const sortedPrayers = response.data.sort((a: PrayerResponse, b: PrayerResponse) => new Date(a.date).getTime() - new Date(b.date).getTime());
 			const filteredPrayers = filterPastDates(sortedPrayers);
 			setPrayers(filteredPrayers);
-		} catch (error) {
+		} catch (error: any) {
 			console.error('Ошибка при получении молитв:', error);
+			if (error.response) {
+				console.error('Ответ сервера:', error.response.data);
+				console.error('Статус:', error.response.status);
+			}
 			setPrayers([]);
 		}
 	};
