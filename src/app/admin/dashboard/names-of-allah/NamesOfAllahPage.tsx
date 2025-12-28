@@ -24,6 +24,7 @@ const NamesOfAllahPage = () => {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [formValues, setFormValues] = useState<UpdateNameOfAllahDto>({});
     const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'enabled' | 'disabled'>('all');
 
     useEffect(() => {
         fetchUserRole();
@@ -193,11 +194,178 @@ const NamesOfAllahPage = () => {
         }
     };
 
+    const toggleSingleName = async (id: number, newStatus: boolean) => {
+        const token = localStorage.getItem('token');
+        
+        // Используем альтернативный эндпоинт напрямую, так как toggle-enabled возвращает 404
+        // но операция выполняется успешно через PATCH /api/names-of-allah/:id
+        await axios.patch(
+            `${API_BASE_URL}/api/names-of-allah/${id}`,
+            { isEnabled: newStatus },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+        return true;
+    };
+
+    const handleToggleEnabled = async (id: number, currentStatus: boolean) => {
+        setLoading(true);
+        const newStatus = !currentStatus;
+        
+        try {
+            await toggleSingleName(id, newStatus);
+            toast.success(`Имя Аллаха ${newStatus ? 'включено' : 'выключено'}`);
+            await fetchNames();
+        } catch (error: any) {
+            console.error('Ошибка при переключении статуса:', error);
+            if (error.response?.status === 401) {
+                toast.error('Не авторизован');
+            } else if (error.response?.status === 403) {
+                toast.error('Недостаточно прав');
+            } else if (error.response?.status === 404) {
+                toast.error('Имя не найдено');
+            } else {
+                toast.error('Ошибка при переключении статуса');
+            }
+            // Откатываем изменение в UI при ошибке
+            await fetchNames();
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDisableAll = async () => {
+        if (!selectedMosqueId) return;
+
+        if (!confirm('Вы уверены, что хотите выключить все имена Аллаха для этой мечети?')) {
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const enabledNames = names.filter(name => name.isEnabled !== false);
+            
+            if (enabledNames.length === 0) {
+                toast.info('Все имена уже выключены');
+                setLoading(false);
+                return;
+            }
+
+            // Выключаем все имена параллельно для ускорения процесса
+            const promises = enabledNames.map(name => 
+                toggleSingleName(name.id, false)
+                    .then(() => ({ success: true, id: name.id }))
+                    .catch((error: any) => {
+                        // Логируем только реальные ошибки
+                        if (error.response?.status !== 404) {
+                            console.error(`Ошибка при выключении имени ${name.id}:`, error);
+                        }
+                        return { success: false, id: name.id };
+                    })
+            );
+
+            // Ждем выполнения всех запросов параллельно
+            const results = await Promise.all(promises);
+            
+            const successCount = results.filter(r => r.success).length;
+            const errorCount = results.filter(r => !r.success).length;
+
+            if (errorCount === 0) {
+                toast.success(`Все имена успешно выключены (${successCount})`);
+            } else {
+                toast.warning(`Выключено ${successCount} из ${enabledNames.length} имен. Ошибок: ${errorCount}`);
+            }
+
+            await fetchNames();
+        } catch (error: any) {
+            console.error('Ошибка при выключении всех имен:', error);
+            if (error.response?.status === 401) {
+                toast.error('Не авторизован');
+            } else if (error.response?.status === 403) {
+                toast.error('Недостаточно прав');
+            } else {
+                toast.error('Ошибка при выключении всех имен');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleEnableAll = async () => {
+        if (!selectedMosqueId) return;
+
+        if (!confirm('Вы уверены, что хотите включить все имена Аллаха для этой мечети?')) {
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const disabledNames = names.filter(name => name.isEnabled === false);
+            
+            if (disabledNames.length === 0) {
+                toast.info('Все имена уже включены');
+                setLoading(false);
+                return;
+            }
+
+            // Включаем все имена параллельно для ускорения процесса
+            const promises = disabledNames.map(name => 
+                toggleSingleName(name.id, true)
+                    .then(() => ({ success: true, id: name.id }))
+                    .catch((error: any) => {
+                        // Логируем только реальные ошибки
+                        if (error.response?.status !== 404) {
+                            console.error(`Ошибка при включении имени ${name.id}:`, error);
+                        }
+                        return { success: false, id: name.id };
+                    })
+            );
+
+            // Ждем выполнения всех запросов параллельно
+            const results = await Promise.all(promises);
+            
+            const successCount = results.filter(r => r.success).length;
+            const errorCount = results.filter(r => !r.success).length;
+
+            if (errorCount === 0) {
+                toast.success(`Все имена успешно включены (${successCount})`);
+            } else {
+                toast.warning(`Включено ${successCount} из ${disabledNames.length} имен. Ошибок: ${errorCount}`);
+            }
+
+            await fetchNames();
+        } catch (error: any) {
+            console.error('Ошибка при включении всех имен:', error);
+            if (error.response?.status === 401) {
+                toast.error('Не авторизован');
+            } else if (error.response?.status === 403) {
+                toast.error('Недостаточно прав');
+            } else {
+                toast.error('Ошибка при включении всех имен');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleBack = () => {
         window.location.href = DASHBOARD_PAGES.DASHBOARD;
     };
 
     const filteredNames = names.filter(name => {
+        // Фильтр по статусу
+        if (statusFilter === 'enabled' && name.isEnabled === false) {
+            return false;
+        }
+        if (statusFilter === 'disabled' && name.isEnabled !== false) {
+            return false;
+        }
+
+        // Фильтр по поисковому запросу
         if (!search.trim()) return true;
         const q = search.toLowerCase();
         return (
@@ -253,9 +421,9 @@ const NamesOfAllahPage = () => {
 
                 {selectedMosqueId && (
                     <div className="space-y-4">
-                        {/* Кнопка инициализации и поиск */}
-                        <div className="flex gap-4 items-end">
-                            <div className="flex-1">
+                        {/* Кнопка инициализации, поиск и фильтры */}
+                        <div className="flex gap-4 items-end flex-wrap">
+                            <div className="flex-1 min-w-[200px]">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Поиск:
                                 </label>
@@ -267,15 +435,49 @@ const NamesOfAllahPage = () => {
                                     className="w-full border border-gray-300 rounded px-3 py-2 text-black"
                                 />
                             </div>
-                            {names.length === 0 && (
-                                <button
-                                    onClick={handleInitialize}
-                                    disabled={loading}
-                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
+                            <div className="min-w-[150px]">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Фильтр по статусу:
+                                </label>
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value as 'all' | 'enabled' | 'disabled')}
+                                    className="w-full border border-gray-300 rounded px-3 py-2 text-black"
                                 >
-                                    Инициализировать 99 имен
-                                </button>
-                            )}
+                                    <option value="all">Все</option>
+                                    <option value="enabled">Включенные</option>
+                                    <option value="disabled">Выключенные</option>
+                                </select>
+                            </div>
+                            <div className="flex gap-2">
+                                {names.length === 0 && (
+                                    <button
+                                        onClick={handleInitialize}
+                                        disabled={loading}
+                                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
+                                    >
+                                        Инициализировать 99 имен
+                                    </button>
+                                )}
+                                {names.length > 0 && (
+                                    <>
+                                        <button
+                                            onClick={handleEnableAll}
+                                            disabled={loading}
+                                            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
+                                        >
+                                            Включить все
+                                        </button>
+                                        <button
+                                            onClick={handleDisableAll}
+                                            disabled={loading}
+                                            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
+                                        >
+                                            Выключить все
+                                        </button>
+                                    </>
+                                )}
+                            </div>
                         </div>
 
                         {/* Список имен */}
@@ -297,6 +499,7 @@ const NamesOfAllahPage = () => {
                                             <th className="py-2 px-4 border-b text-black text-left w-[20%]">Транскрипция (TT)</th>
                                             <th className="py-2 px-4 border-b text-black text-left w-[20%]">Значение (RU)</th>
                                             <th className="py-2 px-4 border-b text-black text-left w-[20%]">Значение (TT)</th>
+                                            <th className="py-2 px-4 border-b text-black text-center w-[10%]">Включено</th>
                                             <th className="py-2 px-4 border-b text-black w-[5%]">Действия</th>
                                         </tr>
                                     </thead>
@@ -361,6 +564,15 @@ const NamesOfAllahPage = () => {
                                                     ) : (
                                                         <div className="text-sm">{name.meaningTatar || <span className="text-gray-400">—</span>}</div>
                                                     )}
+                                                </td>
+                                                <td className="py-2 px-4 border-b text-black text-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={name.isEnabled ?? true}
+                                                        onChange={() => handleToggleEnabled(name.id, name.isEnabled ?? true)}
+                                                        disabled={loading || editingId !== null}
+                                                        className="w-5 h-5 cursor-pointer disabled:cursor-not-allowed"
+                                                    />
                                                 </td>
                                                 <td className="py-2 px-4 border-b text-black">
                                                     {editingId === name.id ? (

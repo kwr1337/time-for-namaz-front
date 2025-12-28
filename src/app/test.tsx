@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import asr from '../pic/asr-1.png';
 import asr2 from '../pic/asr-2.png';
 import fadjr from '../pic/fadjr-1.png';
@@ -477,6 +477,7 @@ export function Test() {
         translationsEnabled: boolean;
         languageToggleEnabled: boolean;
         languageToggleIntervalSeconds: number;
+        fridayZuhrAsJomgaEnabled?: boolean;
     } | null>(null);
 
     // Загрузка имен Аллаха из API для текущей мечети
@@ -501,10 +502,14 @@ export function Test() {
                 
                 if (isMounted) {
                     if (Array.isArray(data) && data.length > 0) {
-                        // Используем данные из API
-                        setNamesOfAllahFromApi(data);
-                        setCurrentName(data[0]);
-                        setCurrentNameIndex(0);
+                        // Фильтруем только включенные имена (isEnabled === true или undefined для обратной совместимости)
+                        const enabledNames = data.filter(name => name.isEnabled !== false);
+                        // Используем данные из API (только включенные)
+                        setNamesOfAllahFromApi(enabledNames);
+                        if (enabledNames.length > 0) {
+                            setCurrentName(enabledNames[0]);
+                            setCurrentNameIndex(0);
+                        }
                     } else {
                         // Если API вернул пустой массив, используем локальные данные как fallback
                         setNamesOfAllahFromApi([]);
@@ -584,7 +589,8 @@ export function Test() {
                     const newSettings = {
                         translationsEnabled: data.translationsEnabled ?? true,
                         languageToggleEnabled: data.languageToggleEnabled ?? false,
-                        languageToggleIntervalSeconds: data.languageToggleIntervalSeconds ?? 30
+                        languageToggleIntervalSeconds: data.languageToggleIntervalSeconds ?? 30,
+                        fridayZuhrAsJomgaEnabled: data.fridayZuhrAsJomgaEnabled ?? false
                     }
                     setLanguageSettings(newSettings)
                     
@@ -601,7 +607,8 @@ export function Test() {
                     setLanguageSettings({
                         translationsEnabled: true,
                         languageToggleEnabled: false,
-                        languageToggleIntervalSeconds: 30
+                        languageToggleIntervalSeconds: 30,
+                        fridayZuhrAsJomgaEnabled: false
                     })
                 }
             }
@@ -675,15 +682,36 @@ export function Test() {
         return (prayerLang === 'ru' ? item.ru : item.tt) || fallback
     }
 
-    const prayerLabels = {
-        fajr: t('prayer.fajr', 'Фаджр'),
-        shuruk: t('prayer.shuruk', 'Шурук'),
-        zuhr: t('prayer.zuhr', 'Зухр'),
-        asr: t('prayer.asr', 'Аср'),
-        maghrib: t('prayer.maghrib', 'Магриб'),
-        isha: t('prayer.isha', 'Иша'),
-        mechet: t('prayer.mechet', 'Мечеть'),
-    }
+    // Обновляем день недели каждую минуту, чтобы при переходе через полночь обновлялось название
+    const [currentDay, setCurrentDay] = useState(new Date().getDay());
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const newDay = new Date().getDay();
+            if (newDay !== currentDay) {
+                setCurrentDay(newDay);
+            }
+        }, 60000); // Проверяем каждую минуту
+        
+        return () => clearInterval(interval);
+    }, [currentDay]);
+
+    // Вычисляем метки намазов с учетом дня недели и настроек
+    // Пересчитываем при изменении настроек, языка или дня недели
+    const prayerLabels = useMemo(() => {
+        // Проверяем, является ли сегодня пятницей и включена ли настройка
+        const isFriday = currentDay === 5; // 5 = пятница (0 = воскресенье)
+        const shouldShowJomga = isFriday && (languageSettings?.fridayZuhrAsJomgaEnabled === true);
+        
+        return {
+            fajr: t('prayer.fajr', 'Фаджр'),
+            shuruk: t('prayer.shuruk', 'Шурук'),
+            zuhr: shouldShowJomga ? t('prayer.jomga', 'Жомга') : t('prayer.zuhr', 'Зухр'),
+            asr: t('prayer.asr', 'Аср'),
+            maghrib: t('prayer.maghrib', 'Магриб'),
+            isha: t('prayer.isha', 'Иша'),
+            mechet: t('prayer.mechet', 'Мечеть'),
+        };
+    }, [languageSettings?.fridayZuhrAsJomgaEnabled, prayerLang, dictionaryMap, currentDay, t]);
 
     // Функция для проверки, идет ли сейчас икамат
     const isIqamaCurrentlyActive = (prayerTime: string, iqamaMinutes: number): boolean => {

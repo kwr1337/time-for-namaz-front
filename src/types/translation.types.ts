@@ -15,6 +15,7 @@ export interface MosqueLanguageSettings {
     translationsEnabled: boolean;
     languageToggleEnabled: boolean;
     languageToggleIntervalSeconds: number;
+    fridayZuhrAsJomgaEnabled?: boolean;
     createdAt: string;
     updatedAt: string;
     mosqueName: string;
@@ -25,5 +26,6 @@ export interface UpdateMosqueLanguageSettingsDto {
     translationsEnabled?: boolean;
     languageToggleEnabled?: boolean;
     languageToggleIntervalSeconds?: number;
+    fridayZuhrAsJomgaEnabled?: boolean;
 }
 

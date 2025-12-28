@@ -97,7 +97,12 @@ const LanguageSettingsPage = () => {
                     headers: { Authorization: `Bearer ${token}` }
                 }
             );
-            setSettings(response.data);
+            // Убеждаемся, что fridayZuhrAsJomgaEnabled всегда имеет значение
+            const settingsData = {
+                ...response.data,
+                fridayZuhrAsJomgaEnabled: response.data.fridayZuhrAsJomgaEnabled ?? false
+            };
+            setSettings(settingsData);
         } catch (error: any) {
             console.error('Ошибка при загрузке настроек:', error);
             if (error.response?.status === 404) {
@@ -108,6 +113,7 @@ const LanguageSettingsPage = () => {
                     translationsEnabled: true,
                     languageToggleEnabled: false,
                     languageToggleIntervalSeconds: 30,
+                    fridayZuhrAsJomgaEnabled: false,
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString(),
                     mosqueName: mosques.find(m => m.id === selectedMosqueId)?.name || '',
@@ -132,10 +138,11 @@ const LanguageSettingsPage = () => {
                 // Если включено переключение языков, автоматически включаем переводы
                 translationsEnabled: settings.languageToggleEnabled ? true : settings.translationsEnabled,
                 languageToggleEnabled: settings.languageToggleEnabled,
-                languageToggleIntervalSeconds: settings.languageToggleIntervalSeconds
+                languageToggleIntervalSeconds: settings.languageToggleIntervalSeconds,
+                fridayZuhrAsJomgaEnabled: settings.fridayZuhrAsJomgaEnabled ?? false
             };
 
-            await axios.put(
+            const response = await axios.put(
                 `${API_BASE_URL}/api/mosque-language-settings/mosque/${selectedMosqueId}`,
                 updateData,
                 {
@@ -146,7 +153,17 @@ const LanguageSettingsPage = () => {
                 }
             );
 
+            // Обновляем локальное состояние из ответа сервера, если оно есть
+            if (response.data) {
+                setSettings({
+                    ...settings,
+                    ...response.data,
+                    fridayZuhrAsJomgaEnabled: response.data.fridayZuhrAsJomgaEnabled ?? updateData.fridayZuhrAsJomgaEnabled ?? false
+                });
+            }
+
             toast.success('Настройки успешно сохранены');
+            // Перезагружаем настройки для синхронизации с сервером
             await fetchSettings();
         } catch (error: any) {
             console.error('Ошибка при сохранении настроек:', error);
@@ -274,6 +291,32 @@ const LanguageSettingsPage = () => {
                                 </p>
                             </div>
                         )}
+
+                        {/* Переименование ЗУХР в Жомга по пятницам */}
+                        <div className="flex items-center justify-between p-4 border rounded">
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">
+                                    Переименовать ЗУХР в "Жомга" по пятницам
+                                </label>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    В пятницу название намаза ЗУХР будет отображаться как "Жомга"
+                                </p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={settings.fridayZuhrAsJomgaEnabled ?? false}
+                                    onChange={(e) =>
+                                        setSettings({
+                                            ...settings,
+                                            fridayZuhrAsJomgaEnabled: e.target.checked
+                                        })
+                                    }
+                                    className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
 
                         {/* Кнопка сохранения */}
                         <div className="flex justify-end">

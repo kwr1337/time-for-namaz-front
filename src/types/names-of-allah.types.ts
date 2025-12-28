@@ -6,6 +6,7 @@ export interface NameOfAllah {
     meaning: string;
     transcriptionTatar?: string;
     meaningTatar?: string;
+    isEnabled?: boolean;
     createdAt: string;
     updatedAt: string;
 }
