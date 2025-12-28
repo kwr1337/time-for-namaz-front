@@ -250,7 +250,7 @@ const NamesOfAllahPage = () => {
             const enabledNames = names.filter(name => name.isEnabled !== false);
             
             if (enabledNames.length === 0) {
-                toast.info('Все имена уже выключены');
+                toast('Все имена уже выключены', { icon: 'ℹ️' });
                 setLoading(false);
                 return;
             }
@@ -277,7 +277,7 @@ const NamesOfAllahPage = () => {
             if (errorCount === 0) {
                 toast.success(`Все имена успешно выключены (${successCount})`);
             } else {
-                toast.warning(`Выключено ${successCount} из ${enabledNames.length} имен. Ошибок: ${errorCount}`);
+                toast(`Выключено ${successCount} из ${enabledNames.length} имен. Ошибок: ${errorCount}`, { icon: '⚠️' });
             }
 
             await fetchNames();
@@ -307,7 +307,7 @@ const NamesOfAllahPage = () => {
             const disabledNames = names.filter(name => name.isEnabled === false);
             
             if (disabledNames.length === 0) {
-                toast.info('Все имена уже включены');
+                toast('Все имена уже включены', { icon: 'ℹ️' });
                 setLoading(false);
                 return;
             }
@@ -334,7 +334,7 @@ const NamesOfAllahPage = () => {
             if (errorCount === 0) {
                 toast.success(`Все имена успешно включены (${successCount})`);
             } else {
-                toast.warning(`Включено ${successCount} из ${disabledNames.length} имен. Ошибок: ${errorCount}`);
+                toast(`Включено ${successCount} из ${disabledNames.length} имен. Ошибок: ${errorCount}`, { icon: '⚠️' });
             }
 
             await fetchNames();
