@@ -88,6 +88,10 @@ const DashboardPage = () => {
 		window.location.href = DASHBOARD_PAGES.NAMES_OF_ALLAH;
 	};
 
+	const handleGoToHolidays = () => {
+		window.location.href = DASHBOARD_PAGES.HOLIDAYS;
+	};
+
 	const handleLogout = () => {
 		localStorage.removeItem('token');
 		window.location.href = '/auth';
@@ -181,6 +185,13 @@ const DashboardPage = () => {
 					className="mt-4 bg-blue-500 w-full text-white p-2 rounded hover:bg-blue-600 transition"
 				>
 					Управление именами Аллаха
+				</button>
+
+				<button
+					onClick={handleGoToHolidays}
+					className="mt-4 bg-blue-500 w-full text-white p-2 rounded hover:bg-blue-600 transition"
+				>
+					Управление праздниками мечети
 				</button>
 
 				<button

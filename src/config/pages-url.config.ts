@@ -13,6 +13,7 @@ class ADMIN {
 	DICTIONARY = `${this.root}/dashboard/dictionary`
 	LANGUAGE_SETTINGS = `${this.root}/dashboard/language-settings`
 	NAMES_OF_ALLAH = `${this.root}/dashboard/names-of-allah`
+	HOLIDAYS = `${this.root}/dashboard/holidays`
 
 }
 

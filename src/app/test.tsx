@@ -28,6 +28,7 @@ import { dictionaryService } from '@/services/dictionary.service'
 import { Noto_Sans } from 'next/font/google'
 import type { MosqueLanguageSettings } from '@/types/translation.types'
 import type { NameOfAllah } from '@/types/names-of-allah.types'
+import type { Holiday } from '@/types/holiday.types'
 
 const notoSans = Noto_Sans({
     subsets: ['latin', 'cyrillic'],
@@ -479,6 +480,8 @@ export function Test() {
         languageToggleIntervalSeconds: number;
         fridayZuhrAsJomgaEnabled?: boolean;
     } | null>(null);
+    const [holidays, setHolidays] = useState<Holiday[]>([]);
+    const [nearestHoliday, setNearestHoliday] = useState<{ holiday: Holiday; daysUntil: number } | null>(null);
 
     // Загрузка имен Аллаха из API для текущей мечети
     useEffect(() => {
@@ -670,6 +673,104 @@ export function Test() {
         })()
         return () => { isMounted = false }
     }, [currentMosqueId])
+
+    // Загрузка праздников для текущей мечети
+    useEffect(() => {
+        let isMounted = true;
+        (async () => {
+            if (!currentMosqueId) {
+                if (isMounted) {
+                    setHolidays([]);
+                    setNearestHoliday(null);
+                }
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/mosques/${currentMosqueId}/holidays`);
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        if (isMounted) {
+                            setHolidays([]);
+                            setNearestHoliday(null);
+                        }
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                if (isMounted) {
+                    // Фильтруем только включенные праздники
+                    const enabledHolidays = Array.isArray(data) ? data.filter((h: Holiday) => h.isEnabled) : [];
+                    setHolidays(enabledHolidays);
+                    
+                    // Вычисляем ближайший праздник
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0); // Устанавливаем время на начало дня
+                    const currentYear = today.getFullYear();
+                    let nearest: { holiday: Holiday; daysUntil: number } | null = null;
+                    
+                    for (const holiday of enabledHolidays) {
+                        const [startMonth, startDay] = holiday.startDate.split('-').map(Number);
+                        const startDate = new Date(currentYear, startMonth - 1, startDay);
+                        startDate.setHours(0, 0, 0, 0);
+                        
+                        // Проверяем, не начался ли праздник уже
+                        let holidayStartDate = startDate;
+                        if (holidayStartDate < today) {
+                            // Если праздник уже прошел в этом году, проверяем следующий год
+                            holidayStartDate = new Date(currentYear + 1, startMonth - 1, startDay);
+                            holidayStartDate.setHours(0, 0, 0, 0);
+                        }
+                        
+                        // Если праздник уже начался сегодня или раньше, проверяем период праздника
+                        if (startDate <= today) {
+                            // Если есть дата окончания, проверяем, не закончился ли праздник
+                            if (holiday.endDate) {
+                                const [endMonth, endDay] = holiday.endDate.split('-').map(Number);
+                                const endDate = new Date(currentYear, endMonth - 1, endDay);
+                                endDate.setHours(0, 0, 0, 0);
+                                
+                                // Если текущая дата находится в промежутке праздника, пропускаем его
+                                if (today >= startDate && today <= endDate) {
+                                    continue; // Праздник идет сейчас, не показываем
+                                }
+                                
+                                // Если праздник закончился в этом году, проверяем следующий год
+                                if (endDate < today) {
+                                    const nextYearStartDate = new Date(currentYear + 1, startMonth - 1, startDay);
+                                    nextYearStartDate.setHours(0, 0, 0, 0);
+                                    holidayStartDate = nextYearStartDate;
+                                }
+                            } else {
+                                // Однодневный праздник - если он сегодня, пропускаем
+                                if (startDate.getTime() === today.getTime()) {
+                                    continue; // Праздник сегодня, не показываем
+                                }
+                            }
+                        }
+                        
+                        const daysUntil = Math.ceil((holidayStartDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                        
+                        // Показываем только будущие праздники (daysUntil > 0)
+                        if (daysUntil > 0 && (!nearest || daysUntil < nearest.daysUntil)) {
+                            nearest = { holiday, daysUntil };
+                        }
+                    }
+                    
+                    setNearestHoliday(nearest);
+                }
+            } catch (error) {
+                console.error('Ошибка при загрузке праздников:', error);
+                if (isMounted) {
+                    setHolidays([]);
+                    setNearestHoliday(null);
+                }
+            }
+        })();
+        return () => { isMounted = false; };
+    }, [currentMosqueId]);
 
     const t = (key: string, fallback: string) => {
         // Если переводы выключены для мечети, возвращаем fallback
@@ -1772,7 +1873,7 @@ export function Test() {
                         <DigitalClock />
                     </div>
 
-                    <div className='flex gap-[5px] 
+                    <div className='flex gap-[5px] items-center
                         lg-max:flex-col lg-max:items-center lg-max:gap-1
                         md-max:flex-col md-max:items-center md-max:gap-0'>
                         <div className="text-[#17181d] text-[40px] pc1:text-[40px] pc2:text-[30px] tv1:text-[20px] break-words overflow-wrap-anywhere
@@ -1807,15 +1908,28 @@ export function Test() {
                     </div>
                 </div>
 
+                {/* Центральный блок (праздник) */}
+                {nearestHoliday && nearestHoliday.daysUntil >= 0 && (
+                    <div className="flex items-center justify-center
+                        lg-max:w-full lg-max:mb-2
+                        md-max:w-full md-max:mb-2">
+                        <div className="text-[#17181d] text-[28px] pc1:text-[28px] pc2:text-[24px] tv1:text-[18px] break-words overflow-wrap-anywhere text-center
+                            lg-max:text-[24px]
+                            md-max:text-[20px]">
+                            {prayerLang === 'ru' ? nearestHoliday.holiday.nameRu : nearestHoliday.holiday.nameTatar} {nearestHoliday.daysUntil === 0 ? t('holiday.today', 'сегодня') : `${t('holiday.in', 'через')} ${nearestHoliday.daysUntil} ${nearestHoliday.daysUntil === 1 ? t('holiday.day', 'день') : nearestHoliday.daysUntil < 5 ? t('holiday.days2', 'дня') : t('holiday.days', 'дней')}`}
+                        </div>
+                    </div>
+                )}
+
                 {/* Правый блок (информация) - без изменений для ПК */}
                 <div className="flex flex-wrap items-center text-center space-x-6 pc2:space-x-4 tv1:space-x-2 
                     lg-max:space-x-0 lg-max:justify-center lg-max:w-full
                     md-max:flex-col md-max:gap-4 md-max:w-full">
 
                     {/* Блок хиджры */}
-                    <div className="flex flex-col bg-white rounded-[25px] pc2:px-1 tv1:px-0 px-3 py-[10px] pc2:h-[86px] tv1:h-[56px] 
-                        lg-max:px-4 lg-max:py-2 lg-max:min-w-[180px]
-                        md-max:px-3 md-max:w-full md-max:items-center">
+                    <div className="flex flex-col bg-white rounded-[25px] px-4 py-[12px] pc2:px-3 pc2:py-[10px] tv1:px-3 tv1:py-[8px] pc2:h-[86px] tv1:h-[56px] 
+                        lg-max:px-5 lg-max:py-3 lg-max:min-w-[180px]
+                        md-max:px-4 md-max:py-3 md-max:w-full md-max:items-center">
                         <div className="text-[#a0a2b1] pc2:text-[12px] font-normal pc2:leading-[27.60px] tv1:leading-[17.60px] tv1:text-[10px] break-words overflow-wrap-anywhere
                             lg-max:text-sm
                             md-max:text-sm">{t('hijri.label', 'Дата по хиджре')}</div>
