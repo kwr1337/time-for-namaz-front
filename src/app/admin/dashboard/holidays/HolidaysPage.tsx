@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { DASHBOARD_PAGES } from '@/config/pages-url.config';
 import { toast } from 'react-hot-toast';
+import { API_BASE_URL } from '@/config/config';
 import type { Holiday, CreateHolidayDto, UpdateHolidayDto } from '@/types/holiday.types';
 
 interface Mosque {
@@ -51,7 +52,7 @@ const HolidaysPage = () => {
     const fetchUserRole = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`/api/admin/me`, {
+            const response = await axios.get(`${API_BASE_URL}/api/admin/me`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setUserRole(response.data.role);
@@ -70,7 +71,7 @@ const HolidaysPage = () => {
     const fetchMosques = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get<Mosque[]>(`/api/mosques`, {
+            const response = await axios.get<Mosque[]>(`${API_BASE_URL}/api/mosques`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -101,7 +102,7 @@ const HolidaysPage = () => {
         setLoading(true);
         try {
             const response = await axios.get<Holiday[]>(
-                `/api/mosques/${selectedMosqueId}/holidays`
+                `${API_BASE_URL}/api/mosques/${selectedMosqueId}/holidays`
             );
             setHolidays(response.data);
         } catch (error: any) {
@@ -205,7 +206,7 @@ const HolidaysPage = () => {
                 };
 
                 await axios.post(
-                    `/api/mosques/${selectedMosqueId}/holidays`,
+                    `${API_BASE_URL}/api/mosques/${selectedMosqueId}/holidays`,
                     createData,
                     {
                         headers: {
@@ -226,7 +227,7 @@ const HolidaysPage = () => {
                 };
 
                 await axios.patch(
-                    `/api/mosques/${selectedMosqueId}/holidays/${editingId}`,
+                    `${API_BASE_URL}/api/mosques/${selectedMosqueId}/holidays/${editingId}`,
                     updateData,
                     {
                         headers: {
@@ -267,7 +268,7 @@ const HolidaysPage = () => {
         try {
             const token = localStorage.getItem('token');
             await axios.delete(
-                `/api/mosques/${selectedMosqueId}/holidays/${id}`,
+                `${API_BASE_URL}/api/mosques/${selectedMosqueId}/holidays/${id}`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -299,7 +300,7 @@ const HolidaysPage = () => {
         try {
             const token = localStorage.getItem('token');
             await axios.patch(
-                `/api/mosques/${selectedMosqueId}/holidays/${id}`,
+                `${API_BASE_URL}/api/mosques/${selectedMosqueId}/holidays/${id}`,
                 { isEnabled: !currentStatus },
                 {
                     headers: {

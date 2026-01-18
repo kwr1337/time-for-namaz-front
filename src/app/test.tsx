@@ -687,7 +687,7 @@ export function Test() {
             }
 
             try {
-                const response = await fetch(`/api/mosques/${currentMosqueId}/holidays`);
+                const response = await fetch(`${API_BASE_URL}/api/mosques/${currentMosqueId}/holidays`);
                 if (!response.ok) {
                     if (response.status === 404) {
                         if (isMounted) {
