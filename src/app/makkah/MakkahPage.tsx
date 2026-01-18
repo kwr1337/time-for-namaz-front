@@ -24,28 +24,9 @@ const MakkahPage = () => {
         // Проверяем поддержку HLS
         if ((window as any).Hls && (window as any).Hls.isSupported()) {
             // Используем HLS.js для браузеров с поддержкой MSE
-            // Настройки для максимального качества видео
             const hls = new (window as any).Hls({
                 enableWorker: true,
-                lowLatencyMode: false, // Отключаем для лучшего качества
-                maxBufferLength: 30, // Увеличиваем буфер для плавности
-                maxMaxBufferLength: 60, // Максимальный размер буфера
-                maxBufferSize: 60 * 1000 * 1000, // 60MB буфер
-                maxBufferHole: 0.5,
-                highBufferWatchdogPeriod: 2,
-                nudgeOffset: 0.1,
-                nudgeMaxRetry: 3,
-                maxFragLoadingTimeOut: 200000,
-                fragLoadingTimeOut: 200000,
-                manifestLoadingTimeOut: 10000,
-                levelLoadingTimeOut: 10000,
-                // Настройки для лучшего качества
-                abrEwmaDefaultEstimate: 500000, // Высокая оценка битрейта для выбора лучшего качества
-                abrEwmaSlowVoD: 3, // Медленное переключение качества для стабильности
-                abrEwmaFastVoD: 3,
-                abrEwmaDefaultVoD: 3,
-                capLevelToPlayerSize: false, // Не ограничиваем качество размером плеера
-                startLevel: -1, // Автоматический выбор, но можно указать индекс уровня (0 = самый высокий)
+                lowLatencyMode: true,
             });
 
             hlsRef.current = hls;
@@ -53,39 +34,12 @@ const MakkahPage = () => {
             hls.loadSource(VIDEO_SRC);
             hls.attachMedia(video);
 
-            hls.on((window as any).Hls.Events.MANIFEST_PARSED, (event: any, data: any) => {
-                console.log('Доступные уровни качества:', data.levels);
-                
-                // Пытаемся выбрать самый высокий уровень качества
-                if (data.levels && data.levels.length > 0) {
-                    // Находим уровень с максимальным разрешением
-                    let maxLevel = 0;
-                    let maxResolution = 0;
-                    data.levels.forEach((level: any, index: number) => {
-                        const resolution = (level.width || 0) * (level.height || 0);
-                        if (resolution > maxResolution) {
-                            maxResolution = resolution;
-                            maxLevel = index;
-                        }
-                    });
-                    
-                    console.log(`Выбран уровень качества: ${maxLevel} (${data.levels[maxLevel].width}x${data.levels[maxLevel].height})`);
-                    hls.currentLevel = maxLevel; // Устанавливаем максимальное качество
-                }
-                
+            hls.on((window as any).Hls.Events.MANIFEST_PARSED, () => {
                 setIsLoading(false);
                 setError(null);
                 video.play().catch((err) => {
                     console.error('Ошибка автовоспроизведения:', err);
                 });
-            });
-
-            // Отслеживаем переключения качества
-            hls.on((window as any).Hls.Events.LEVEL_SWITCHED, (event: any, data: any) => {
-                const level = hls.levels[data.level];
-                if (level) {
-                    console.log(`Переключено на уровень: ${data.level} (${level.width}x${level.height}, битрейт: ${level.bitrate})`);
-                }
             });
 
             hls.on((window as any).Hls.Events.ERROR, (event: any, data: any) => {
@@ -191,7 +145,6 @@ const MakkahPage = () => {
                                 autoPlay
                                 playsInline
                                 muted={false}
-                                preload="auto"
                             />
                         </div>
                     </div>

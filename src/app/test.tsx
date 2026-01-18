@@ -783,6 +783,15 @@ export function Test() {
         return (prayerLang === 'ru' ? item.ru : item.tt) || fallback
     }
 
+    // Функция для перевода фраз праздников - работает независимо от translationsEnabled
+    const tHoliday = (key: string, fallbackRu: string, fallbackTt: string) => {
+        const item = dictionaryMap[key]
+        if (item) {
+            return (prayerLang === 'ru' ? item.ru : item.tt) || (prayerLang === 'ru' ? fallbackRu : fallbackTt)
+        }
+        return prayerLang === 'ru' ? fallbackRu : fallbackTt
+    }
+
     // Обновляем день недели каждую минуту, чтобы при переходе через полночь обновлялось название
     const [currentDay, setCurrentDay] = useState(new Date().getDay());
     useEffect(() => {
@@ -1876,8 +1885,8 @@ export function Test() {
                     <div className='flex gap-[5px] items-center
                         lg-max:flex-col lg-max:items-center lg-max:gap-1
                         md-max:flex-col md-max:items-center md-max:gap-0'>
-                        <div className="text-[#17181d] text-[40px] pc1:text-[40px] pc2:text-[30px] tv1:text-[20px] break-words overflow-wrap-anywhere
-                            lg-max:text-[34px]
+                        <div className="text-[#17181d] text-[33px] pc1:text-[33px] pc2:text-[30px] tv1:text-[20px] break-words overflow-wrap-anywhere
+                            lg-max:text-[33px]
                             md-max:text-[28px]">
                             {(() => {
                                 const d = new Date();
@@ -1887,8 +1896,8 @@ export function Test() {
                                 return `${dayNum} ${monthName}`;
                             })()},
                         </div>
-                        <div className="text-[#17181d] text-[40px] pc1:text-[40px] pc2:text-[30px] tv1:text-[20px] break-words overflow-wrap-anywhere
-                            lg-max:text-[34px]
+                        <div className="text-[#17181d] text-[33px] pc1:text-[33px] pc2:text-[30px] tv1:text-[20px] break-words overflow-wrap-anywhere
+                            lg-max:text-[33px]
                             md-max:text-[28px]">
                             {(() => {
                                 const d = new Date();
@@ -1913,10 +1922,10 @@ export function Test() {
                     <div className="flex items-center justify-center
                         lg-max:w-full lg-max:mb-2
                         md-max:w-full md-max:mb-2">
-                        <div className="text-[#17181d] text-[28px] pc1:text-[28px] pc2:text-[24px] tv1:text-[18px] break-words overflow-wrap-anywhere text-center
-                            lg-max:text-[24px]
+                        <div className="text-[#17181d] text-[33px] pc1:text-[33px] pc2:text-[24px] tv1:text-[18px] break-words overflow-wrap-anywhere text-center
+                            lg-max:text-[33px]
                             md-max:text-[20px]">
-                            {prayerLang === 'ru' ? nearestHoliday.holiday.nameRu : nearestHoliday.holiday.nameTatar} {nearestHoliday.daysUntil === 0 ? t('holiday.today', 'сегодня') : `${t('holiday.in', 'через')} ${nearestHoliday.daysUntil} ${nearestHoliday.daysUntil === 1 ? t('holiday.day', 'день') : nearestHoliday.daysUntil < 5 ? t('holiday.days2', 'дня') : t('holiday.days', 'дней')}`}
+                            {prayerLang === 'ru' ? nearestHoliday.holiday.nameRu : nearestHoliday.holiday.nameTatar} {nearestHoliday.daysUntil === 0 ? tHoliday('holiday.today', 'сегодня', 'бүген') : `${tHoliday('holiday.in', 'через', 'күрә')} ${nearestHoliday.daysUntil} ${nearestHoliday.daysUntil === 1 ? tHoliday('holiday.day', 'день', 'көн') : nearestHoliday.daysUntil < 5 ? tHoliday('holiday.days2', 'дня', 'көн') : tHoliday('holiday.days', 'дней', 'көн')}`}
                         </div>
                     </div>
                 )}
