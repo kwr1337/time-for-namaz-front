@@ -2076,7 +2076,7 @@ export function Test() {
                                 <div className="flex flex-col">
                                     {/* <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold max-w-[190px] md-max:text-[24px] break-words overflow-wrap-anywhere">{t('help.label', 'Помощь')}</div> */}
                                     <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold max-w-[190px] md-max:text-[24px] break-words overflow-wrap-anywhere">
-                                        {secondaryQrProjectName ? `"${secondaryQrProjectName}"` : `"${t('help.project', 'Проект')}"`}
+                                        {secondaryQrProjectName ? `"${secondaryQrProjectName}"` : `${t('help.project', 'Проект')}`}
                                     </div>
                                 </div>
                                 <img src={`${phoneIcon.src}`} alt="phone" className="w-[30px] h-[50px] -mt-8 md-max:mt-0" />
