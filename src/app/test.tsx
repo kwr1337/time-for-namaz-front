@@ -2074,7 +2074,7 @@ export function Test() {
                             md-max:h-[300px] md-max:flex md-max:flex-col md-max:justify-between">
                             <div className='flex gap-[11px] items-center justify-between sm-max:flex-col sm-max:items-start md-max:flex-row md-max:w-full'>
                                 <div className="flex flex-col">
-                                    <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold max-w-[190px] md-max:text-[24px] break-words overflow-wrap-anywhere">{t('help.label', 'Помощь')}</div>
+                                    {/* <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold max-w-[190px] md-max:text-[24px] break-words overflow-wrap-anywhere">{t('help.label', 'Помощь')}</div> */}
                                     <div className="text-white text-left pc2:text-[28px] tv1:text-[20px] font-bold max-w-[190px] md-max:text-[24px] break-words overflow-wrap-anywhere">
                                         {secondaryQrProjectName ? `"${secondaryQrProjectName}"` : `"${t('help.project', 'Проект')}"`}
                                     </div>
